@@ -99,6 +99,13 @@ Bundled open fonts (embedded as base64 in `assets/fonts.css`) remain under the
 SIL Open Font License 1.1; see `FONT-LICENSES.md`. The bundled Three.js runtime
 is MIT and retains its upstream SPDX header.
 
-The imagery in `assets/generated/` and `assets/foreground/` is ThreeUI-authored
-and MIT licensed. The `assets/generated/` files are still the original Kage
-chapter renders and do not match this scene — replacing them is outstanding.
+The imagery in `assets/foreground/` is ThreeUI-authored and MIT licensed. It is
+page content in the article sections, not part of the 3D scene, whose foreground
+is generated. Several of those files are still Kyoto-garden subjects and do not
+match this scene — replacing them is outstanding.
+
+The chapter-card plates are generated at runtime by `texCardPlate`, so there are
+no bitmap assets behind them. That matters more than it sounds: the cards are
+carried by a cloth simulation, and cloth only reads as fabric because the image
+it holds stretches and shades as the mesh moves. Replacing the plates with a
+flat fill leaves the simulation running and invisible.
