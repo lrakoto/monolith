@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kage — Where stillness reveals the unseen</title>
-<meta name="description" content="A five-chapter night walk through a Kyoto mountain temple. Charred cypress, lantern light and a vermilion moon, rendered live in WebGL.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305070a'/%3E%3Ccircle cx='16' cy='17' r='8' fill='%23e0231c'/%3E%3Crect x='4' y='8' width='24' height='2.6' fill='%23dfe7e0'/%3E%3Crect x='7' y='13' width='18' height='2' fill='%23dfe7e0'/%3E%3C/svg%3E">
+<title>ThreeOhFive Studios — Code and visual design for brand experiences</title>
+<meta name="description" content="Lova Rakoto — web developer and designer in Los Angeles. Code and visual design brought together to build brand experiences, in a live WebGL scene generated at runtime.">
+<link rel="icon" href="assets/brand/icon-32.webp" sizes="32x32">
+<link rel="icon" href="assets/brand/icon-192.webp" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/brand/icon-180.webp">
 <link rel="stylesheet" href="assets/fonts.css">
 <style>
 /* ============================================================= tokens */
@@ -17,8 +19,9 @@
   --muted:#78837c;
   --line:rgba(223,231,224,.13);
   --line-soft:rgba(223,231,224,.07);
-  --vermilion:#e0231c;
-  --ember:#ff5a3c;
+  --brand:#e4606c;        /* the coral of the studio script mark */
+  --brand-deep:#a82448;   /* its shadow side, for gradients that need a floor */
+  --ember:#ff6f66;        /* the warm end, tied to the slot light in the scene */
   --gold:#c9a24a;
   --pad:clamp(20px, 3.4vw, 56px);
   --nav-h:84px;
@@ -36,7 +39,7 @@ body{
   overflow-x:hidden;
 }
 body.is-locked{ overflow:hidden; height:100vh; }
-::selection{ background:var(--vermilion); color:#fff; }
+::selection{ background:var(--brand); color:#fff; }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -141,8 +144,11 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .brand{ display:flex; align-items:center; gap:11px; flex:0 0 auto; }
 .brand svg{ width:34px; height:34px; display:block; }
 .brand-tx{ display:flex; flex-direction:column; line-height:1; gap:3px; }
-.brand-tx b{ font-size:12px; font-weight:500; letter-spacing:.26em; }
-.brand-tx i{ font-style:normal; font-size:8px; letter-spacing:.34em; color:var(--muted); }
+.brand-tx b{ font-size:12px; font-weight:500; letter-spacing:.2em; }
+/* No space between the two halves — the colour is the word break, which is
+   the one place the studio coral earns its keep in the chrome. */
+.brand-tx b em{ font-style:normal; color:var(--brand); }
+.brand-tx i{ font-style:normal; font-size:8px; letter-spacing:.72em; color:var(--muted); }
 .nav-links{ display:flex; gap:clamp(18px,2.6vw,46px); margin-left:auto; }
 .nav-link{
   position:relative; font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
@@ -153,7 +159,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .nav-link:hover span{ transform:translate3d(0,-100%,0); }
 .nav-link:hover .alt{ transform:none; }
 .nav-link.on{ color:var(--bone); }
-.nav-link.on::after{ content:''; position:absolute; left:0; bottom:0; width:100%; height:1px; background:var(--vermilion); }
+.nav-link.on::after{ content:''; position:absolute; left:0; bottom:0; width:100%; height:1px; background:var(--brand); }
 .nav-burger{ margin-left:clamp(18px,2.6vw,42px); width:26px; height:16px; position:relative; flex:0 0 auto; }
 .nav-burger i{ position:absolute; right:0; height:1.5px; background:var(--bone); transition:width .45s var(--ease-out), transform .45s var(--ease-out); }
 .nav-burger i:nth-child(1){ top:4px; width:26px; }
@@ -167,7 +173,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
   background:linear-gradient(rgba(3,6,9,.72), rgba(3,6,9,.34) 46%, transparent); }
 .hero-top{ padding-top:calc(var(--nav-h) + clamp(12px,2.6vh,34px)); max-width:min(560px,46vw); position:relative; z-index:2; }
 .hero-top .eyebrow{ display:flex; align-items:center; gap:10px; margin-bottom:20px; }
-.hero-top .eyebrow .dot{ width:5px; height:5px; border-radius:50%; background:var(--vermilion); box-shadow:0 0 10px var(--vermilion); }
+.hero-top .eyebrow .dot{ width:5px; height:5px; border-radius:50%; background:var(--brand); box-shadow:0 0 10px var(--brand); }
 .hero h1{ margin-bottom:18px; }
 .hero-sub{ max-width:322px; text-shadow:0 1px 26px rgba(3,6,8,.95); }
 .hero-spacer{ flex:1 1 auto; min-height:clamp(140px,26vh,300px); }
@@ -194,7 +200,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .chip:hover p{ color:var(--bone-dim); }
 .chip.on .num{ color:var(--ember); }
 .chip.on b{ color:var(--bone); }
-/* the floating window: a generated Sanmon still carried over the hero */
+/* the floating window: a generated work still carried over the hero */
 .peek{
   position:absolute; z-index:2; right:clamp(78px,11vw,190px); top:clamp(132px,25vh,238px);
   width:clamp(150px,16vw,262px); display:block;
@@ -221,7 +227,11 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
   position:absolute; z-index:2; right:var(--pad); top:50%; transform:translateY(-50%);
   display:flex; flex-direction:column; align-items:center; gap:14px; pointer-events:none;
 }
-.hero-side .v{ writing-mode:vertical-rl; font-size:13px; letter-spacing:.62em; color:rgba(223,231,224,.5); }
+/* The tracking here was set for three CJK glyphs. Eleven latin characters at
+   the same .62em ran the rail down over the wordmark, so the latin setting is
+   tighter and a size smaller — it still reads as a rule of type down the edge,
+   and it now stops well above the numerals. */
+.hero-side .v{ writing-mode:vertical-rl; font-size:11px; letter-spacing:.3em; color:rgba(223,231,224,.5); }
 @keyframes cue{ 0%{transform:scaleX(0)} 42%{transform:scaleX(1)} 100%{transform:scaleX(1) translateX(100%)} }
 
 /* ============================================================= sections */
@@ -246,7 +256,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 }
 .sec-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:clamp(30px,5vh,66px); }
 .sec-head .k{ font-size:10px; font-weight:500; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
-.sec-head .k b{ color:var(--vermilion); font-weight:500; }
+.sec-head .k b{ color:var(--brand); font-weight:500; }
 .rule{ flex:1 1 auto; height:1px; background:var(--line-soft); }
 
 /* — chapter I: the gate */
@@ -269,7 +279,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 
 /* — chapter II: pathways cards */
 .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(10px,1.4vw,22px); align-items:start; }
-.card{ position:relative; cursor:pointer; }
+.card{ position:relative; display:block; cursor:pointer; }
 .card:nth-child(1){ transform:translateY(0); }
 .card:nth-child(2){ transform:translateY(clamp(26px,5vw,74px)); }
 .card:nth-child(3){ transform:translateY(clamp(52px,10vw,148px)); }
@@ -399,17 +409,17 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
   cursor:pointer; transition:padding .5s var(--ease-out);
 }
 .les::before{ content:''; position:absolute; left:calc(var(--pad) * -1); right:0; top:0; bottom:0;
-  background:linear-gradient(90deg, rgba(224,35,28,.09), transparent 46%);
+  background:linear-gradient(90deg, rgba(228,96,108,.11), transparent 46%);
   opacity:0; transition:opacity .55s var(--ease); pointer-events:none; }
 .les:hover::before{ opacity:1; }
 .les:hover{ padding-left:clamp(8px,1.2vw,18px); }
 .les .k{ font-size:11px; letter-spacing:.16em; color:var(--muted); font-variant-numeric:tabular-nums; transition:color .4s; }
-.les:hover .k{ color:var(--vermilion); }
+.les:hover .k{ color:var(--brand); }
 .les h3{ font-size:clamp(16px,1.5vw,23px); font-weight:400; letter-spacing:-.005em; }
 .les h3 em{ font-style:normal; font-family:'NotoJP',sans-serif; font-size:.72em; color:var(--muted); margin-left:12px; letter-spacing:.24em; }
 .les p{ margin:0; font-size:13px; line-height:1.6; color:#909b95; text-shadow:0 1px 16px rgba(3,6,8,.92); }
 .les .t{ text-align:right; font-size:11px; letter-spacing:.14em; color:#8b958f; font-variant-numeric:tabular-nums; text-shadow:0 1px 16px rgba(3,6,8,.92); }
-.les .bar{ position:absolute; left:0; bottom:-1px; height:1px; width:100%; background:var(--vermilion);
+.les .bar{ position:absolute; left:0; bottom:-1px; height:1px; width:100%; background:var(--brand);
   transform:scaleX(0); transform-origin:left; transition:transform .7s var(--ease-out); }
 .les:hover .bar{ transform:scaleX(1); }
 
@@ -546,16 +556,19 @@ body[data-layout-hero="b"] .chip .tx{
 body[data-layout-hero="b"] .peek{
   left:auto; right:var(--pad); top:auto; bottom:clamp(38px,7vh,96px);
 }
-body[data-layout-hero="b"] .peek-cap b.jp{ font-size:clamp(20px,2.2vw,34px); letter-spacing:.18em; }
-/* The Japanese title reads down the right edge, hung under the navigation —
-   the one mark on that side of the frame now that the romanization has gone. */
+body[data-layout-hero="b"] .peek-cap b{ font-size:clamp(20px,2.2vw,34px); letter-spacing:.18em; }
+/* The place name reads down the right edge, hung under the navigation — the
+   one mark on that side of the frame. This was set at display scale for three
+   Japanese glyphs; eleven latin characters at 54px ran the rail straight down
+   through the wordmark, so the latin setting trades size for length and reads
+   as a fine rule of type instead of a second title competing with the 305. */
 body[data-layout-hero="b"] .hero-side{
   left:auto; right:var(--pad); top:calc(var(--nav-h) + clamp(14px,3vh,42px));
   bottom:auto; transform:none; display:block;
 }
 body[data-layout-hero="b"] .hero-side .v{
   position:static; transform:none;
-  font-size:clamp(30px,3.2vw,54px); letter-spacing:.12em; color:rgba(223,231,224,.62);
+  font-size:clamp(13px,1.35vw,19px); letter-spacing:.34em; color:rgba(223,231,224,.62);
 }
 
 /* — story B · spread: the title crosses two columns, the reading column is
@@ -598,7 +611,7 @@ body[data-layout-curriculum="b"] .les{
 }
 body[data-layout-curriculum="b"] .les:nth-child(-n+2){ grid-column:span 3; }
 body[data-layout-curriculum="b"] .les:nth-child(n+3){ grid-column:span 2; }
-body[data-layout-curriculum="b"] .les::before{ left:0; background:linear-gradient(145deg,rgba(224,35,28,.13),transparent 58%); }
+body[data-layout-curriculum="b"] .les::before{ left:0; background:linear-gradient(145deg,rgba(228,96,108,.15),transparent 58%); }
 body[data-layout-curriculum="b"] .les:hover{ padding-left:32px; }
 body[data-layout-curriculum="b"] .les h3{ font-size:clamp(20px,2vw,30px); }
 body[data-layout-curriculum="b"] .les p{ display:block; max-width:34ch; }
@@ -636,176 +649,14 @@ body[data-layout-footer="b"] .foot-grid > div:nth-child(n+3){
 body[data-layout-footer="b"] .foot-base{ display:grid; grid-template-columns:1fr auto 1fr; }
 body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 
-/* ================================================= foreground layers (KAGE)
-   The transparent PNG library in assets/foreground/png is
-   introduced as a near plane. Each section carries one .fg box holding a few
-   cut-outs that stand between the live sanctuary and the reading: the scene
-   itself is untouched, this is only the garden that grows in front of it.
-
-   The cut-outs are the nearest plane on the page, so they sit in front of the
-   reading rather than behind it. Inside .page — itself z-index:10, above the
-   #gl canvas at 0:
-     -1   .sec::before / .foot::before   the section scrims
-      2   headings, copy, links, cards, stats, CTA
-      3   .fg                            the cut-outs: aria-hidden, inert
-   .page caps everything it holds at tier 10, which is under the fixed
-   furniture (rail 45, nav 50), so the chapter's live near plane is moved out
-   to #fg-sky at 52 — over the layout and the navigation both, and still under
-   the passes that treat the frame as one image: vignette 55, grain 60,
-   cursor 80.
-
-   A stage is only ever shown while its own chapter holds the viewport, and
-   only in the fixed bottom-anchored form. Parked back in its section it is
-   inert and invisible: a near plane that scrolls with the page reads as
-   wallpaper printed on the document rather than as something standing between
-   the camera and the scene, so there is no second, section-owned appearance.
-   Every piece is therefore placed from the bottom edge of that fixed plane —
-   left/right and bottom, never top.
-
-   The entrance is driven by the chapter, not by the scroll observer: each
-   [data-fg-in] piece rises from the edge it is anchored to when its stage goes
-   live, one every 90ms in DOM order, and the reduced-motion block at the foot
-   of this sheet flattens it. The wrapper owns the entrance and animates
-   opacity and transform only; the artwork itself remains at full opacity, with
-   the reading protected by the layer order rather than a translucent
-   foreground treatment. */
-.fg{
-  position:absolute; inset:0; z-index:3;
-  overflow:visible; pointer-events:none;
-}
-/* Nothing inside a section may widen the document. The foreground cut-outs and
-   the cloth canvases are placed to hang past the frame edges on purpose, and as
-   ordinary in-flow descendants they dragged the page box out with them — 194px
-   past a 1440 frame. Clip the horizontal axis at the section, which is exactly
+/* Nothing inside a section may widen the document. The cloth canvases are
+   placed to hang past the frame edges on purpose, and as ordinary in-flow
+   descendants they dragged the page box out with them — 194px past a 1440
+   frame. Clip the horizontal axis at the section, which is exactly
    viewport-wide, so each overhang is cut precisely where it leaves the screen.
    `clip` pairs with `visible` without coercing it, so no scroll container is
    created and every bit of vertical bleed survives. */
 .sec, .foot{ overflow-x:clip; overflow-y:visible; }
-/* the host for whichever chapter currently owns the near plane — no box of
-   its own, since every stage it holds is position:fixed to the viewport */
-#fg-sky{
-  position:fixed; left:0; top:0; width:0; height:0;
-  z-index:52; pointer-events:none;
-}
-.sec > *:not(.fg), .foot > *:not(.fg){ position:relative; z-index:2; }
-.fg-el{ position:absolute; display:block; opacity:0; }
-.fg-el > img{
-  width:100%; height:auto;   /* the width/height attrs hold the box before the lazy image lands */
-  opacity:1;
-  filter:saturate(.88) brightness(.86);
-}
-.fg-el--flip > img{ transform:scaleX(-1); }
-/* each piece waits off the edge it is anchored to until its chapter is called */
-[data-fg-in="up"]   { transform:translate3d(0,13%,0); }
-[data-fg-in="left"] { transform:translate3d(-11%,6%,0); }
-[data-fg-in="right"]{ transform:translate3d(11%,6%,0); }
-/* one slow breath, on the two lightest layers only */
-@keyframes fg-sway{
-  from{ transform:rotate(-.45deg) translate3d(0,2px,0); }
-  to  { transform:rotate(.45deg)  translate3d(0,-6px,0); }
-}
-.fg-el--sway > img{ animation:fg-sway 21s var(--ease-io) infinite alternate; transform-origin:0% 45%; }
-
-/* The active chapter owns a bottom-anchored near plane. Its former stage is
-   retained only long enough to dissolve into the next chapter's scene. */
-.fg.fg-active,.fg.fg-retiring{
-  position:fixed; left:0; right:0; top:auto; bottom:0; height:min(56svh,680px);
-  z-index:1; overflow:visible; pointer-events:none;
-}
-.fg.fg-active .fg-el{
-  opacity:1; transform:none;
-  transition:opacity 1.2s var(--ease-out), transform 1.5s var(--ease-out);
-  transition-delay:var(--fg-delay,0ms);
-}
-.fg .fg-el:nth-child(2){ --fg-delay:90ms; }
-.fg .fg-el:nth-child(3){ --fg-delay:180ms; }
-.fg .fg-el:nth-child(4){ --fg-delay:270ms; }
-.fg.fg-retiring .fg-el{
-  opacity:0; transform:translate3d(0,8vh,0) scale(.98); filter:blur(18px);
-  transition:opacity .68s var(--ease-out),transform .78s var(--ease-out),filter .78s var(--ease-out);
-}
-
-/* Placement is keyed off [data-fg] rather than the section id, because the
-   stage of the live chapter is re-parented into #fg-sky and stops being a
-   descendant of its own section for as long as it holds the near plane.
-
-   Every piece is anchored from the bottom of that plane, which is the bottom
-   of the viewport. The cut-outs in png/ are trimmed flush to their own lowest
-   opaque row, so a negative bottom here is a real amount of artwork buried off
-   the foot of the frame, not slack in the file — the ground-sitting pieces
-   carry enough of it that their base line never lifts off the edge. */
-
-/* — I · the gate: the wall runs along the lower-left frame, a pine holds the
-     far edge, and one bank of grass closes the foot of the chapter */
-/* Wall against the left edge, pine against the right: the chapter is framed
-   by the two of them with the court open between.
-
-   left:0, not a negative offset — the plate is trimmed to its own artwork, so
-   pulling it off-frame cuts the gate itself rather than trimming empty margin.
-   Its left edge sits on the viewport's. */
-[data-fg="gate"] .fg-wall  { left:0; bottom:-30px; width:clamp(430px,47vw,780px); }
-[data-fg="gate"] .fg-pine  { right:-4%; bottom:-46px; width:clamp(190px,21vw,370px); }
-[data-fg="gate"] .fg-grass { left:3%;   bottom:-150px; width:clamp(420px,60vw,1050px); }
-
-/* — II · still gardens: sakura and maple sweep in from the two lower corners
-     and carry their whole length, a lit lantern and a low bush hold the edges */
-[data-fg="pathways"] .fg-sakura { left:-6%;  bottom:-86px;  width:clamp(430px,50vw,880px); }
-[data-fg="pathways"] .fg-leaves { right:-6%; bottom:-62px;  width:clamp(330px,38vw,670px); }
-[data-fg="pathways"] .fg-lantern{ left:-1%;  bottom:-96px;  width:clamp(120px,13vw,215px); }
-[data-fg="pathways"] .fg-bush   { right:-4%; bottom:-38px;  width:clamp(250px,30vw,530px); }
-/* the lantern is the one lit object in the library — it keeps its ember */
-[data-fg="pathways"] .fg-lantern > img{ filter:saturate(.96) brightness(1); }
-[data-fg="pathways"] .fg-leaves > img{ transform-origin:100% 40%; }
-
-/* — III · sacred craft: basalt and a low wall fragment bracket the atlas and
-     a stand of grass ties them together, all three below the plate grid */
-[data-fg="lessons"] .fg-wall   { right:-8%; bottom:-78px; width:clamp(390px,50vw,870px); }
-[data-fg="lessons"] .fg-stones { left:-4%;  bottom:-48px; width:clamp(250px,30vw,530px); }
-[data-fg="lessons"] .fg-grass  { left:24%;  bottom:-84px; width:clamp(280px,33vw,580px); }
-
-/* — IV · afterlight: a far hill closes the horizon, the shrine ruins stand at
-     the left of it, grass banks the right, one branch hangs into the corner */
-[data-fg="eternity"] .fg-hill   { left:-8%; width:min(150vh,116%); bottom:calc(-1 * min(20vh,15.5vw)); }
-[data-fg="eternity"] .fg-ruins  { left:-5%;  bottom:-32px; width:clamp(240px,28vw,500px); }
-[data-fg="eternity"] .fg-grass  { right:-7%; bottom:-60px; width:clamp(300px,37vw,670px); }
-[data-fg="eternity"] .fg-sakura { left:-15%; bottom:-70px; width:clamp(280px,33vw,580px); }
-
-/* — colophon: one restrained planting along the lower edge, nothing above it */
-[data-fg="foot"] .fg-bush   { left:-6%;  bottom:-110px; width:clamp(230px,28vw,480px); }
-[data-fg="foot"] .fg-grass  { right:-5%; bottom:-98px;  width:clamp(255px,30vw,530px); }
-[data-fg="foot"] .fg-stones { left:36%;  bottom:-104px; width:clamp(190px,22vw,370px); }
-
-@media (max-width:1080px){
-  /* the columns have collapsed and the copy has taken the width back, so the
-     framing layers step down rather than crowd it */
-  [data-fg="gate"] .fg-wall      { width:clamp(390px,42vw,600px); }
-  [data-fg="pathways"] .fg-sakura{ width:clamp(400px,46vw,660px); }
-  [data-fg="pathways"] .fg-leaves{ width:clamp(310px,35vw,500px); }
-  [data-fg="lessons"] .fg-wall   { width:clamp(360px,45vw,640px); }
-  [data-fg="eternity"] .fg-sakura{ width:clamp(260px,30vw,430px); }
-}
-@media (max-width:820px){
-  /* one or two anchors per section: the stacked cards, the atlas plates and
-     the call to action own the whole width here, so every duplicated piece
-     of ornament goes and what stays is smaller */
-  [data-fg="gate"] .fg-pine, [data-fg="pathways"] .fg-sakura,
-  [data-fg="pathways"] .fg-leaves, [data-fg="lessons"] .fg-wall,
-  [data-fg="eternity"] .fg-sakura, [data-fg="foot"] .fg-stones{ display:none; }
-  [data-fg="gate"] .fg-wall     { left:-14%; bottom:-22px; width:min(82vw,440px); }
-  [data-fg="gate"] .fg-grass    { left:auto; right:-10%; bottom:-76px; width:min(94vw,530px); }
-  [data-fg="pathways"] .fg-lantern{ left:-4%;   bottom:-58px; width:clamp(80px,20vw,128px); }
-  [data-fg="pathways"] .fg-bush   { right:-10%; bottom:-38px; width:min(72vw,400px); }
-  [data-fg="lessons"] .fg-stones  { left:-8%; bottom:-34px; width:min(66vw,360px); }
-  [data-fg="lessons"] .fg-grass   { left:auto; right:-8%; bottom:-44px; width:min(70vw,380px); }
-  [data-fg="eternity"] .fg-ruins  { left:-8%;   bottom:-25px; width:min(54vw,300px); }
-  [data-fg="eternity"] .fg-grass  { right:-12%; bottom:-34px; width:min(80vw,440px); }
-  [data-fg="foot"] .fg-bush  { left:-12%;  bottom:-26px; width:min(68vw,340px); }
-  [data-fg="foot"] .fg-grass { right:-12%; bottom:-30px; width:min(74vw,380px); }
-}
-@media (prefers-reduced-motion:reduce){
-  .fg-el--sway > img{ animation:none; }
-  .fg.fg-retiring .fg-el{ transition:none !important; filter:none !important; }
-}
 
 @media (max-width:1080px){
   body[data-layout-hero="b"] .chapters{ gap:16px 20px; }
@@ -895,15 +746,16 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 <div id="pre">
   <div class="pre-in">
     <div class="pre-mark">
+      <!-- the slab and its slot, the one mark this page earns -->
       <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
-        <circle cx="22" cy="24" r="9.5" stroke="#e0231c" stroke-width="1.2"/>
-        <path d="M6 12h32M9.5 17h25M22 8v28" stroke="#dfe7e0" stroke-width="1.2"/>
+        <rect x="13.5" y="5.5" width="17" height="33" stroke="#dfe7e0" stroke-width="1.2"/>
+        <rect x="13.5" y="20.4" width="17" height="3.2" fill="#e4606c"/>
       </svg>
     </div>
-    <div class="pre-jp jp">影の道</div>
+    <div class="pre-jp">THREEOHFIVE</div>
     <div class="pre-bar"><i id="pre-fill"></i></div>
     <div class="pre-meta">
-      <span>Raising the mountain temple</span><b><span id="pre-pct">0</span>%</b>
+      <span>Pouring the slab</span><b><span id="pre-pct">0</span>%</b>
     </div>
   </div>
 </div>
@@ -912,17 +764,17 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 <header class="nav" id="nav">
   <a class="brand" href="#top" data-cursor>
     <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
-      <circle cx="22" cy="25" r="8.6" fill="#e0231c" fill-opacity=".9"/>
-      <path d="M5 13h34M9 18.4h26M22 8.5v27" stroke="#dfe7e0" stroke-width="1.5"/>
-      <path d="M14 35.5h16" stroke="#dfe7e0" stroke-width="1.2" stroke-opacity=".6"/>
+      <rect x="13" y="5" width="18" height="34" fill="#dfe7e0" fill-opacity=".07"/>
+      <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
+      <rect x="13" y="20" width="18" height="3.6" fill="#e4606c"/>
     </svg>
-    <span class="brand-tx"><b>KAGE</b><i>HIDDEN REALMS OF KYOTO</i></span>
+    <span class="brand-tx"><b>THREEOHFIVE<em>STUDIOS</em></b><i>LOS ANGELES</i></span>
   </a>
   <nav class="nav-links" id="navlinks">
-    <a class="nav-link" href="#gate" data-cursor><span>Temples</span><span class="alt">伽藍</span></a>
-    <a class="nav-link" href="#pathways" data-cursor><span>Gardens</span><span class="alt">庭園</span></a>
-    <a class="nav-link" href="#lessons" data-cursor><span>Rituals</span><span class="alt">神事</span></a>
-    <a class="nav-link" href="#eternity" data-cursor><span>Afterlight</span><span class="alt">残光</span></a>
+    <a class="nav-link" href="#gate" data-cursor><span>Studio</span><span class="alt">01</span></a>
+    <a class="nav-link" href="#pathways" data-cursor><span>Work</span><span class="alt">02</span></a>
+    <a class="nav-link" href="#lessons" data-cursor><span>Services</span><span class="alt">03</span></a>
+    <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">04</span></a>
   </nav>
   <button class="nav-burger" aria-label="Menu" data-cursor><i></i><i></i></button>
 </header>
@@ -932,14 +784,14 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 <!-- ============================================================ hero -->
 <section class="hero" id="hero" data-cam="0">
   <div class="hero-top">
-    <div class="eyebrow" data-rv="fade"><span class="dot"></span> Chapter 00 — The Hidden Gate</div>
+    <div class="eyebrow" data-rv="fade"><span class="dot"></span> Los Angeles — Design Engineer</div>
     <h1 class="display h-hero">
-      <span class="mask-line"><span>Where stillness</span></span>
-      <span class="mask-line"><span>reveals the</span></span>
-      <span class="mask-line"><span>unseen.</span></span>
+      <span class="mask-line"><span>Code and visual</span></span>
+      <span class="mask-line"><span>design, building</span></span>
+      <span class="mask-line"><span>brand experiences.</span></span>
     </h1>
-    <p class="hero-sub body" data-rv="up">Enter Kyoto through its quiet thresholds, where ritual,
-      craft, and memory shape the path.</p>
+    <p class="hero-sub body" data-rv="up">I am a web developer and designer based in Los Angeles,
+      helping businesses build an impactful, thoughtful and elegant digital presence.</p>
   </div>
 
   <div class="hero-spacer"></div>
@@ -948,264 +800,190 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <div class="hero-cue" data-rv="fade"><span>Scroll to enter</span><span class="track"><i></i></span></div>
     <div class="chapters" id="chips">
       <div class="chip" data-chip="0" data-rv="up" data-cursor><span class="num">01</span>
-        <span class="tx"><b>Thresholds</b><p>Discover the hidden gates that open on to deeper paths.</p></span></div>
+        <span class="tx"><b>Web Development</b><p>End-to-end web experiences, concept through launch.</p></span></div>
       <div class="chip" data-chip="1" data-rv="up" data-cursor><span class="num">02</span>
-        <span class="tx"><b>Still Gardens</b><p>Witness the courts where silence gently unfolds.</p></span></div>
+        <span class="tx"><b>Visual &amp; UI/UX</b><p>Interfaces balancing aesthetics, usability and speed.</p></span></div>
       <div class="chip" data-chip="2" data-rv="up" data-cursor><span class="num">03</span>
-        <span class="tx"><b>Sacred Craft</b><p>Embrace the hands and heritage that shape devotion.</p></span></div>
+        <span class="tx"><b>Testing</b><p>Websites as growth tools, improved by experiment.</p></span></div>
       <div class="chip" data-chip="3" data-rv="up" data-cursor><span class="num">04</span>
-        <span class="tx"><b>Night Rituals</b><p>Explore the rites that awaken when the day is done.</p></span></div>
+        <span class="tx"><b>Strategy</b><p>Design, engineering and business goals in one line.</p></span></div>
     </div>
   </div>
 
-  <a class="peek" href="#pathways" data-view="3" data-rv="fade" data-cursor aria-label="Preview: Sanmon, before the bell">
+  <a class="peek" href="#pathways" data-view="3" data-rv="fade" data-cursor aria-label="Preview: AutoDex, a car database built and shipped">
     <!-- data-frame, or the live view is blitted over the whole anchor and
          runs on down behind the caption instead of stopping at the frame -->
     <span class="peek-fr" data-frame></span>
     <span class="peek-play"><svg viewBox="0 0 22 22" fill="none"><path d="M8 5.6 16.4 11 8 16.4z" fill="#dfe7e0"/></svg></span>
-    <span class="peek-cap"><b class="jp">山門</b><i>Sanmon — before the bell</i></span>
+    <span class="peek-cap"><b>AutoDex</b><i>Built, shipped, live</i></span>
   </a>
 
-  <div class="word-fb" aria-hidden="true">KAGE</div>
+  <div class="word-fb" aria-hidden="true">305</div>
 
   <div class="hero-side" data-rv="up">
-    <span class="v jp">影の道</span>
+    <span class="v">LOS ANGELES</span>
   </div>
 </section>
 
 <!-- ============================================================ chapter I -->
 <section class="sec" id="gate" data-cam="1">
-  <!-- foreground: the wall arrives first, the pine at the edge, the grass last -->
-  <div class="fg" data-fg="gate" aria-hidden="true">
-    <span class="fg-el fg-wall" data-fg-in="left">
-      <img src="assets/foreground/png/temple-wall.webp" alt="" width="1536" height="884" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-pine" data-fg-in="right">
-      <img src="assets/foreground/png/pine-tree.webp" alt="" width="1024" height="1438" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-grass" data-fg-in="up">
-      <img src="assets/foreground/png/tall-grass.webp" alt="" width="1717" height="916" loading="lazy" decoding="async">
-    </span>
-  </div>
   <div class="sec-head" data-rv="fade">
-    <span class="k"><b>01</b> — The Sanmon</span><span class="rule"></span><span class="k jp">山門</span>
+    <span class="k"><b>01</b> — Studio</span><span class="rule"></span><span class="k">305</span>
   </div>
   <div class="gate-grid">
-    <h2 class="display h-sec" data-rv="up">Charred cypress, worn stone, one gate left open.</h2>
+    <h2 class="display h-sec" data-rv="up">Visual design and technical development, brought together.</h2>
     <div class="gate-copy">
-      <p class="lead" data-rv="up">Kage begins where the city stops: a mountain gate of cedar burned black,
-        standing in its own weather. The soot is not decoration. It is how a board is taught to survive a
-        hundred rainy seasons, and the first thing this place asks you to understand.</p>
-      <p class="body" data-rv="up">Climb the worn steps and the worship hall lifts out of the mist, its paper
-        screens lit from inside like a lantern the size of a house. Above the eaves a vermilion moon holds
-        its place, patient, half hidden. Nothing here is in a hurry. Neither, for the next ninety minutes,
-        are you.</p>
+      <p class="lead" data-rv="up">Most work stops at the handoff: a design that was never built, or a build
+        that was never designed. I do both ends, so nothing is lost in the gap between them — the visual
+        intent survives all the way into production code.</p>
+      <p class="body" data-rv="up">That means end-to-end web experiences that pair strong visual design with
+        clean, scalable development, and a process that treats a site as a growth tool rather than a
+        delivery. Success is built on vision, strategy and collaboration. This page is the argument: every
+        surface below is generated in the browser at load, with no model files and no images behind
+        the scene.</p>
       <a class="arrowlink" href="#pathways" data-rv="fade" data-cursor>
-        <span>Cross the threshold</span>
+        <span>See recent work</span>
         <span class="ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
       </a>
     </div>
   </div>
   <div class="gate-stats" data-rv="up">
-    <div><b>05</b><span>Chapters</span></div>
-    <div><b>92</b><span>Minutes</span></div>
-    <div><b>1611</b><span>Hall raised</span></div>
-    <div><b>∞</b><span>Stillness</span></div>
+    <div><b>10</b><span>Years</span></div>
+    <div><b>06</b><span>Client brands</span></div>
+    <div><b>04</b><span>Disciplines</span></div>
+    <div><b>LA</b><span>Los Angeles</span></div>
   </div>
 </section>
 
 <!-- ============================================================ chapter II -->
 <section class="sec" id="pathways" data-cam="2">
-  <!-- foreground: the garden frames the mosaic from the sides and the two lower corners -->
-  <div class="fg" data-fg="pathways" aria-hidden="true">
-    <span class="fg-el fg-sakura fg-el--sway" data-fg-in="left">
-      <img src="assets/foreground/png/sakura-branch.webp" alt="" width="1536" height="1024" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-leaves fg-el--sway" data-fg-in="right">
-      <img src="assets/foreground/png/maple-leaves.webp" alt="" width="1536" height="1024" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-lantern" data-fg-in="up">
-      <img src="assets/foreground/png/stone-lantern.webp" alt="" width="1024" height="1499" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-bush" data-fg-in="up">
-      <img src="assets/foreground/png/garden-bush.webp" alt="" width="1717" height="876" loading="lazy" decoding="async">
-    </span>
-  </div>
   <div class="sec-head" data-rv="fade">
-    <span class="k"><b>02</b> — Still Gardens</span><span class="rule"></span><span class="k jp">庭園</span>
+    <span class="k"><b>02</b> — Recent Work</span><span class="rule"></span><span class="k">03</span>
   </div>
   <div class="cards" id="cards">
-    <article class="card" data-rv="up" data-view="0" data-cursor>
+    <a class="card" href="https://autodx.io/" target="_blank" rel="noopener" aria-label="AutoDex — open the live app" data-rv="up" data-view="0" data-cursor>
       <div class="card-fr" data-frame>
                 <span class="card-ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
         <i class="glow" style="--gx:80.2%; --gy:23.9%; --gr:22%; --gt:6.1s; --gt2:9.7s; --gc1:rgba(255,142,108,.50); --gc2:rgba(212,56,38,.24)"></i>
-        <div class="card-lab"><b>Approach</b><span class="jp">参道</span></div>
+        <div class="card-lab"><b>AutoDex</b><span>Personal project</span></div>
       </div>
-      <div class="card-meta"><span>The long climb</span><span>01 / 03</span></div>
-    </article>
-    <article class="card" data-rv="up" data-view="1" data-cursor>
+      <div class="card-meta"><span>Car database, API, profiles</span><span>01 / 03</span></div>
+    </a>
+    <a class="card" href="https://www.gundrymd.com" target="_blank" rel="noopener" aria-label="Gundry MD — open the live site" data-rv="up" data-view="1" data-cursor>
       <div class="card-fr" data-frame>
                 <span class="card-ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
         <i class="glow glow--flame" style="--gx:70.5%; --gy:47.2%; --gr:14%; --gt:3.7s; --gt2:5.3s; --gc1:rgba(255,198,124,.62); --gc2:rgba(226,118,40,.30)"></i>
-        <div class="card-lab"><b>Lanterns</b><span class="jp">灯籠</span></div>
+        <div class="card-lab"><b>Gundry MD</b><span>E-commerce</span></div>
       </div>
-      <div class="card-meta"><span>Lantern court</span><span>02 / 03</span></div>
-    </article>
-    <article class="card" data-rv="up" data-view="2" data-cursor>
+      <div class="card-meta"><span>Figma to Builder.io, at traffic</span><span>02 / 03</span></div>
+    </a>
+    <a class="card" href="#top" aria-label="Monolith — you are looking at it" data-rv="up" data-view="2" data-cursor>
       <div class="card-fr" data-frame>
                 <span class="card-ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
         <i class="glow" style="--gx:48.0%; --gy:16.8%; --gr:20%; --gt:7.3s; --gt2:11.2s; --gc1:rgba(255,138,104,.52); --gc2:rgba(208,54,36,.24)"></i>
-        <div class="card-lab"><b>Moonwater</b><span class="jp">月影</span></div>
+        <div class="card-lab"><b>Monolith</b><span>WebGL</span></div>
       </div>
-      <div class="card-meta"><span>The wet court</span><span>03 / 03</span></div>
-    </article>
+      <div class="card-meta"><span>This page — procedural Three.js</span><span>03 / 03</span></div>
+    </a>
   </div>
 </section>
 
 <!-- ============================================================ chapter III -->
 <section class="sec" id="lessons" data-cam="3">
-  <!-- foreground: a low periphery for the atlas — wall fragment, basalt, one stand of grass -->
-  <div class="fg" data-fg="lessons" aria-hidden="true">
-    <span class="fg-el fg-wall fg-el--flip" data-fg-in="right">
-      <img src="assets/foreground/png/temple-wall.webp" alt="" width="1536" height="884" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-stones" data-fg-in="up">
-      <img src="assets/foreground/png/basalt-stones.webp" alt="" width="1536" height="996" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-grass" data-fg-in="up">
-      <img src="assets/foreground/png/tall-grass.webp" alt="" width="1717" height="916" loading="lazy" decoding="async">
-    </span>
-  </div>
   <div class="sec-head" data-rv="fade">
-    <span class="k"><b>03</b> — Sacred Craft</span><span class="rule"></span><span class="k jp">手業</span>
+    <span class="k"><b>03</b> — Services</span><span class="rule"></span><span class="k">04</span>
   </div>
   <div class="cur-head">
-    <h2 class="display h-sec" data-rv="up">Five chapters. Ninety minutes. One quiet mind.</h2>
-    <p class="body-lg" data-rv="up">Each chapter is a walk, not a lecture. You arrive at the gate, climb the
-      steps, sit with the lantern, and leave with one thing worth keeping.</p>
+    <h2 class="display h-sec" data-rv="up">Four disciplines. One person accountable.</h2>
+    <p class="body-lg" data-rv="up">Design and engineering are not a handoff here. They are the same job,
+      taken from first concept to measured result.</p>
   </div>
   <div class="cur" id="cur">
     <div class="les" data-les="0" data-cursor>
       <span class="k">01</span>
-      <h3>The Hidden Gate<em class="jp">山門</em></h3>
-      <p>Why a gate is a sentence, and what you agree to when you walk under one.</p>
-      <span class="t">14 min</span><i class="bar"></i>
+      <h3>Web Design and Development</h3>
+      <p>End-to-end web experiences that combine strong visual design with clean, scalable development.</p>
+      <span class="t">Build</span><i class="bar"></i>
     </div>
     <div class="les" data-les="1" data-cursor>
       <span class="k">02</span>
-      <h3>Borrowed Scenery<em class="jp">借景</em></h3>
-      <p>Shakkei: composing with a mountain you will never own.</p>
-      <span class="t">18 min</span><i class="bar"></i>
+      <h3>Visual Design &amp; UI/UX</h3>
+      <p>Intuitive, visually compelling interfaces that balance aesthetics, usability and performance.</p>
+      <span class="t">Design</span><i class="bar"></i>
     </div>
     <div class="les" data-les="2" data-cursor>
       <span class="k">03</span>
-      <h3>Charred Cypress<em class="jp">焼杉</em></h3>
-      <p>Yakisugi: burning a board black so the weather will let it live.</p>
-      <span class="t">21 min</span><i class="bar"></i>
+      <h3>A/B Testing and Performance</h3>
+      <p>Websites as growth tools, using data and experimentation to continuously improve the experience.</p>
+      <span class="t">Growth</span><i class="bar"></i>
     </div>
     <div class="les" data-les="3" data-cursor>
       <span class="k">04</span>
-      <h3>Lantern Light<em class="jp">灯籠</em></h3>
-      <p>How a single ember decides the scale of everything around it.</p>
-      <span class="t">17 min</span><i class="bar"></i>
-    </div>
-    <div class="les" data-les="4" data-cursor>
-      <span class="k">05</span>
-      <h3>The Vermilion Moon<em class="jp">朱月</em></h3>
-      <p>Why the moon burns red over the valley, and what the garden does with it.</p>
-      <span class="t">22 min</span><i class="bar"></i>
+      <h3>Collaboration &amp; Strategy</h3>
+      <p>Cross-functional alignment of design, technical execution and business goals.</p>
+      <span class="t">Strategy</span><i class="bar"></i>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ chapter IV -->
 <section class="sec fin" id="eternity" data-cam="4">
-  <!-- foreground: the closing horizon: hill, ruins, grass, and the last branch -->
-  <div class="fg" data-fg="eternity" aria-hidden="true">
-    <span class="fg-el fg-hill" data-fg-in="up">
-      <img src="assets/foreground/png/hill.webp" alt="" width="1774" height="887" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-ruins" data-fg-in="left">
-      <img src="assets/foreground/png/shrine-ruins.webp" alt="" width="1536" height="1001" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-grass" data-fg-in="up">
-      <img src="assets/foreground/png/tall-grass.webp" alt="" width="1717" height="916" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-sakura" data-fg-in="left">
-      <img src="assets/foreground/png/sakura-branch.webp" alt="" width="1536" height="1024" loading="lazy" decoding="async">
-    </span>
-  </div>
-  <div class="eyebrow" data-rv="fade">Chapter 04 — Afterlight</div>
-  <h2 class="display" data-rv="up">Afterlight</h2>
-  <p class="body-lg" data-rv="up">The gate does not close behind you. Take the walk whenever the noise
-    gets loud — it is always the same path, and never the same light.</p>
-  <a class="cta" href="#top" data-rv="fade" data-cursor>
-    <i></i><span>Begin the walk</span>
+  <div class="eyebrow" data-rv="fade">04 — Contact</div>
+  <h2 class="display" data-rv="up">Let's build</h2>
+  <p class="body-lg" data-rv="up">If you have a project that needs design and engineering held by the same
+    pair of hands, I would like to hear about it. Based in Los Angeles, working anywhere.</p>
+  <a class="cta" href="mailto:lova@threeohfivestudios.com" data-rv="fade" data-cursor>
+    <i></i><span>Start a project</span>
     <svg viewBox="0 0 14 14" fill="none" width="13" height="13"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg>
   </a>
 </section>
 
 <!-- ============================================================ footer -->
 <footer class="foot" data-cam="5">
-  <!-- foreground: one planting along the lower edge of the colophon -->
-  <div class="fg" data-fg="foot" aria-hidden="true">
-    <span class="fg-el fg-bush" data-fg-in="up">
-      <img src="assets/foreground/png/garden-bush.webp" alt="" width="1717" height="876" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-grass" data-fg-in="up">
-      <img src="assets/foreground/png/tall-grass.webp" alt="" width="1717" height="916" loading="lazy" decoding="async">
-    </span>
-    <span class="fg-el fg-stones" data-fg-in="up">
-      <img src="assets/foreground/png/basalt-stones.webp" alt="" width="1536" height="996" loading="lazy" decoding="async">
-    </span>
-  </div>
   <div class="foot-grid">
     <div class="foot-brand">
       <svg viewBox="0 0 44 44" fill="none" width="34" height="34" aria-hidden="true">
-        <circle cx="22" cy="25" r="8.6" fill="#e0231c" fill-opacity=".9"/>
-        <path d="M5 13h34M9 18.4h26M22 8.5v27" stroke="#dfe7e0" stroke-width="1.5"/>
+        <rect x="13" y="5" width="18" height="34" fill="#dfe7e0" fill-opacity=".07"/>
+        <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
+        <rect x="13" y="20" width="18" height="3.6" fill="#e4606c"/>
       </svg>
-      <p>A five-chapter night walk through a Kyoto mountain temple. Three illustrated garden field notes
-        sit inside a live Three.js sanctuary.</p>
+      <p>The portfolio of Lova Rakoto — web developer and designer in Los Angeles. Every surface in the
+        scene behind this page is generated in the browser at load.</p>
     </div>
-    <div><h4>Chapters</h4><ul>
-      <li><a href="#gate" data-cursor>The Sanmon</a></li>
-      <li><a href="#pathways" data-cursor>Still Gardens</a></li>
-      <li><a href="#lessons" data-cursor>Sacred Craft</a></li>
-      <li><a href="#eternity" data-cursor>Afterlight</a></li>
+    <div><h4>Sections</h4><ul>
+      <li><a href="#gate" data-cursor>Studio</a></li>
+      <li><a href="#pathways" data-cursor>Recent work</a></li>
+      <li><a href="#lessons" data-cursor>Services</a></li>
+      <li><a href="#eternity" data-cursor>Contact</a></li>
     </ul></div>
-    <div><h4>Practice</h4><ul>
-      <li><a href="#lessons" data-cursor>Borrowed scenery</a></li>
-      <li><a href="#lessons" data-cursor>Lantern light</a></li>
-      <li><a href="#lessons" data-cursor>Charred cypress</a></li>
-      <li><a href="#lessons" data-cursor>Raked gravel</a></li>
+    <div><h4>Services</h4><ul>
+      <li><a href="#lessons" data-cursor>Web development</a></li>
+      <li><a href="#lessons" data-cursor>Visual &amp; UI/UX</a></li>
+      <li><a href="#lessons" data-cursor>A/B testing</a></li>
+      <li><a href="#lessons" data-cursor>Strategy</a></li>
     </ul></div>
     <div><h4>Elsewhere</h4><ul>
-      <li><a href="#top" data-cursor>Journal</a></li>
-      <li><a href="#top" data-cursor>Field notes</a></li>
-      <li><a href="#top" data-cursor>Colophon</a></li>
+      <li><a href="https://threeohfivestudios.com/" target="_blank" rel="noopener" data-cursor>threeohfivestudios.com</a></li>
+      <li><a href="https://www.linkedin.com/in/lovarakoto/" target="_blank" rel="noopener" data-cursor>LinkedIn</a></li>
+      <li><a href="https://vimeo.com/threeohfivestudios" target="_blank" rel="noopener" data-cursor>Vimeo</a></li>
     </ul></div>
   </div>
   <div class="foot-base">
-    <span>© 2026 Kage — Kage no Michi</span>
-    <span class="jp">静けさは一つの技である</span>
-    <span>WebGL · Onest · Kyoto</span>
+    <span>© 2026 ThreeOhFive Studios — Lova Rakoto</span>
+    <span>Vision, strategy, collaboration</span>
+    <span>WebGL · Onest · Los Angeles</span>
   </div>
 </footer>
 
 </div><!-- /.page -->
 
-<!-- The near plane of the active chapter is parked here rather than inside its
-     section: .page is a stacking context at z-index 10, so nothing living in it
-     can rise past the nav. #fg-sky sits above the whole layout instead. -->
-<div id="fg-sky" aria-hidden="true"></div>
 
 <div class="rail" id="rail"></div>
 
 <script src="assets/three.min.js"></script>
 <script>
 /* =====================================================================
-   KAGE — a live Kyoto mountain temple, after dark.
+   305 — the ThreeOhFive Studios portfolio, over a live concrete slab.
    Everything on this page is generated at runtime: no photographs,
    no video, no external assets beyond three.js and two subset fonts.
    ===================================================================== */
@@ -1224,7 +1002,6 @@ const sat    = v => clamp(v, 0, 1);
 const lerp   = (a, b, t) => a + (b - a) * t;
 const smooth = (e0, e1, x) => { const t = sat((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
 const easeOut= t => 1 - Math.pow(1 - t, 3);
-const easeIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const TAU    = Math.PI * 2;
 /* frame-rate independent damping */
 const damp   = (cur, to, rate, dt) => lerp(cur, to, 1 - Math.exp(-rate * dt));
@@ -1485,144 +1262,6 @@ function texFloorRough() {
   return r;
 }
 
-/* --------------------------------------------------- temple timber · cedar
-   Boards, not a noise field. Three things make sawn wood read as wood and
-   none of them is fbm:
-
-     1 · ring geometry. A plank is a flat cut through a round log, so the
-         rings meet the face as two branches either side of the pith, and
-         wherever the cut runs shallow across a ring the branches close into
-         the cathedral arch everyone recognises. Solving the circle for it —
-         x = pith ± √(r² − d(y)²), with the cut depth d wandering down the
-         board — hands over the arches for free. Drawn strokes only ever give
-         stripes, which is what the first pass here did, and stripes on a
-         column read as brushed metal.
-     2 · the boards themselves. Joints, and a different tone on either side of
-         one. A wall with no joint in it is a wall of plastic.
-     3 · pores, so the face has tooth rather than a painted finish.
-
-   Broad fbm overlays used to do the work here and they are exactly why the
-   hall looked like it was standing under a cloud: at this camera distance a
-   noise blotch is dirt, and dirt is not grain. Everything below is structure.
-
-   boards:0 gives a single timber for the columns, sills and rails, which are
-   each one stick of wood and must not carry a joint. */
-function texWood(seed, opt) {
-  const o = opt || {}, W = 512, H = 512;
-  const c = cvs(W, H), x = c.getContext('2d');
-  const h = cvs(W, H), hx = h.getContext('2d');
-  const r = cvs(W, H), rx = r.getContext('2d');
-  const rnd = mulberry32(seed || 3);
-  const base = o.base || [30, 23, 19];
-  x.fillStyle = hex(base[0], base[1], base[2]); x.fillRect(0, 0, W, H);
-  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
-  rx.fillStyle = o.rough || '#d6d6d6'; rx.fillRect(0, 0, W, H);
-
-  /* board layout — widths jittered, then normalised so the run closes on the
-     tile edge and the map still wraps */
-  const nb = o.boards === undefined ? 7 : o.boards;
-  const cuts = [0];
-  if (nb > 0) {
-    const ws = []; let sum = 0;
-    for (let i = 0; i < nb; i++) { const v = .70 + rnd() * .60; ws.push(v); sum += v; }
-    let acc = 0;
-    ws.forEach(v => { acc += v / sum * W; cuts.push(acc); });
-  } else cuts.push(W);
-
-  const stroke = (pts, ctx, style, w) => {
-    if (pts.length < 2) return;
-    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.strokeStyle = style; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke();
-  };
-
-  for (let b = 0; b < cuts.length - 1; b++) {
-    const x0 = cuts[b], x1 = cuts[b + 1], bw = x1 - x0;
-    /* every board came off a different part of the log */
-    const tone = .80 + rnd() * .44;
-    const pith = x0 + bw * (rnd() * 2.8 - .9);        /* usually outside it */
-    const d0 = bw * (.12 + rnd() * 1.7);              /* how deep the cut ran */
-    const amp = bw * (.10 + rnd() * .40);
-    const per = 1 + ((rnd() * 2) | 0), ph = rnd() * TAU;
-    const dAt = y => d0 + Math.sin(y / H * TAU * per + ph) * amp;
-    const gap = 2.4 + rnd() * 5.0;                    /* ring spacing */
-
-    [x, hx, rx].forEach(d => { d.save(); d.beginPath(); d.rect(x0, 0, bw, H); d.clip(); });
-    x.fillStyle = hex(base[0] * tone, base[1] * tone, base[2] * tone);
-    x.fillRect(x0, 0, bw, H);
-
-    for (let k = 1; k * gap < bw * 3.4 + d0 + amp; k++) {
-      const rr = k * gap * (.88 + rnd() * .24);
-      const dark = .42 + rnd() * .38, wide = .8 + rnd() * 1.9;
-      for (const side of [-1, 1]) {
-        let pts = [];
-        const flush = () => {
-          /* latewood: a narrow dark band, with the pale earlywood just inside */
-          stroke(pts, x, 'rgba(0,0,0,' + dark.toFixed(2) + ')', wide);
-          stroke(pts, hx, 'rgba(0,0,0,' + (dark * .8).toFixed(2) + ')', wide);
-          stroke(pts.map(q => [q[0] + side * (wide + .6), q[1]]), x,
-                 'rgba(150,120,96,' + (dark * .30).toFixed(2) + ')', wide * .7);
-          pts = [];
-        };
-        for (let y = -3; y <= H + 3; y += 3) {
-          const d = dAt(y), q = rr * rr - d * d;
-          if (q <= 0) { flush(); continue; }
-          pts.push([pith + side * Math.sqrt(q), y]);
-        }
-        flush();
-      }
-    }
-    /* pores — the open tooth of cedar, elongated along the grain */
-    for (let i = 0; i < 220; i++) {
-      const px2 = x0 + rnd() * bw, py = rnd() * H, ln = 1.5 + rnd() * 6;
-      x.fillStyle = 'rgba(0,0,0,' + (.10 + rnd() * .22) + ')';
-      x.fillRect(px2, py, .7 + rnd() * .7, ln);
-      hx.fillStyle = 'rgba(0,0,0,.22)'; hx.fillRect(px2, py, .8, ln);
-    }
-    /* the odd knot, where a branch left the trunk */
-    if (rnd() > .55) {
-      const kx = x0 + bw * (.2 + rnd() * .6), ky = rnd() * H, kr = 2.5 + rnd() * 5;
-      for (let i = 5; i >= 1; i--) {
-        const t = i / 5;
-        x.strokeStyle = 'rgba(0,0,0,' + (.5 - t * .25).toFixed(2) + ')'; x.lineWidth = 1.1;
-        x.beginPath(); x.ellipse(kx, ky, kr * t * 1.5, kr * t * 2.4, 0, 0, TAU); x.stroke();
-        hx.strokeStyle = 'rgba(0,0,0,.30)'; hx.lineWidth = 1.1;
-        hx.beginPath(); hx.ellipse(kx, ky, kr * t * 1.5, kr * t * 2.4, 0, 0, TAU); hx.stroke();
-      }
-    }
-    /* checking: the splits a dried board opens, always along the grain */
-    for (let i = 0; i < 5; i++) {
-      const sx = x0 + rnd() * bw, sy = rnd() * H, ln = 20 + rnd() * 120;
-      const pts = [];
-      for (let y = sy; y < sy + ln; y += 6) pts.push([sx + Math.sin(y * .07) * 1.4, y]);
-      stroke(pts, x, 'rgba(0,0,0,.62)', .7 + rnd() * 1.2);
-      stroke(pts, hx, 'rgba(0,0,0,.55)', .7 + rnd() * 1.2);
-    }
-    [x, hx, rx].forEach(d => d.restore());
-
-    /* the joint, and the board edge that catches light beside it */
-    if (nb > 0) {
-      x.fillStyle = 'rgba(0,0,0,.80)'; x.fillRect(x1 - 1.1, 0, 2.2, H);
-      x.fillStyle = 'rgba(158,130,106,.14)'; x.fillRect(x1 + 1.1, 0, 1.1, H);
-      hx.fillStyle = 'rgba(0,0,0,.85)'; hx.fillRect(x1 - 1.3, 0, 2.6, H);
-      hx.fillStyle = 'rgba(255,255,255,.35)'; hx.fillRect(x1 + 1.3, 0, 1.6, H);
-      rx.fillStyle = 'rgba(255,255,255,.5)'; rx.fillRect(x1 - 1.6, 0, 3.2, H);
-    }
-  }
-
-  /* soot, running down the boards rather than pooling in clouds — this is the
-     one weathering pass, and it follows the grain because water does */
-  for (let i = 0; i < 90; i++) {
-    const sx = rnd() * W, top = rnd() * H, ln = H * (.15 + rnd() * .5);
-    const g = x.createLinearGradient(0, top, 0, top + ln);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(.3, 'rgba(0,0,0,' + (.10 + rnd() * .16) + ')');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    x.fillStyle = g; x.fillRect(sx, top, .8 + rnd() * 3.4, ln);
-  }
-  return { map: c, normal: normalFromHeight(h, o.relief || 2.4), rough: r };
-}
-
 /* ------------------------------------------------------------ cut granite
    The lanterns are carved out of one block, so this is a monolith face and
    not coursed masonry: no joints, no bond pattern. What sells it instead is
@@ -1716,106 +1355,6 @@ function texStone(seed, opt) {
   }
   x.putImageData(im, 0, 0); rx.putImageData(rm, 0, 0);
   return { map: c, normal: normalFromHeight(h, o.relief || 3.2), rough: r };
-}
-
-/* ------------------------------------------- weathered vermilion · the gate
-   Not a red cylinder. The gate is a painted timber that has stood out in the
-   weather: the lacquer has crazed into a fine net, flaked off the edges back to
-   the black wood underneath, and run in streaks where the rain came down it.
-   So the wood is drawn first and the paint is laid over it at less than full
-   coverage — the grain has to read *through* the red, which is what stops it
-   looking like plastic. */
-function texLacquer() {
-  const W = 512, H = 512;
-  const wood = texWood(131, { base: [34, 22, 17], boards: 0 });
-  const c = cvs(W, H), x = c.getContext('2d');
-  const h = cvs(W, H), hx = h.getContext('2d');
-  const r = cvs(W, H), rx = r.getContext('2d');
-  const rnd = mulberry32(5);
-  x.drawImage(wood.map, 0, 0);
-  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
-  rx.fillStyle = '#8c8c8c'; rx.fillRect(0, 0, W, H);   /* lacquer half-holds a sheen */
-
-  /* the coat */
-  x.globalAlpha = .80; x.fillStyle = '#7c1610'; x.fillRect(0, 0, W, H);
-  x.globalAlpha = 1;
-  /* pull the grain back through it */
-  x.globalCompositeOperation = 'multiply'; x.globalAlpha = .42;
-  x.drawImage(wood.map, 0, 0);
-  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  /* uneven pigment: the brush left it thicker in places */
-  x.globalCompositeOperation = 'overlay'; x.globalAlpha = .5;
-  x.drawImage(fbmCanvas(W, H, 313, 5, 3, 1), 0, 0);
-  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-
-  /* craquelure — a wandering net of hairline cracks in the paint film */
-  for (let i = 0; i < 190; i++) {
-    let px = rnd() * W, py = rnd() * H, a = rnd() * TAU;
-    x.strokeStyle = 'rgba(24,8,6,' + (.28 + rnd() * .4) + ')';
-    hx.strokeStyle = 'rgba(0,0,0,.42)';
-    x.lineWidth = hx.lineWidth = .5 + rnd() * .7;
-    x.beginPath(); hx.beginPath(); x.moveTo(px, py); hx.moveTo(px, py);
-    for (let k = 0; k < 5 + rnd() * 9; k++) {
-      a += (rnd() - .5) * 1.5; px += Math.cos(a) * (5 + rnd() * 9); py += Math.sin(a) * (5 + rnd() * 9);
-      x.lineTo(px, py); hx.lineTo(px, py);
-    }
-    x.stroke(); hx.stroke();
-  }
-
-  /* flaking: islands where the coat has lifted, showing the burnt wood, each
-     with the pale shoulder of paint still standing at its edge */
-  for (let i = 0; i < 40; i++) {
-    const px = rnd() * W, py = rnd() * H, rad = 2 + rnd() * rnd() * 17;
-    const pts = [];
-    for (let k = 0; k < 9; k++) {
-      const a = k / 9 * TAU, rr = rad * (.55 + rnd() * .75);
-      pts.push([px + Math.cos(a) * rr, py + Math.sin(a) * rr]);
-    }
-    const path = d => {
-      d.beginPath(); d.moveTo(pts[0][0], pts[0][1]);
-      for (let k = 1; k < pts.length; k++) {
-        const p = pts[k], q = pts[(k + 1) % pts.length];
-        d.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2);
-      }
-      d.closePath();
-    };
-    x.save(); path(x); x.clip(); x.drawImage(wood.map, 0, 0);
-    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(0, 0, W, H); x.restore();
-    path(x); x.strokeStyle = 'rgba(196,110,76,.30)'; x.lineWidth = 1.2; x.stroke();
-    path(hx); hx.fillStyle = 'rgba(0,0,0,.34)'; hx.fill();
-    hx.strokeStyle = 'rgba(255,255,255,.30)'; hx.lineWidth = 1.6; hx.stroke();
-    path(rx); rx.fillStyle = 'rgba(240,240,240,.75)'; rx.fill();   /* bare wood, matte */
-  }
-
-  /* rain running down the column */
-  for (let i = 0; i < 120; i++) {
-    const sx = rnd() * W, w = .6 + rnd() * 2.6, top = rnd() * H, len = H * (.2 + rnd() * .6);
-    const g = x.createLinearGradient(0, top, 0, top + len);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(.3, rnd() > .5 ? 'rgba(12,4,4,.24)' : 'rgba(210,150,120,.05)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    x.fillStyle = g; x.fillRect(sx, top, w, len);
-  }
-  rx.globalAlpha = .6; rx.globalCompositeOperation = 'multiply';
-  rx.drawImage(fbmCanvas(W, H, 401, 4, 6, 1.2), 0, 0);
-  rx.globalAlpha = 1; rx.globalCompositeOperation = 'source-over';
-  return { map: c, normal: normalFromHeight(h, 2.2), rough: r };
-}
-
-/* the shoji screen the sun burns through */
-function texShoji() {
-  const W = 1024, H = 768, c = cvs(W, H), x = c.getContext('2d');
-  x.clearRect(0, 0, W, H);
-  x.fillStyle = 'rgba(228,222,206,.055)'; x.fillRect(0, 0, W, H);
-  x.strokeStyle = 'rgba(10,8,7,.88)';
-  const cols = 12, rows = 9;
-  x.lineWidth = 5;
-  for (let i = 1; i < cols; i++) { x.beginPath(); x.moveTo(W / cols * i, 0); x.lineTo(W / cols * i, H); x.stroke(); }
-  for (let j = 1; j < rows; j++) { x.beginPath(); x.moveTo(0, H / rows * j); x.lineTo(W, H / rows * j); x.stroke(); }
-  x.lineWidth = 13; x.strokeStyle = 'rgba(8,6,5,.95)';
-  x.strokeRect(0, 0, W, H);
-  x.beginPath(); x.moveTo(W / 2, 0); x.lineTo(W / 2, H); x.stroke();
-  return c;
 }
 
 /* one maple leaf, white on transparent — tinted per instance */
@@ -1975,45 +1514,6 @@ function texRidge() {
     x.closePath(); x.fill();
   }
   return c;
-}
-
-/* glazed roof tile — half-round caps running down the slope, weathered */
-function texRoof() {
-  const W = 512, H = 512, c = cvs(W, H), x = c.getContext('2d');
-  const h = cvs(W, H), hx = h.getContext('2d');
-  x.fillStyle = '#151c20'; x.fillRect(0, 0, W, H);
-  hx.fillStyle = '#606060'; hx.fillRect(0, 0, W, H);
-  const ribs = 14, s = W / ribs;
-  for (let i = 0; i < ribs; i++) {
-    const g = x.createLinearGradient(i * s, 0, (i + 1) * s, 0);
-    g.addColorStop(0, 'rgba(0,0,0,.62)');  g.addColorStop(.30, 'rgba(148,178,192,.13)');
-    g.addColorStop(.66, 'rgba(84,110,124,.05)'); g.addColorStop(1, 'rgba(0,0,0,.62)');
-    x.fillStyle = g; x.fillRect(i * s, 0, s, H);
-    x.fillStyle = 'rgba(0,0,0,.50)'; x.fillRect(i * s - 3, 0, 6, H);
-    x.fillStyle = 'rgba(168,196,208,.09)'; x.fillRect(i * s - 1.2, 0, 1.6, H);
-    /* the half-round cap itself, as height: the valley between two tiles is
-       the only reason a tiled roof reads as tiled at this distance */
-    const hg = hx.createLinearGradient(i * s, 0, (i + 1) * s, 0);
-    hg.addColorStop(0, '#2c2c2c'); hg.addColorStop(.5, '#eaeaea'); hg.addColorStop(1, '#2c2c2c');
-    hx.fillStyle = hg; hx.fillRect(i * s, 0, s, H);
-  }
-  /* the courses running down the slope — each tile overlaps the one below */
-  const rnd = mulberry32(211);
-  for (let y = 0; y < H; y += H / 9) {
-    x.fillStyle = 'rgba(0,0,0,.34)'; x.fillRect(0, y, W, 3.5);
-    hx.fillStyle = 'rgba(0,0,0,.55)'; hx.fillRect(0, y, W, 3.5);
-    hx.fillStyle = 'rgba(255,255,255,.28)'; hx.fillRect(0, y + 3.5, W, 2);
-    for (let i = 0; i < 26; i++) {                     /* chipped, mossed edges */
-      x.fillStyle = rnd() > .5 ? 'rgba(0,0,0,.30)' : 'rgba(96,116,92,.10)';
-      x.fillRect(rnd() * W, y + 1, 2 + rnd() * 9, 2 + rnd() * 3);
-    }
-  }
-  x.globalCompositeOperation = 'overlay'; x.globalAlpha = .46;
-  x.drawImage(fbmCanvas(256, 256, 211, 5, 3, 1), 0, 0, W, H);
-  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  hx.globalAlpha = .3; hx.drawImage(fbmCanvas(256, 256, 213, 4, 16, 1.2), 0, 0, W, H);
-  hx.globalAlpha = 1;
-  return { map: c, normal: normalFromHeight(h, 2.2) };
 }
 
 /* -------------------------------------------------------- the blood moon
@@ -2527,113 +2027,6 @@ function surface(t, rep, o) {
    canvases and six normal-map passes at load. */
 const LIB = {};
 const lib = (k, f) => (LIB[k] || (LIB[k] = f()));
-/* the walls are boarded; a column, a sill and a rail are each one stick of
-   wood and must not carry a joint down the middle of them */
-const wallWood = () => lib('wallWood', () => texWood(3, { boards: 7 }));
-const postWood = () => lib('postWood', () => texWood(29, { boards: 0 }));
-
-/* sweep a polygonal cross-section along a path — kasagi, shimaki, beams */
-function sweepPoly(points, profile) {
-  const segs = points.length, np = profile.length;
-  const pos = [], nor = [], uv = [], idx = [];
-  const T = new THREE.Vector3(), N = new THREE.Vector3(), B = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-  for (let i = 0; i < segs; i++) {
-    const p = points[i], a = points[Math.max(0, i - 1)], b = points[Math.min(segs - 1, i + 1)];
-    T.subVectors(b, a).normalize();
-    B.crossVectors(T, up).normalize();
-    N.crossVectors(B, T).normalize();
-    for (let j = 0; j < np; j++) {
-      const u = profile[j][0], v = profile[j][1], l = Math.hypot(u, v) || 1;
-      pos.push(p.x + B.x * u + N.x * v, p.y + B.y * u + N.y * v, p.z + B.z * u + N.z * v);
-      nor.push(B.x * u / l + N.x * v / l, B.y * u / l + N.y * v / l, B.z * u / l + N.z * v / l);
-      uv.push(j / np, i / (segs - 1));
-    }
-  }
-  for (let i = 0; i < segs - 1; i++) for (let j = 0; j < np; j++) {
-    const j2 = (j + 1) % np, a = i * np + j, b = i * np + j2, c = (i + 1) * np + j2, d = (i + 1) * np + j;
-    idx.push(a, b, c, a, c, d);
-  }
-  /* caps */
-  [0, segs - 1].forEach((ring, k) => {
-    const base = pos.length / 3, p = points[ring];
-    pos.push(p.x, p.y, p.z); nor.push(0, 0, k ? 1 : -1); uv.push(.5, .5);
-    for (let j = 0; j < np; j++) {
-      const a = ring * np + j, b = ring * np + (j + 1) % np;
-      k ? idx.push(base, a, b) : idx.push(base, b, a);
-    }
-  });
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setIndex(idx);
-  return g;
-}
-/* A temple roof. The height is a concave function of the Chebyshev distance
-   from the ridge out to the eave, and the last fifth of that run flares back
-   upward — that lift at the corners is the whole silhouette. Emitted solid:
-   a top shell, an underside shell, and a fascia stitching the two rims. */
-function roofGeo(A, B, R, Hr, thick, flare) {
-  const NX = 52, NZ = 34, FL = flare === undefined ? .30 : flare, e = 1e-3;
-  /* The lift has to be weighted toward the corners. Applied evenly along the
-     eave it produces a raised rim the whole way round and the roof reads as a
-     saucer; concentrated where the two runs meet, it reads as a temple. */
-  const hAt = (x, z) => {
-    const cx = Math.min(1, Math.abs(x) / A), cz = Math.min(1, Math.abs(z) / B);
-    const tx = Math.max(0, (Math.abs(x) - R) / Math.max(A - R, 1e-4));
-    const t = Math.min(1, Math.max(tx, cz));
-    return Hr * Math.pow(1 - t, 1.45)
-         + FL * Hr * smooth(.72, 1, t) * (.52 + .68 * Math.min(cx, cz));
-  };
-  const pos = [], nor = [], uv = [], idx = [];
-  const N = new THREE.Vector3();
-  const VPS = (NX + 1) * (NZ + 1);
-  for (let k = 0; k < 2; k++) {
-    for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NX; i++) {
-      const x = -A + 2 * A * i / NX, z = -B + 2 * B * j / NZ;
-      N.set(-(hAt(x + e, z) - hAt(x - e, z)) / (2 * e), 1,
-            -(hAt(x, z + e) - hAt(x, z - e)) / (2 * e)).normalize();
-      if (k) N.negate();
-      pos.push(x, hAt(x, z) - (k ? thick : 0), z);
-      nor.push(N.x, N.y, N.z);
-      /* one tile every seven metres: at half a metre the ribs land inside a
-         pixel at this range and the mip chain averages them to flat grey */
-      uv.push(x * .14, z * .14);
-    }
-    for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
-      const a = k * VPS + j * (NX + 1) + i, b = a + 1, c = a + NX + 2, d = a + NX + 1;
-      k ? idx.push(a, c, b, a, d, c) : idx.push(a, b, c, a, c, d);
-    }
-  }
-  /* fascia: its own ring of vertices so the eave edge keeps a sideways normal */
-  const per = [];
-  for (let i = 0; i <= NX; i++) per.push([i, 0]);
-  for (let j = 1; j <= NZ; j++) per.push([NX, j]);
-  for (let i = NX - 1; i >= 0; i--) per.push([i, NZ]);
-  for (let j = NZ - 1; j >= 1; j--) per.push([0, j]);
-  const base = pos.length / 3;
-  per.forEach(p => {
-    const x = -A + 2 * A * p[0] / NX, z = -B + 2 * B * p[1] / NZ;
-    const nx = p[0] === 0 ? -1 : (p[0] === NX ? 1 : 0);
-    const nz = p[1] === 0 ? -1 : (p[1] === NZ ? 1 : 0);
-    const l = Math.hypot(nx, nz) || 1;
-    const y = hAt(x, z);
-    pos.push(x, y, z, x, y - thick, z);
-    nor.push(nx / l, 0, nz / l, nx / l, 0, nz / l);
-    uv.push(0, 0, 0, 1);
-  });
-  for (let i = 0; i < per.length; i++) {
-    const a = base + i * 2, b = a + 1;
-    const c = base + ((i + 1) % per.length) * 2, d = c + 1;
-    idx.push(a, b, d, a, d, c);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setIndex(idx);
-  return g;
-}
 
 function mergeGeos(list) {
   let vN = 0, iN = 0;
@@ -2786,6 +2179,12 @@ const MONO = {
   inset:  1.30,   /* how far it stops short of each edge           */
   lean:  -0.026   /* radians off plumb — the head goes away        */
 };
+/* The slot's colour, as a ratio the brightness slider scales. Sampled off the
+   ThreeOhFive script mark (#e46060) and held warm: blue is kept just under
+   green, because matching them lands on pink and the slot has to read as a
+   light source rather than a tint. Both the material and the tuning panel's
+   live handler multiply through this, so the two can never drift apart. */
+const SLOT_RGB = [1.00, 0.42, 0.34];
 /* One pour, shared by the slab, the threshold, the bollards and the stones.
    Concrete is the whole scene now, and generating it per-object is six
    canvases and six normal-map passes for a surface nobody sees twice. */
@@ -2806,9 +2205,15 @@ function buildMonolith() {
      only place a hard, tight highlight belongs */
   const steel = new THREE.MeshStandardMaterial({ color: 0x2a3034, roughness: .18, metalness: .82, envMapIntensity: 2.2 });
 
-  /* the light in the slot — pushed well past white, because it is the only
-     thing in the frame the bloom has to bite on */
-  const lit = new THREE.MeshBasicMaterial({ color: hdr(TUNE.slotBright, TUNE.slotBright * .48, TUNE.slotBright * .20), fog: true, toneMapped: false });
+  /* The light in the slot — pushed well past white, because it is the only
+     thing in the frame the bloom has to bite on.
+     The ratio is the studio coral (#e46060) rather than the amber this was
+     first tuned to, which is what ties the brand into the scene without a
+     logo pasted over it. Blue is held just under green: matching them exactly
+     gives the sampled pink, and the slot has to stay a warm light source.
+     SLOT_RGB is shared with the tuning panel's live handler — split them and
+     the first drag of the slider snaps the colour back. */
+  const lit = new THREE.MeshBasicMaterial({ color: hdr(TUNE.slotBright * SLOT_RGB[0], TUNE.slotBright * SLOT_RGB[1], TUNE.slotBright * SLOT_RGB[2]), fog: true, toneMapped: false });
   WORLD.slot = lit; WORLD.paper = lit;
 
   const HW = MONO.w / 2, HD = MONO.d / 2;
@@ -3195,15 +2600,18 @@ function buildForeground() {
 /* --------------------------------------------------- the giant wordmark */
 const WORD_Z = 3.0;
 function buildWordmark() {
-  /* The word is set to the frame width, so a short word is a *taller* word.
-     Four letters at the old tracking put a 400-pixel cap height across the
-     scene; the letters are spaced out instead, which keeps the type edge to
-     edge while the caps come back down to the height of the headline block. */
-  const SZ = 320, TRACK = .40, PAD = 26;
+  /* The word is set to the frame width, so a short word is a *taller* word:
+     scale is frame width over ink width, and dropping a glyph shrinks the
+     divisor. Three digits carry noticeably less advance than the four letters
+     this was tuned for — digits are narrower than caps as well as fewer — so
+     the tracking absorbs the difference. It is what holds the cap height down
+     to roughly the headline block instead of letting 305 tower over the slab,
+     and wide-tracked numerals are the right register for the scene anyway. */
+  const SZ = 320, TRACK = 1.05, PAD = 26;
   const m = cvs(4, 4).getContext('2d');
   m.font = '600 ' + SZ + 'px Wordmark, sans-serif';
   m.textBaseline = 'alphabetic'; m.textAlign = 'left';
-  const word = 'KAGE', gl = [];
+  const word = '305', gl = [];
   let pen = 0, ascMax = 0, descMax = 0, xMin = 1e9, xMax = -1e9;
   for (const ch of word) {
     const t = m.measureText(ch);
@@ -4032,12 +3440,137 @@ function clothPlate(img, w, h) {
    pulled and replaced with a flat SVG — the cloth was still running and had
    simply stopped being visible.
 
-   So the plates are generated, with the tonal range the drape needs: a
-   concrete pour, shuttering lines, tie holes, and one warm bloom borrowed
-   from the slot so each panel has a light in it for the fabric to move
-   around. Placed differently per card, or three identical panels read as one
-   repeated texture. */
-function texCardPlate(seed, gx, gy) {
+   So the plates are generated: a concrete pour, shuttering lines, tie holes,
+   and one bloom borrowed from the slot so each panel has a light in it for the
+   fabric to move around.
+
+   Over that, each card carries an abstraction of its own project — a search
+   and a grid of vehicles, a shopfront, the slab itself. Not screenshots: a
+   photograph would be the one bitmap on a page whose whole argument is that
+   it has none, and it would also be the wrong picture, because a flat crop
+   held on a moving cloth reads as a poster of a website rather than the thing
+   itself. These are drawn at low alpha so the pour still comes through them,
+   which is what keeps the drape legible: the marks travel with the mesh while
+   the concrete underneath does the shading. */
+
+const CARD_INK  = 'rgba(223,231,224,';
+const CARD_CORAL= 'rgba(228,96,108,';
+
+/* the inset the artwork lives in, and its faint housing */
+function cardPanel(x, W, H) {
+  const P = 42, w = W - P * 2, h = H - P * 2;
+  x.fillStyle = 'rgba(8,11,15,.42)'; x.fillRect(P, P, w, h);
+  x.strokeStyle = CARD_INK + '.14)'; x.lineWidth = 1;
+  x.strokeRect(P + .5, P + .5, w - 1, h - 1);
+  return { P: P, w: w, h: h };
+}
+const cardBar = (x, bx, by, bw, bh, a) => {
+  x.fillStyle = CARD_INK + a + ')'; x.fillRect(bx, by, bw, bh);
+};
+
+/* ---- 01 · AutoDex — a search over a grid of vehicles */
+function cardArtAutodex(x, W, H) {
+  const { P, w, h } = cardPanel(x, W, H);
+  /* the search field, with the one coral mark on the card */
+  const sy = P + 22;
+  x.strokeStyle = CARD_INK + '.22)'; x.lineWidth = 1.4;
+  x.strokeRect(P + 20.5, sy + .5, w - 116, 26);
+  cardBar(x, P + 32, sy + 11, 78, 3.5, '.34');
+  x.fillStyle = CARD_CORAL + '.85)'; x.fillRect(P + w - 84, sy, 64, 27);
+
+  /* three vehicle tiles: a body line and two wheels is enough of a car */
+  const cols = 3, gap = 12, tw = (w - 40 - gap * (cols - 1)) / cols, th = 74;
+  for (let i = 0; i < cols; i++) {
+    const tx = P + 20 + i * (tw + gap), ty = sy + 46;
+    x.fillStyle = 'rgba(223,231,224,.045)'; x.fillRect(tx, ty, tw, th);
+    x.strokeStyle = CARD_INK + '.11)'; x.lineWidth = 1;
+    x.strokeRect(tx + .5, ty + .5, tw - 1, th - 1);
+    const cy = ty + th * .58, bw = tw * .62, bx = tx + (tw - bw) / 2;
+    x.strokeStyle = CARD_INK + (.40 - i * .07).toFixed(2) + ')'; x.lineWidth = 2;
+    x.beginPath();
+    x.moveTo(bx, cy);
+    x.lineTo(bx + bw * .16, cy - 11);
+    x.lineTo(bx + bw * .60, cy - 13);
+    x.lineTo(bx + bw * .86, cy - 3);
+    x.lineTo(bx + bw, cy);
+    x.stroke();
+    [.28, .76].forEach(f => {
+      x.beginPath(); x.arc(bx + bw * f, cy + 3, 4.6, 0, TAU); x.stroke();
+    });
+    cardBar(x, tx + 10, ty + th - 14, tw * .5, 3, '.20');
+  }
+  /* the rows below the fold of the grid */
+  for (let r = 0; r < 3; r++) {
+    const ry = sy + 134 + r * 16;
+    cardBar(x, P + 20, ry, w - 40, 1, '.10');
+    cardBar(x, P + 20, ry + 5, (w - 40) * (.42 - r * .07), 3, '.17');
+  }
+}
+
+/* ---- 02 · Gundry MD — a shopfront: banner, products, prices */
+function cardArtShop(x, W, H) {
+  const { P, w, h } = cardPanel(x, W, H);
+  /* the banner and its call to action */
+  const by = P + 18;
+  x.fillStyle = 'rgba(223,231,224,.06)'; x.fillRect(P + 18, by, w - 36, 58);
+  cardBar(x, P + 32, by + 16, w * .38, 6, '.36');
+  cardBar(x, P + 32, by + 30, w * .26, 3.5, '.18');
+  x.fillStyle = CARD_CORAL + '.88)'; x.fillRect(P + 32, by + 40, 62, 11);
+
+  /* four products — a bottle is a shoulder, a body and a cap */
+  const cols = 4, gap = 10, tw = (w - 36 - gap * (cols - 1)) / cols, ty = by + 74, th = 76;
+  for (let i = 0; i < cols; i++) {
+    const tx = P + 18 + i * (tw + gap);
+    x.fillStyle = 'rgba(223,231,224,.04)'; x.fillRect(tx, ty, tw, th);
+    const bw = tw * .34, bx = tx + (tw - bw) / 2, bb = ty + th - 16;
+    x.strokeStyle = CARD_INK + (.38 - i * .05).toFixed(2) + ')'; x.lineWidth = 1.8;
+    x.beginPath();
+    x.moveTo(bx, bb); x.lineTo(bx, ty + 30);
+    x.lineTo(bx + bw * .3, ty + 22); x.lineTo(bx + bw * .3, ty + 15);
+    x.lineTo(bx + bw * .7, ty + 15); x.lineTo(bx + bw * .7, ty + 22);
+    x.lineTo(bx + bw, ty + 30); x.lineTo(bx + bw, bb);
+    x.closePath(); x.stroke();
+    cardBar(x, bx - 2, bb - 20, bw + 4, 7, '.13');       /* the label band */
+    cardBar(x, tx + tw * .3, ty + th - 9, tw * .4, 3.5, '.22');   /* the price */
+  }
+}
+
+/* ---- 03 · Monolith — the scene itself, reduced to marks */
+function cardArtScene(x, W, H) {
+  const { P, w, h } = cardPanel(x, W, H);
+  const cx = P + w / 2, base = P + h - 34;
+  /* the flight, narrowing as it goes back */
+  for (let i = 0; i < 9; i++) {
+    const t = i / 9, sw = w * (.50 - t * .22), sy = base - i * 7;
+    x.fillStyle = CARD_INK + (.16 - t * .10).toFixed(3) + ')';
+    x.fillRect(cx - sw / 2, sy, sw, 2);
+  }
+  /* the slab, and the cut through it */
+  const mw = w * .17, mh = h * .52, mx = cx - mw / 2, my = base - 62 - mh;
+  const g = x.createLinearGradient(0, my, 0, my + mh);
+  g.addColorStop(0, 'rgba(223,231,224,.15)'); g.addColorStop(1, 'rgba(223,231,224,.05)');
+  x.fillStyle = g; x.fillRect(mx, my, mw, mh);
+  x.strokeStyle = CARD_INK + '.26)'; x.lineWidth = 1.2;
+  x.strokeRect(mx + .5, my + .5, mw - 1, mh - 1);
+
+  const sy = my + mh * .42;
+  const bloom = x.createRadialGradient(cx, sy + 3, 1, cx, sy + 3, mw * 1.9);
+  bloom.addColorStop(0, CARD_CORAL + '.55)'); bloom.addColorStop(1, CARD_CORAL + '0)');
+  x.fillStyle = bloom; x.fillRect(mx - mw * 2, sy - mw, mw * 5, mw * 2.4);
+  x.fillStyle = 'rgba(255,206,186,.92)'; x.fillRect(mx + 3, sy, mw - 6, 6);
+
+  /* two bollards flanking the flight, and the horizon behind everything */
+  [-1, 1].forEach(sd => {
+    const bx = cx + sd * w * .27;
+    x.fillStyle = CARD_INK + '.13)'; x.fillRect(bx - 3, base - 40, 6, 40);
+    x.fillStyle = CARD_CORAL + '.75)'; x.fillRect(bx - 2, base - 33, 4, 9);
+  });
+  x.fillStyle = CARD_INK + '.09)'; x.fillRect(P + 14, base + 8, w - 28, 1);
+}
+
+const CARD_ART = { autodex: cardArtAutodex, shop: cardArtShop, scene: cardArtScene };
+
+function texCardPlate(seed, gx, gy, kind) {
   const W = 640, H = 400, c = cvs(W, H), x = c.getContext('2d');
   const rnd = mulberry32(seed);
 
@@ -4062,11 +3595,15 @@ function texCardPlate(seed, gx, gy) {
     x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, TAU); x.fill();
   }
 
+  /* the bloom, on the same coral as the slot rather than the amber this was
+     first drawn against */
   const g = x.createRadialGradient(W * gx, H * gy, 4, W * gx, H * gy, W * .52);
-  g.addColorStop(0, 'rgba(255,176,96,.42)');
-  g.addColorStop(.35, 'rgba(210,124,54,.16)');
-  g.addColorStop(1, 'rgba(120,70,30,0)');
+  g.addColorStop(0, 'rgba(255,150,132,.38)');
+  g.addColorStop(.35, 'rgba(208,88,84,.15)');
+  g.addColorStop(1, 'rgba(110,44,44,0)');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+  if (kind && CARD_ART[kind]) CARD_ART[kind](x, W, H);
 
   /* a vignette, so the drape has somewhere dark to fall away into */
   const v = x.createLinearGradient(0, 0, 0, H);
@@ -4075,10 +3612,19 @@ function texCardPlate(seed, gx, gy) {
   return c;
 }
 
-const CARD_PLATES = [[9101, .70, .42], [9203, .32, .58], [9307, .54, .30]];
+const CARD_PLATES = [[9101, .70, .42, 'autodex'], [9203, .32, .58, 'shop'], [9307, .54, .30, 'scene']];
 
 function buildCardCloth() {
-  if (COARSE) return;                     /* no pointer to brush it with */
+  /* The hero's preview takes the plate treatment but not the simulation, so
+     it has no reason to sit behind the pointer test — and behind it, every
+     touch device fell back to the flat CSS fill and got back exactly the grey
+     rectangle the generated plates were written to kill. */
+  const peek = document.querySelector('.peek-fr');
+  if (peek) peek.style.backgroundImage =
+    'url(' + texCardPlate(9411, .58, .38, 'autodex').toDataURL() + '), ' +
+    'linear-gradient(180deg, rgba(3,6,9,.04) 24%, rgba(3,6,9,.48) 100%)';
+
+  if (COARSE) return;                     /* no pointer to brush the cloth with */
   $$('.cards .card-fr').forEach((fr, i) => {
     /* A canvas, not an Image. clothPlate only needs width, height and
        something drawImage accepts, and generating the plate here drops the
@@ -4106,10 +3652,6 @@ function buildCardCloth() {
     card.addEventListener('pointerenter', () => inst.setEdge(.185), { passive: true });
     card.addEventListener('pointerleave', () => inst.setEdge(.048), { passive: true });
   });
-
-  /* the hero's little preview shares the treatment, minus the simulation */
-  const peek = document.querySelector('.peek-fr');
-  if (peek) peek.style.backgroundImage = 'url(' + texCardPlate(9411, .58, .38).toDataURL() + ')';
 }
 
 function buildLights() {
@@ -4780,7 +4322,7 @@ function initTuning() {
     stairFilmOpacity: v => (WORLD.stairFilms || []).forEach(m => { m.opacity = v; }),
     stairFilmRough:  v => (WORLD.stairFilms || []).forEach(m => { m.roughness = v; }),
     envIntensity:    v => envMats.forEach(e => { e.m.envMapIntensity = e.base * v; }),
-    slotBright:      v => { if (WORLD.slot) WORLD.slot.color.setRGB(v, v * .48, v * .20); },
+    slotBright:      v => { if (WORLD.slot) WORLD.slot.color.setRGB(v * SLOT_RGB[0], v * SLOT_RGB[1], v * SLOT_RGB[2]); },
     moonBright:      v => { if (WORLD.moon) WORLD.moon.material.color.setRGB(v, v * 1.26, v * 1.65); },
     moonSize:        v => { if (WORLD.moon) { WORLD.moon.scale.setScalar(v); WORLD.moonHalo.scale.setScalar(v); } }
   });
@@ -4789,7 +4331,7 @@ function initTuning() {
 /* ================================================= 8 · the camera rig */
 const CAM = [
   { p: [  0.0, 4.05, 13.6 ], t: [  0.0, 6.60, -18.0 ], fov: 36 },  /* 0 hero        */
-  { p: [ -5.6, 2.35, 11.6 ], t: [  1.2, 5.60, -14.0 ], fov: 48 },  /* 1 the sanmon  */
+  { p: [ -5.6, 2.35, 11.6 ], t: [  1.2, 5.60, -14.0 ], fov: 48 },  /* 1 the slab     */
   { p: [  1.2, 3.60,  2.2 ], t: [ -0.6, 7.50, -22.0 ], fov: 40 },  /* 2 gardens     */
   { p: [  5.2, 2.10, -3.4 ], t: [ -2.6, 7.00, -20.0 ], fov: 46 },  /* 3 craft       */
   { p: [  0.0, 7.60, -16.0 ], t: [  0.0, 13.0, -40.0 ], fov: 42 }, /* 4 afterlight  */
@@ -4880,10 +4422,10 @@ function layoutWord() {
      phone — on a width test it took the desktop baseline and sat below the
      fold with only the top of the G showing. */
   const narrow = vpW() / vpH() < 1.05;
-  /* Four wide-tracked letters reach the frame edge exactly; pushing past it,
-     as the six-letter word could afford to, decapitates the K and the E. The
-     narrow branch is held a little inside the edge because a phone frame has
-     no gutter to lose the tracking that trails the final letter into. */
+  /* Three wide-tracked digits reach the frame edge exactly; pushing past it,
+     as a longer word could afford to, clips the outer strokes of the 3 and
+     the 5. The narrow branch is held a little inside the edge because a phone
+     frame has no gutter to lose the tracking that trails the last glyph. */
   const fill = narrow ? .96 : 1.00;
   const s = (R.x - L.x) * fill / WORD.ink.w;
   /* on a tall frame the mounds sit near mid-height, so the baseline has to
@@ -4949,82 +4491,6 @@ function splitHeadingWords() {
   });
 }
 
-/* Foreground PNGs are section-owned until their chapter is called. At that
-   point the active stage becomes a fixed lower viewport plane; its predecessor
-   remains there just long enough to blur and fade out before returning home.
-
-   While it holds that plane the stage is re-parented into #fg-sky, which lives
-   outside .page and so is not capped by its stacking context — that is the
-   only way a cut-out can pass in front of the nav and the chapter rail. The
-   move costs nothing in layout: the stage is position:fixed either way, and
-   its placement rules key off [data-fg], not off the section it came from. */
-function wireForegroundStages() {
-  const pairs = $$('.sec .fg, .foot .fg').map(stage => ({
-    section:stage.closest('.sec, .foot'), stage
-  })).filter(pair => pair.section);
-  if (!pairs.length) return;
-
-  const sky = $('#fg-sky');
-  const ratios = new Map(pairs.map(pair => [pair.section, 0]));
-  const homes = new WeakMap(pairs.map(pair => [pair.stage, pair.section]));
-  const timers = new WeakMap();
-  let activeStage = null;
-
-  const lift = stage => {
-    if (!sky || stage.parentNode === sky) return;
-    sky.appendChild(stage);
-    /* A re-inserted element has no previous computed style, so the entrance
-       would land already finished. Resolve the parked state in its new parent
-       first and the pieces have something to rise from. */
-    void stage.offsetWidth;
-  };
-  const park = stage => {
-    const home = homes.get(stage);
-    if (home && stage.parentNode !== home) home.insertBefore(stage, home.firstChild);
-  };
-
-  const retire = stage => {
-    if (!stage || stage === activeStage) return;
-    const pending = timers.get(stage);
-    if (pending) clearTimeout(pending);
-    stage.classList.remove('fg-active');
-    if (REDUCE) { park(stage); return; }
-    stage.classList.add('fg-retiring');
-    timers.set(stage, setTimeout(() => {
-      stage.classList.remove('fg-retiring');
-      timers.delete(stage);
-      park(stage);
-    }, 820));
-  };
-
-  const activate = stage => {
-    if (!stage || stage === activeStage) return;
-    const pending = timers.get(stage);
-    if (pending) clearTimeout(pending);
-    stage.classList.remove('fg-retiring');
-    lift(stage);
-    stage.classList.add('fg-active');
-    const prior = activeStage;
-    activeStage = stage;
-    retire(prior);
-  };
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => ratios.set(entry.target, entry.isIntersecting ? entry.intersectionRatio : 0));
-    const next = pairs.reduce((best, pair) =>
-      (ratios.get(pair.section) || 0) > (ratios.get(best.section) || 0) ? pair : best
-    );
-    const nextRatio = ratios.get(next.section) || 0;
-    if (nextRatio > 0) activate(next.stage);
-    else if (activeStage) {
-      const prior = activeStage;
-      activeStage = null;
-      retire(prior);
-    }
-  }, { rootMargin:'-12% 0px -12% 0px', threshold:[0, .12, .32, .55] });
-
-  pairs.forEach(pair => observer.observe(pair.section));
-}
 
 /* ------------------------------------------------------ leaving the hero
    Everything along the foot of the hero is spent the moment the walk starts:
@@ -5085,7 +4551,7 @@ function wireHeroExit() {
 function wireNav() {
   let last = 0;
   const rail = $('#rail');
-  const names = ['The Hidden Gate', 'The Sanmon', 'Still Gardens', 'Sacred Craft', 'Afterlight', 'Colophon'];
+  const names = ['Top', 'Studio', 'Recent Work', 'Services', 'Contact', 'Colophon'];
   SECS.forEach((s, i) => {
     const b = document.createElement('button');
     b.innerHTML = '<i></i>'; b.title = names[i] || '';
@@ -5510,7 +4976,7 @@ const JOBS = [
 
 function boot() {
   makeGrain();
-  wireReveals(); wireForegroundStages(); wireNav(); wireHeroExit(); wireFocus(); wireCursor();
+  wireReveals(); wireNav(); wireHeroExit(); wireFocus(); wireCursor();
   document.body.classList.add('is-locked');
   let i = 0;
   const step = () => {
@@ -5525,7 +4991,7 @@ function boot() {
     let r;
     try { r = j[1](); }
     catch (err) {
-      console.error('[kage] job "' + j[0] + '" failed', err);
+      console.error('[305] job "' + j[0] + '" failed', err);
       if (i <= 1) return fallback(err);          /* no renderer, no scene */
     }
     (r && r.then) ? r.then(done, done) : done();
@@ -5539,7 +5005,7 @@ function fallback(err) {
   document.body.classList.remove('is-locked');
   preEl.classList.add('done');
   $$('[data-rv], .mask-line').forEach(e => e.classList.add('rv-in'));
-  window.__kage = window.__secret = { fallback: true, error: String(err && err.message || err) };
+  window.__305 = window.__secret = { fallback: true, error: String(err && err.message || err) };
 }
 
 function start() {
@@ -5571,7 +5037,7 @@ function start() {
   running = true; tPrev = performance.now();
   INTRO.t0 = shot !== null ? 0 : (REDUCE ? performance.now() - 4000 : performance.now());
   queue();
-  window.__kage = window.__secret = { RIG: RIG, WORLD: WORLD, WORD: WORD, CAM: CAM, POST: POST, renderer: renderer, scene: scene, camera: camera, anchors: () => anchors };
+  window.__305 = window.__secret = { RIG: RIG, WORLD: WORLD, WORD: WORD, CAM: CAM, POST: POST, renderer: renderer, scene: scene, camera: camera, anchors: () => anchors };
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 0);

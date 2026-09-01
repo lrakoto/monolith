@@ -1,10 +1,13 @@
 # Monolith
 
-A single-page WebGL scene: a board-formed concrete slab standing at the head of
-a forty-step flight, with one horizontal slot of light cut through it. Rendered
-live in Three.js — every piece of geometry and every texture in the scene is
-generated in JavaScript at load. There are no model files and no image assets
-for the 3D scene at all.
+The portfolio of **ThreeOhFive Studios** — Lova Rakoto, web developer and
+designer in Los Angeles — built over a single-page WebGL scene: a board-formed
+concrete slab standing at the head of a forty-step flight, with one horizontal
+slot of light cut through it.
+
+Rendered live in Three.js. Every piece of geometry and every texture is
+generated in JavaScript at load: there are no model files and no image assets
+anywhere except the three favicon sizes carrying the studio mark.
 
 Open `index.html` through a local server and scroll.
 
@@ -88,8 +91,32 @@ bollards and standing stones; the blood moon became a flat disc; and the whole
 surface treatment was retuned for wet stone, which is where the mirror, the
 puddles and the glint field came from.
 
+The temple's own texture and geometry code went with it — the lacquer, the
+paper screens, the tile, the swept beams and the roof shell were all still in
+the file, generating a building nothing referenced any more. Roughly 1,100
+lines have come out in total across that sweep and the removal of the DOM
+foreground.
+
 The wet-street approach and the tuning-panel pattern are ported from a private
 project of my own.
+
+## The cards
+
+Each project card carries a generated abstraction of its own work — a search
+over a grid of vehicles, a shopfront, the slab itself — drawn at low alpha over
+the concrete pour so the grain still reads through.
+
+They are not screenshots, for two reasons. A photograph would be the only
+bitmap on a page whose whole argument is that it has none. And it would be the
+wrong picture anyway: the cards are carried by a cloth simulation, and a flat
+crop held on a moving mesh reads as a poster of a website rather than as the
+thing itself. Marks drawn into the plate travel with the drape, while the
+concrete underneath does the shading.
+
+The cards are anchors rather than articles, so each one opens the work it
+describes. The link is the card element itself and not a stretched overlay:
+the cloth listens for `pointermove` on the frame that owns its canvas, and any
+transparent layer sitting on top would swallow those events and kill the brush.
 
 ## Licence
 
@@ -99,10 +126,24 @@ Bundled open fonts (embedded as base64 in `assets/fonts.css`) remain under the
 SIL Open Font License 1.1; see `FONT-LICENSES.md`. The bundled Three.js runtime
 is MIT and retains its upstream SPDX header.
 
-The imagery in `assets/foreground/` is ThreeUI-authored and MIT licensed. It is
-page content in the article sections, not part of the 3D scene, whose foreground
-is generated. Several of those files are still Kyoto-garden subjects and do not
-match this scene — replacing them is outstanding.
+The studio mark in `assets/brand/` is ThreeOhFive Studios' own and is not
+covered by the MIT grant above; it is bundled here as this site's favicon.
+
+The ten ThreeUI-authored garden cut-outs that used to sit in
+`assets/foreground/` are gone, and so is the near-plane system that carried
+them. They were the last bitmaps in the project and the last Kyoto subjects in
+it — a scene of poured concrete fronted by sakura and stone lanterns.
+
+They were briefly replaced with generated equivalents in the same vocabulary as
+the scene: barrier, berm, rubble, precast, mast, bollard, cables, mesh, weeds,
+formwork. That worked as a picture and did not work in motion. A near plane
+sliding in and out on every chapter change competes with the thing it stands in
+front of, and the scene is the argument this page is making — so the whole
+layer came out, along with its stage choreography, its re-parenting into
+`#fg-sky` and about seven hundred lines of CSS and JavaScript.
+
+What is left in front of the reading is the scene itself, which is what the
+page was for.
 
 The chapter-card plates are generated at runtime by `texCardPlate`, so there are
 no bitmap assets behind them. That matters more than it sounds: the cards are
