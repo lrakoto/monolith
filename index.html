@@ -431,6 +431,45 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .acard-meta{ display:flex; justify-content:space-between; gap:10px; margin-top:10px;
   font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
 .acard:hover .acard-meta{ color:var(--bone-dim); }
+
+/* ---- the shimmer on the archive frames -----------------------------------
+   A one-pixel ring cut out of a moving gradient: the gradient fills the box,
+   and a two-layer mask subtracts the content area so only the border survives.
+   Guarded behind @supports because that subtraction is the whole trick — with
+   no mask-composite the gradient would fill the frame and sit on top of the
+   work, which is a worse failure than simply not having it.
+
+   Held faint at rest and staggered per card. Twelve frames pulsing in unison
+   is a light show; twelve drifting out of step reads as the same lamp moving
+   over them, which is the register the rest of the page is in. */
+@supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
+  .acard-fr::before{
+    content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+    padding:1px;
+    background:linear-gradient(104deg,
+      transparent 0%, transparent 30%,
+      rgba(228,96,108,.85) 42%,
+      rgba(255,205,150,.78) 50%,
+      rgba(223,231,224,.62) 58%,
+      transparent 70%, transparent 100%);
+    background-size:280% 100%;
+    /* both driven by the pointer — see wireCardSheen */
+    background-position:var(--spos, 50%) 0;
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+            mask-composite:exclude;
+    /* Lit by where the cursor is rather than by which card it happens to be
+       over. A hover state is binary and stops at the card's edge; proximity
+       carries across the whole grid, so the nearest frames answer first and
+       the ones further out only catch the edge of it — which is the same
+       thing the lamp does to the grass, in a different medium. */
+    opacity:calc(.07 + var(--sheen, 0) * .96);
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .acard-fr::before{ background-position:50% 0; }
+}
 @media (max-width:820px){ .cards-arch{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:520px){ .cards-arch{ grid-template-columns:1fr; } }
 
@@ -1259,20 +1298,26 @@ function fbm(n, x, y, oct, lac, gain) {
    The panel is off unless the URL says ?tune=1, so the page itself never
    pays for it. */
 const TUNE = {
-  courtRoughness:   0.190,
-  courtReflect:     0.340,
-  courtFresnel:     1.150,
-  glintDensity:     5700,
-  glintSize:        1.500,
-  glintBright:      0.850,
-  puddleOpacity:    0.800,
-  puddleRipple:     1.00,
+  courtRoughness:   0.850,
+  courtReflect:     1.500,
+  courtFresnel:     0.000,
+  glintDensity:     12000,
+  glintSize:        0.900,
+  glintBright:      1.000,
+  puddleOpacity:    1.000,
+  puddleRipple:     3.00,
   stairFilmOpacity: 0.720,
   stairFilmRough:   0.050,
-  envIntensity:     1.00,
-  slotBright:       1.300,
+  envIntensity:     1.15,
+  slotBright:       3.000,
   moonBright:       0.460,
-  moonSize:         1.00
+  moonSize:         1.00,
+  lampBright:       8.00,
+  lampReach:        30.50,
+  nearReach:        12.60,
+  grassGlow:        14.00,
+  letterGlow:       2.00,
+  fgPlane:          1.00
 };
 
 /* label, min, max, step, group — the order here is the order shown */
@@ -1290,7 +1335,13 @@ const TUNE_SCHEMA = [
   ['envIntensity',     'Environment',  0,    3,     .05,  'Scene'],
   ['slotBright',       'Slot',         0,    3,     .02,  'Scene'],
   ['moonBright',       'Moon',         0,    2,     .02,  'Scene'],
-  ['moonSize',         'Moon size',    .4,   2,     .02,  'Scene']
+  ['moonSize',         'Moon size',    .4,   2,     .02,  'Scene'],
+  ['lampBright',       'Brightness',   0,    14,    .1,   'Cursor lamp'],
+  ['lampReach',        'Court reach',  2,    40,    .5,   'Cursor lamp'],
+  ['nearReach',        'Near reach',   1,    16,    .1,   'Cursor lamp'],
+  ['grassGlow',        'Grass glow',   0,    14,    .1,   'Cursor lamp'],
+  ['letterGlow',       'Letter rim',   0,    14,    .1,   'Cursor lamp'],
+  ['fgPlane',          'Near plane z', -6,   10,    .1,   'Cursor lamp']
 ];
 
 /* ------------------------------------------------------------ 1 · canvas */
@@ -2736,26 +2787,57 @@ function buildRocks() {
    the middle of a blade or a stroke, feathered at its edge. So the glow rides
    the partial-alpha band, which is the edge, squared over distance to keep it
    local to the lamp. */
-function injectLampGlow(sh, strength) {
-  sh.uniforms.uLPos = CUR_UNI.pos;
+function injectLampGlow(sh, o) {
+  sh.uniforms.uLPos = CUR_UNI.nearPos;
   sh.uniforms.uLAmt = CUR_UNI.amt;
-  sh.uniforms.uLCol = CUR_UNI.col;
-  sh.uniforms.uLRange = CUR_UNI.range;
-  sh.uniforms.uGlow = { value: strength === undefined ? 1 : strength };
+  sh.uniforms.uLRange = CUR_UNI.nearRange;
+  sh.uniforms.uLCol = { value: o.col || CUR_UNI.col.value };
+  sh.uniforms.uGlow  = o.glow;                 /* shared — the panel moves it */
+  sh.uniforms.uGlowW = { value: o.weight === undefined ? 1 : o.weight };
+  sh.uniforms.uMix   = { value: o.mix || 0 };
+  sh.uniforms.uRMul  = { value: o.rangeMul === undefined ? 1 : o.rangeMul };
   sh.vertexShader = 'varying vec3 vWPos;\n' + sh.vertexShader.replace(
     '#include <project_vertex>',
     'vWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>');
   /* inserted at fog_fragment, which in r149 sits after output_fragment — so
-     gl_FragColor is already assigned by the time this adds to it */
+     gl_FragColor is already assigned by the time this touches it.
+
+     Two ways out, because the two surfaces need opposite things. Grass is
+     dark, so light *adds* to it. The letters are near-white — their ramp tops
+     out around 226,236,229 — and adding light to something already at the top
+     of every channel does nothing at all, which is why they stayed stubbornly
+     unlit. So on those the glow *tints* instead: the rim is pulled toward
+     gold, which a pale surface can actually show. */
   sh.fragmentShader =
     'varying vec3 vWPos;\nuniform vec3 uLPos;\nuniform float uLAmt;\n' +
     'uniform vec3 uLCol;\nuniform float uLRange;\nuniform float uGlow;\n' +
+    'uniform float uMix;\nuniform float uRMul;\nuniform float uGlowW;\n' +
     sh.fragmentShader.replace('#include <fog_fragment>',
       'float lD = distance(vWPos, uLPos);\n' +
-      'float lF = 1.0 - smoothstep(0.0, uLRange, lD);\n' +
-      'float lEdge = smoothstep(0.03, 0.44, diffuseColor.a) * (1.0 - smoothstep(0.5, 0.99, diffuseColor.a));\n' +
-      'float lG = lF * lF * uLAmt * uGlow * (0.22 + 2.4 * lEdge);\n' +
-      'gl_FragColor.rgb += uLCol * lG;\n' +
+      'float lF = 1.0 - smoothstep(0.0, uLRange * uRMul, lD);\n' +
+      'lF = lF * lF * lF * lF;\n' +
+      /* the thin band only: a solid interior stays dark, which is what makes
+         this read as light coming through rather than a lamp shone at it */
+      'float lEdge = smoothstep(0.02, 0.26, diffuseColor.a) * (1.0 - smoothstep(0.30, 0.72, diffuseColor.a));\n' +
+      'float lG = lF * uLAmt * uGlow * uGlowW * lEdge;\n' +
+      'gl_FragColor.rgb += uLCol * lG * (1.0 - uMix);\n' +
+      /* On pale surfaces the tint alone was never going to show: the rim band
+         is exactly where alpha is lowest, so recolouring it gold recoloured
+         something that was barely being drawn. Here the band also gains
+         opacity, and a four-tap dilation of the map lets the glow sit just
+         outside the stroke — which is where a light behind something actually
+         spills. Branching on a uniform, so the grass pays for none of it. */
+      'if (uMix > 0.5) {\n' +
+      '  vec2 dl = vec2(0.0075);\n' +
+      '  float dA = texture2D(map, vUv + vec2(dl.x, 0.0)).a;\n' +
+      '  dA = max(dA, texture2D(map, vUv - vec2(dl.x, 0.0)).a);\n' +
+      '  dA = max(dA, texture2D(map, vUv + vec2(0.0, dl.y)).a);\n' +
+      '  dA = max(dA, texture2D(map, vUv - vec2(0.0, dl.y)).a);\n' +
+      '  float halo = clamp(dA - diffuseColor.a, 0.0, 1.0);\n' +
+      '  float rim = lF * uLAmt * uGlow * uGlowW * max(lEdge, halo);\n' +
+      '  gl_FragColor.rgb = mix(gl_FragColor.rgb, uLCol, clamp(rim, 0.0, 0.94));\n' +
+      '  gl_FragColor.a = clamp(gl_FragColor.a + rim * 0.85, 0.0, 1.0);\n' +
+      '}\n' +
       '#include <fog_fragment>');
 }
 
@@ -2793,7 +2875,7 @@ function cutoutMaterial(canvasEl, sway, tint, glow) {
        opaque, its edges are feathered, so the partial-alpha band is exactly
        the edge to light. Falloff is squared over distance and gated on the
        pointer, so the effect exists only while the lamp is near and on. */
-    injectLampGlow(sh, glow);
+    injectLampGlow(sh, { glow: CUR_UNI.grassGlow, weight: glow, mix: 0, rangeMul: 0.58 });
     sh.fragmentShader = sh.fragmentShader.replace('#include <alphatest_fragment>',
       'float feX = smoothstep(0.0, 0.11, vUv.x) * (1.0 - smoothstep(0.89, 1.0, vUv.x));\n' +
       'float feY = smoothstep(0.0, 0.07, vUv.y);\n' +
@@ -2916,7 +2998,8 @@ function buildWordmark() {
 function wordMaterial(canvasEl) {
   const m = new THREE.MeshBasicMaterial({ map: tx(canvasEl, { aniso: 16 }), transparent: true,
     depthWrite: false, side: THREE.DoubleSide, fog: true, opacity: 1 });
-  m.onBeforeCompile = sh => injectLampGlow(sh, 1.35);
+  m.onBeforeCompile = sh => injectLampGlow(sh,
+    { glow: CUR_UNI.letterGlow, weight: 1, col: new THREE.Color(0xffc36a), mix: 1, rangeMul: 1.75 });
   return m;
 }
 const WORD = { glyphs: [], group: null, ink: null, reveal: 0 };
@@ -3967,6 +4050,35 @@ const WORK_INFO = {
   }
 };
 
+/* Proximity, written onto each card as two custom properties: how strongly it
+   is lit, and where along its width the highlight sits. Read on a frame tick
+   rather than per event, and skipped entirely for cards outside the viewport,
+   because this runs alongside a WebGL scene and twelve rect reads per pointer
+   event would be twelve too many. */
+function wireCardSheen() {
+  const cards = $$('.acard');
+  if (!cards.length || COARSE) return;
+  let px = -1e4, py = -1e4, pending = 0;
+  const apply = () => {
+    pending = 0;
+    const vh = innerHeight;
+    for (let i = 0; i < cards.length; i++) {
+      const c = cards[i], r = c.getBoundingClientRect();
+      if (r.bottom < -160 || r.top > vh + 160) continue;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const dx = (px - cx) / Math.max(r.width, 1);
+      const dy = (py - cy) / Math.max(r.height, 1);
+      const amt = clamp(1 - Math.sqrt(dx * dx + dy * dy) / 2.1, 0, 1);
+      c.style.setProperty('--sheen', (amt * amt).toFixed(3));
+      c.style.setProperty('--spos', (50 - clamp(dx, -1.6, 1.6) * 78).toFixed(1) + '%');
+    }
+  };
+  const schedule = () => { if (!pending) pending = requestAnimationFrame(apply); };
+  addEventListener('pointermove', e => { px = e.clientX; py = e.clientY; schedule(); }, { passive: true });
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', schedule, { passive: true });
+}
+
 function wireWorkModal() {
   const dlg = $('#wmodal'); if (!dlg || !dlg.showModal) return;
   const q = k => dlg.querySelector('[data-wm-' + k + ']');
@@ -4262,11 +4374,30 @@ const CURSOR_LIGHT_Y = 1.35;      /* just off the court, so it pools on water */
 /* One set of uniform objects, handed to every cut-out material rather than
    copied into each: assigning the same object means a single write per frame
    updates all of them, which is the trick WORLD.uT already uses for the sway. */
+/* declared before CUR_UNI, which reads it: a const used inside an
+   initializer that runs earlier is a temporal-dead-zone throw at load, not
+   a syntax error, so nothing but running it would have caught this. */
+const FG_LAMP = { z: 3.4 };       /* the plane the near cut-outs live around */
 const CUR_UNI = {
   pos:   { value: new THREE.Vector3(0, CURSOR_LIGHT_Y, 4) },
   amt:   { value: 0 },
   col:   { value: new THREE.Color(0xff8a6c) },
-  range: { value: 21.0 }
+  range: { value: 13.5 },
+  /* A second position for the near plane. The lamp above is put where the
+     cursor ray meets the *court*, which is right for a wash on wet stone and
+     wrong for everything standing in front of it: the grass and the letters
+     sit seven to fourteen units ahead of the camera, so the ray passes
+     through them and lands far beyond and below, and the glow was never
+     where the cursor appeared to be. Tightening the radius only shrank a pool
+     in the wrong place. This one stops at the foreground depth, so the light
+     is at the blade the cursor is actually over. */
+  nearPos:   { value: new THREE.Vector3(0, 3, 3.4) },
+  nearRange: { value: 5.2 },
+  /* Shared so the panel can move them live. The per-sheet weighting stays
+     baked into each material as uGlowW and multiplies through, which is what
+     lets one slider drive six cut-outs without flattening them to each other. */
+  grassGlow:  { value: 4.2 },
+  letterGlow: { value: 5.2 }
 };
 const _curRay = new THREE.Vector3();
 function updateCursorLight(dt) {
@@ -4290,11 +4421,16 @@ function updateCursorLight(dt) {
      which is the one thing in the frame the bloom is tuned to bite on. The
      light stays; what it lights is the subject. */
   const on = RIG.pointer ? 1 : 0;
-  L.intensity = damp(L.intensity, on * 5.6, 3.2, dt);
+  L.intensity = damp(L.intensity, on * TUNE.lampBright, 3.2, dt);
 
-  /* the cut-outs read the same lamp, so the grass can catch it */
   CUR_UNI.pos.value.copy(L.position);
   CUR_UNI.amt.value = damp(CUR_UNI.amt.value, on, 3.2, dt);
+
+  /* and the near lamp, stopped at the foreground plane rather than run on to
+     the floor — this is the one the grass and the letters read */
+  const tz = (FG_LAMP.z - camera.position.z) / _curRay.z;
+  if (isFinite(tz) && tz > 0.4)
+    CUR_UNI.nearPos.value.copy(camera.position).addScaledVector(_curRay, tz);
 }
 /* ====================================================== 6 · planar mirror
    Restored. The court was built to carry one and the wiring for it never
@@ -4892,6 +5028,12 @@ function initTuning() {
   const pools = () => PUD.mats.concat(LAND.mats);
 
   buildTunePanel({
+    lampBright:      () => {},                       /* read each frame */
+    lampReach:       v => { CUR_UNI.range.value = v; },
+    nearReach:       v => { CUR_UNI.nearRange.value = v; },
+    grassGlow:       v => { CUR_UNI.grassGlow.value = v; },
+    letterGlow:      v => { CUR_UNI.letterGlow.value = v; },
+    fgPlane:         v => { FG_LAMP.z = v; },
     courtRoughness:  v => { WORLD.floorMat.roughness = v; },
     courtReflect:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uReflect.value = v; },
     courtFresnel:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uFres.value = v; },
@@ -5617,7 +5759,7 @@ const JOBS = [
 function boot() {
   makeGrain();
   buildArchive();
-  wireWorkModal();
+  wireWorkModal(); wireCardSheen();
   wireReveals(); wireNav(); wireHeroExit(); wireFocus(); wireCursor();
   document.body.classList.add('is-locked');
   let i = 0;
