@@ -5,9 +5,10 @@ designer in Los Angeles — built over a single-page WebGL scene: a board-formed
 concrete slab standing at the head of a forty-step flight, with one horizontal
 slot of light cut through it.
 
-Rendered live in Three.js. Every piece of geometry and every texture is
-generated in JavaScript at load: there are no model files and no image assets
-anywhere except the three favicon sizes carrying the studio mark.
+Rendered live in Three.js. Every piece of geometry and every texture *in the
+scene* is generated in JavaScript at load — no model files, no image assets.
+The exceptions are deliberate and both live outside the scene: the studio mark
+in `assets/brand/`, and captures of the work in `assets/work/`.
 
 Open `index.html` through a local server and scroll.
 
@@ -102,16 +103,26 @@ project of my own.
 
 ## The cards
 
-Each project card carries a generated abstraction of its own work — a search
-over a grid of vehicles, a shopfront, the slab itself — drawn at low alpha over
-the concrete pour so the grain still reads through.
+Each card shows a capture of the work where there is one, and a drawn
+abstraction where there is not.
 
-They are not screenshots, for two reasons. A photograph would be the only
-bitmap on a page whose whole argument is that it has none. And it would be the
-wrong picture anyway: the cards are carried by a cloth simulation, and a flat
-crop held on a moving mesh reads as a poster of a website rather than as the
-thing itself. Marks drawn into the plate travel with the drape, while the
-concrete underneath does the shading.
+The cards were generated abstractions first, on the argument that a photograph
+would be the only bitmap on a page whose whole point is that it has none. That
+was the wrong priority. This is a portfolio: its job is to show the work, and a
+drawing of a search field says far less about a product than the product does.
+The claim is narrower now and the page is more use — the scene is generated,
+the evidence is photographed.
+
+What survived from that first pass is the compositing. A shot is sunk into the
+pour rather than pasted over it: desaturated, darkened, held at partial alpha
+and grained back over, so it reads as an image printed on the slab. The cloth
+needs that. The drape is legible because the plate shades as it moves, and a
+flat opaque crop would give it nothing to shade — which is also why the three
+plates are kept in one tonal register rather than lit to their own taste.
+
+`cardShot` takes over from `CARD_ART` per card, keyed on whether a file exists
+in `WORK_SRC`, and a shot that fails to load falls back to the drawing. So the
+drawn versions are not dead code; they are what a card without a capture gets.
 
 The cards are anchors rather than articles, so each one opens the work it
 describes. The link is the card element itself and not a stretched overlay:

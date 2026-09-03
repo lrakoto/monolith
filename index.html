@@ -3453,6 +3453,30 @@ function clothPlate(img, w, h) {
    which is what keeps the drape legible: the marks travel with the mesh while
    the concrete underneath does the shading. */
 
+/* Where a real capture of the work exists it is used instead of the drawing.
+   The page generates everything else, and for a while it generated these too —
+   but a portfolio's job is to show the work, and an abstraction of a search
+   field says much less about a product than the product does. So the claim is
+   narrower now and the page is more use: the scene is generated, the evidence
+   is photographed.
+
+   A shot is composited into the pour rather than pasted over it — desaturated,
+   darkened, held at partial alpha and grained back over — so it reads as an
+   image printed on the slab and leaves the concrete showing through. The cloth
+   needs that: the drape is legible because the plate shades as it moves, and a
+   flat opaque crop gives it nothing to shade. */
+const WORK_SRC   = { autodex: 'assets/work/autodex.jpg' };
+const WORK_SHOTS = {};
+function loadWorkShots() {
+  const keys = Object.keys(WORK_SRC);
+  return Promise.all(keys.map(k => new Promise(done => {
+    const im = new Image();
+    im.onload  = () => { WORK_SHOTS[k] = im; done(); };
+    im.onerror = () => done();     /* a missing shot falls back to the drawing */
+    im.src = WORK_SRC[k];
+  })));
+}
+
 const CARD_INK  = 'rgba(223,231,224,';
 const CARD_CORAL= 'rgba(228,96,108,';
 
@@ -3467,6 +3491,34 @@ function cardPanel(x, W, H) {
 const cardBar = (x, bx, by, bw, bh, a) => {
   x.fillStyle = CARD_INK + a + ')'; x.fillRect(bx, by, bw, bh);
 };
+
+/* a capture, sunk into the concrete */
+function cardShot(x, W, H, img) {
+  const { P, w, h } = cardPanel(x, W, H);
+  x.save();
+  x.beginPath(); x.rect(P, P, w, h); x.clip();
+  /* cover, so a shot of any aspect fills the panel without distorting */
+  const sc = Math.max(w / img.width, h / img.height);
+  const dw = img.width * sc, dh = img.height * sc;
+  x.globalAlpha = .66;
+  /* Chrome, Safari 16.4+ and Firefox all take this; where it is missing the
+     shot simply lands unfiltered and a little brighter, which is survivable */
+  x.filter = 'saturate(.5) brightness(.72) contrast(1.06)';
+  x.drawImage(img, P + (w - dw) / 2, P + (h - dh) / 2, dw, dh);
+  x.filter = 'none';
+  /* the pour, brought back over the top so the two share a surface */
+  x.globalAlpha = .30; x.globalCompositeOperation = 'overlay';
+  x.drawImage(fbmCanvas(256, 256, 77, 5, 3, 1), P, P, w, h);
+  x.restore();
+  x.strokeStyle = CARD_INK + '.16)'; x.lineWidth = 1;
+  x.strokeRect(P + .5, P + .5, w - 1, h - 1);
+  fgLitEdge(x, P, P, w);
+}
+/* the lit arris along the head of the panel, as everywhere else in the scene */
+function fgLitEdge(x, px, py, w) {
+  x.strokeStyle = CARD_INK + '.20)'; x.lineWidth = 1.4;
+  x.beginPath(); x.moveTo(px, py); x.lineTo(px + w, py); x.stroke();
+}
 
 /* ---- 01 · AutoDex — a search over a grid of vehicles */
 function cardArtAutodex(x, W, H) {
@@ -3603,7 +3655,9 @@ function texCardPlate(seed, gx, gy, kind) {
   g.addColorStop(1, 'rgba(110,44,44,0)');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
 
-  if (kind && CARD_ART[kind]) CARD_ART[kind](x, W, H);
+  /* a capture where we have one, the drawing where we do not */
+  if (kind && WORK_SHOTS[kind])   cardShot(x, W, H, WORK_SHOTS[kind]);
+  else if (kind && CARD_ART[kind]) CARD_ART[kind](x, W, H);
 
   /* a vignette, so the drape has somewhere dark to fall away into */
   const v = x.createLinearGradient(0, 0, 0, H);
@@ -4926,6 +4980,7 @@ function queue() { TIMER ? setTimeout(() => frame(performance.now()), 16) : requ
 /* ======================================================== 14 · booting */
 const JOBS = [
   ['Reading the type', () => document.fonts && document.fonts.load('600 320px Wordmark')],
+  ['Fetching the work', () => loadWorkShots()],
   ['Pouring the ground', () => { initGL(); WORLD.uT = { value: 0 }; buildRig(); buildEnvironment(); buildLights(); }],
   ['Cutting the approach', () => buildShell()],
   ['Raising the slab', () => buildMonolith()],
