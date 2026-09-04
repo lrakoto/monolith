@@ -297,31 +297,112 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
   filter:grayscale(1) invert(1) contrast(1.08); opacity:.42; transition:opacity .5s; }
 .clients li:hover img{ opacity:.78; }
 
-/* ---- the process --------------------------------------------------------- */
+/* ---- the process, as the flight -----------------------------------------
+   Three equal boxes in a row said nothing about sequence, which is the only
+   thing a process has to say. These climb instead, on the same move the scene
+   is built around: each stage is a tread lifted above the one before it, with
+   a riser dropping from its left edge to the step below and a lit nosing on
+   its front edge. Bottom-aligned, so the padding under each item is what
+   raises it — no transforms, so the rows still reflow honestly when the grid
+   collapses on a narrow frame. */
 .proc{ margin-top:clamp(46px,8vh,96px); }
 .proc-k, .xp-k{ display:flex; align-items:center; gap:16px; margin-bottom:clamp(20px,3vh,34px); }
 .proc-k b, .xp-k b{ font-size:11px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:var(--bone-dim); }
 .proc-k .rule, .xp-k .rule{ flex:1; height:1px; background:var(--line-soft); }
 .proc ol{ list-style:none; margin:0; padding:0; display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(16px,2.6vw,40px); }
-.proc li{ border-top:1px solid var(--line-soft); padding-top:16px; }
+  grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 clamp(16px,2.6vw,40px);
+  align-items:end; }
+/* Descending, not ascending: the reader travels left to right, and a flight
+   that drops as the eye moves reads as leading somewhere rather than as being
+   climbed against. Each tread carries a face now — the same pour as the card
+   plates, lit along its top edge — so the steps have mass instead of being
+   three horizontal rules with text under them. */
+.proc li{ position:relative; border-top:1px solid var(--line);
+  padding:17px 15px 16px 17px;
+  background:linear-gradient(180deg, rgba(223,231,224,.055), rgba(223,231,224,.012) 46%, rgba(4,6,9,.16)); }
+.proc li:nth-child(1){ padding-bottom:clamp(60px,9.2vw,136px); }
+.proc li:nth-child(2){ padding-bottom:clamp(30px,4.6vw,68px); }
+/* the riser: drops from this tread to the level of the step below it */
+/* the riser now falls on the right, since the flight descends that way */
+.proc li::before{ content:''; position:absolute; right:-1px; top:0; height:100%; width:1px;
+  background:linear-gradient(rgba(228,96,108,.55), rgba(228,96,108,0) 72%); }
+/* the lit nosing on the front edge of the tread */
+.proc li::after{ content:''; position:absolute; left:0; top:-1px; height:1px;
+  width:clamp(22px,3vw,46px); background:var(--brand); }
 .proc-n{ display:block; font-size:11px; letter-spacing:.16em; color:var(--brand);
   font-variant-numeric:tabular-nums; margin-bottom:9px; }
 .proc li b{ display:block; font-size:clamp(14px,1.3vw,18px); font-weight:400; letter-spacing:-.005em; }
 .proc li p{ margin:8px 0 0; font-size:12.5px; line-height:1.6; color:#8b958f; }
 
-/* ---- the experience ------------------------------------------------------ */
-.xp{ margin-top:clamp(44px,7vh,84px); margin-bottom:clamp(34px,5vh,60px); text-align:left; }
-.xp ol{ list-style:none; margin:0; padding:0; border-top:1px solid var(--line-soft); }
-.xp li{ display:grid; grid-template-columns:76px minmax(0,1fr); gap:clamp(12px,2vw,30px);
-  align-items:baseline; padding:15px 0; border-bottom:1px solid var(--line-soft); }
+/* ---- the experience, as board-form lifts ---------------------------------
+   The slab in the scene is poured concrete: buildMonolith lays a lift line
+   every 1.62 units, each with a lit shoulder under it, and texCardPlate draws
+   the same seam on the card plates. A career accumulates the same way — in
+   pours, one season at a time, oldest at the bottom — so the timeline is
+   built from that seam rather than from a list rule. The current role takes
+   the coral, which is the only light in the scene that moves. */
+/* Two layouts. Without WebGL or a pointer this stays an ordinary list, which
+   is what the markup is; with the scene running, body.xp-3d lifts the rows
+   out of flow and pins each one to a stair tread — see updateXpAnchors. The
+   section keeps its own height either way, because that scroll is what the
+   camera climbs. */
+#experience{ min-height:340vh; }
+/* No scrim here. A chapter's scrim exists to hold its copy off the scene, but
+   this chapter's copy is standing *in* the scene on the steps, each panel
+   carrying its own ground — so the radial wash was only dimming the flight
+   the section is about. */
+#experience::before{ background:none; }
+.xp{ margin-top:clamp(30px,5vh,58px); text-align:left; }
+body.xp-3d .xp{ position:fixed; inset:0; z-index:3; margin:0; pointer-events:none; }
+body.xp-3d .xp-k{ display:none; }
+body.xp-3d .xp ol{ border:0; }
+body.xp-3d .xp li{
+  position:absolute; top:0; left:0; width:min(310px,34vw);
+  margin:0; padding:11px 14px 12px; border:0;
+  background:linear-gradient(180deg, rgba(9,13,17,.80), rgba(9,13,17,.52));
+  border-left:1px solid var(--brand);
+  box-shadow:0 18px 44px -18px rgba(0,0,0,.9);
+  opacity:0; will-change:transform, opacity;
+}
+body.xp-3d .xp li::before{ display:none; }
+body.xp-3d .xp li p{ margin-top:4px; }
+.xp ol{ list-style:none; margin:0; padding:0; border-top:1px solid rgba(0,0,0,.55); }
+.xp li{ position:relative; display:grid; grid-template-columns:78px minmax(0,1fr);
+  gap:clamp(12px,2vw,30px); align-items:baseline;
+  padding:16px 0 15px; border-top:1px solid rgba(0,0,0,.5);
+  background:linear-gradient(180deg, rgba(223,231,224,.030), rgba(223,231,224,0) 58%); }
+/* the lit shoulder that sits under every seam in the pour */
+.xp li::before{ content:''; position:absolute; left:0; right:0; top:0; height:1px;
+  background:rgba(214,224,230,.11); }
+.xp li:first-child::before{ background:rgba(228,96,108,.55); }
+.xp li:last-child{ border-bottom:1px solid rgba(0,0,0,.5); }
+/* Each role steps back from the one above it, so the column reads as a flight
+   descending into the page rather than as a stack of rules. The indent is the
+   going of a tread; the seam already reads as its nosing. It runs newest at
+   the top because that is where the reader starts and where the flight is
+   nearest — the years walk away from you into the older work. */
+.xp li{ --going:clamp(9px,1.5vw,32px); }
+.xp li:nth-child(2){ margin-left:calc(var(--going) * 1); }
+.xp li:nth-child(3){ margin-left:calc(var(--going) * 2); }
+.xp li:nth-child(4){ margin-left:calc(var(--going) * 3); }
+.xp li:nth-child(5){ margin-left:calc(var(--going) * 4); }
+.xp li:nth-child(6){ margin-left:calc(var(--going) * 5); }
+.xp li:nth-child(7){ margin-left:calc(var(--going) * 6); }
+/* the tread face catches a little less light the further back it sits */
+.xp li:nth-child(n+4){ background:linear-gradient(180deg, rgba(223,231,224,.020), rgba(223,231,224,0) 58%); }
+.xp li:nth-child(n+6){ background:linear-gradient(180deg, rgba(223,231,224,.012), rgba(223,231,224,0) 58%); }
 .xp-y{ font-size:11px; letter-spacing:.14em; color:var(--muted); font-variant-numeric:tabular-nums; }
 .xp li:first-child .xp-y{ color:var(--brand); }
 .xp li b{ font-size:clamp(14px,1.35vw,19px); font-weight:400; letter-spacing:-.005em; }
 .xp li p{ grid-column:2; margin:5px 0 0; font-size:12.5px; line-height:1.55; color:#8b958f; }
 @media (max-width:820px){
   .proc ol{ grid-template-columns:1fr; }
+  .proc li:nth-child(1), .proc li:nth-child(2){ padding-bottom:0; }
+  .proc li::before{ display:none; }
   .xp li{ grid-template-columns:58px minmax(0,1fr); }
+  /* the going collapses on a narrow frame, or the last role starts
+     halfway across the screen with nowhere left to set its title */
+  .xp li{ --going:clamp(4px,1vw,10px); }
 }
 
 /* — chapter II: pathways cards */
@@ -947,7 +1028,8 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <a class="nav-link" href="#gate" data-cursor><span>Studio</span><span class="alt">01</span></a>
     <a class="nav-link" href="#pathways" data-cursor><span>Work</span><span class="alt">02</span></a>
     <a class="nav-link" href="#lessons" data-cursor><span>Services</span><span class="alt">03</span></a>
-    <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">04</span></a>
+    <a class="nav-link" href="#experience" data-cursor><span>Experience</span><span class="alt">04</span></a>
+    <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">05</span></a>
   </nav>
   <button class="nav-burger" aria-label="Menu" data-cursor><i></i><i></i></button>
 </header>
@@ -1131,11 +1213,11 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 </section>
 
 <!-- ============================================================ chapter IV -->
-<section class="sec fin" id="eternity" data-cam="4">
-  <div class="eyebrow" data-rv="fade">04 — Contact</div>
-  <h2 class="display" data-rv="up">Let's build</h2>
-  <p class="body-lg" data-rv="up">If you have a project that needs design and engineering held by the same
-    pair of hands, I would like to hear about it. Based in Los Angeles, working anywhere.</p>
+<section class="sec" id="experience" data-cam="4">
+  <div class="sec-head" data-rv="fade">
+    <span class="k"><b>04</b> — Experience</span><span class="rule"></span><span class="k">10 yrs</span>
+  </div>
+  <h2 class="display h-sec" data-rv="up">Poured in lifts, one season at a time.</h2>
   <div class="xp" data-rv="up">
     <div class="xp-k"><b>Experience</b><span class="rule"></span></div>
     <ol>
@@ -1154,7 +1236,14 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
         <p>Designed and managed email marketing campaigns.</p></li>
     </ol>
   </div>
+</section>
 
+<!-- ============================================================ chapter V -->
+<section class="sec fin" id="eternity" data-cam="5">
+  <div class="eyebrow" data-rv="fade">05 — Contact</div>
+  <h2 class="display" data-rv="up">Let's build</h2>
+  <p class="body-lg" data-rv="up">If you have a project that needs design and engineering held by the same
+    pair of hands, I would like to hear about it. Based in Los Angeles, working anywhere.</p>
   <a class="cta" href="mailto:lova@threeohfivestudios.com" data-rv="fade" data-cursor>
     <i></i><span>Start a project</span>
     <svg viewBox="0 0 14 14" fill="none" width="13" height="13"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg>
@@ -1162,7 +1251,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 </section>
 
 <!-- ============================================================ footer -->
-<footer class="foot" id="colophon" data-cam="5">
+<footer class="foot" id="colophon" data-cam="6">
   <div class="foot-grid">
     <div class="foot-brand">
       <svg viewBox="0 0 44 44" fill="none" width="34" height="34" aria-hidden="true">
@@ -1177,6 +1266,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       <li><a href="#gate" data-cursor>Studio</a></li>
       <li><a href="#pathways" data-cursor>Recent work</a></li>
       <li><a href="#lessons" data-cursor>Services</a></li>
+      <li><a href="#experience" data-cursor>Experience</a></li>
       <li><a href="#eternity" data-cursor>Contact</a></li>
     </ul></div>
     <div><h4>Services</h4><ul>
@@ -2685,16 +2775,22 @@ function buildLantern(x, z, s, y) {
   });
   WORLD.lanternPane = WORLD.lanternPane || paneMat;
 
+  /* The halo, with the brown taken out of it. texGlow ramps inner -> mid at
+     .28 -> white at .62, and the old mid was rgba(238,124,40) — a genuinely
+     brown orange. Interpolating that toward white across a low-alpha band and
+     then adding it is what put a dull brown ring around each lamp. The core
+     is a warm cream now and the mid stop drops to a twelfth alpha, so the
+     falloff never accumulates enough colour to go muddy. */
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 3.2),
-    new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,168,88,.90)', 'rgba(238,124,40,.26)')),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .42 }));
+    new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,206,152,.88)', 'rgba(255,158,104,.12)')),
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .40 }));
   glow.position.y = 1.20; glow.renderOrder = 2; g.add(glow);
-  glow.userData.billboard = true;
 
   const lt = new THREE.PointLight(0xff9a44, 2.4, 8.5, 2);
   lt.position.set(0, 1.25, 0); g.add(lt);
   WORLD.lanternLights = WORLD.lanternLights || [];
-  WORLD.lanternLights.push(lt); WORLD.lanternGlows = WORLD.lanternGlows || []; WORLD.lanternGlows.push(glow);
+  WORLD.lanternLights.push(lt);
+  WORLD.lanternGlows = WORLD.lanternGlows || []; WORLD.lanternGlows.push(glow);
 
   g.position.set(x, y || 0, z); g.scale.setScalar(s || 1);
   scene.add(g);
@@ -4055,6 +4151,63 @@ const WORK_INFO = {
    rather than per event, and skipped entirely for cards outside the viewport,
    because this runs alongside a WebGL scene and twelve rect reads per pointer
    event would be twelve too many. */
+/* Each role stands on a step. The rows are pinned to points along the flight
+   and projected to the screen every frame, so the chapter is climbed rather
+   than read: the camera rises from the foot of the stairs to the landing over
+   the section's scroll, and the roles pass it one at a time.
+
+   They alternate either side of the centre line because at this spacing two
+   consecutive labels would otherwise overlap on screen, and flanking the run
+   reads better than a column stacked down the middle of it anyway.
+
+   Newest is nearest. You start at the bottom of the flight beside the current
+   role and climb away from it into the older work. */
+const XP_ANCHORS = [];
+function buildXpAnchors() {
+  const rows = $$('.xp li');
+  if (!rows.length || COARSE) return;
+  /* Spaced from the bottom riser upward — STAIR_Z0 is where the flight
+     actually starts, and an earlier pass began these three units in front of
+     it, which put the first roles out on the court at a clamped height with
+     no tread under them at all. Every anchor now solves its own tread from
+     the same constants the stairs are built from, and floats a fixed height
+     above it. */
+  /* Matched to the rig's own travel through the chapter (-10.5 to -30.5), so
+     every panel sits the same one unit ahead of the lens when it pauses,
+     instead of the gap widening as the climb goes on. */
+  const SPAN = 20.0;
+  rows.forEach((el, i) => {
+    const t = rows.length > 1 ? i / (rows.length - 1) : 0;
+    const z = STAIR_Z0 - 0.5 - t * SPAN;
+    const step = (STAIR_Z0 - z) / STAIR_RUN;          /* which tread that is */
+    const y = (step + 1) * (PODIUM / STEPS) + 1.55;
+    const x = (i % 2 ? 1 : -1) * 3.5;
+    XP_ANCHORS.push({ v: new THREE.Vector3(x, y, z), el: el });
+  });
+  document.body.classList.add('xp-3d');
+}
+
+const _xpV = new THREE.Vector3();
+function updateXpAnchors() {
+  if (!XP_ANCHORS.length) return;
+  /* only while the chapter holds the frame, eased so they arrive and leave */
+  const near = 1 - clamp(Math.abs(RIG.smooth - 4) / 1.15, 0, 1);
+  const W = vpW(), H = vpH();
+  for (let i = 0; i < XP_ANCHORS.length; i++) {
+    const a = XP_ANCHORS[i], el = a.el;
+    if (near <= .002) { if (el.style.opacity !== '0') el.style.opacity = '0'; continue; }
+    _xpV.copy(a.v).project(camera);
+    /* behind the lens, or outside the frame by more than its own width */
+    const off = _xpV.z > 1 || _xpV.x < -1.6 || _xpV.x > 1.6 || _xpV.y < -1.7 || _xpV.y > 1.7;
+    if (off) { el.style.opacity = '0'; continue; }
+    const sx = (_xpV.x * .5 + .5) * W, sy = (-_xpV.y * .5 + .5) * H;
+    /* fade the ones still far up the flight, so the nearest reads loudest */
+    const depth = clamp(1 - (camera.position.distanceTo(a.v) - 3) / 26, 0, 1);
+    el.style.transform = 'translate3d(' + Math.round(sx) + 'px,' + Math.round(sy) + 'px,0)';
+    el.style.opacity = (near * (.18 + .82 * depth * depth)).toFixed(3);
+  }
+}
+
 function wireCardSheen() {
   const cards = $$('.acard');
   if (!cards.length || COARSE) return;
@@ -5057,13 +5210,23 @@ const CAM = [
   { p: [ -5.6, 2.35, 11.6 ], t: [  1.2, 5.60, -14.0 ], fov: 48 },  /* 1 the slab     */
   { p: [  1.2, 3.60,  2.2 ], t: [ -0.6, 7.50, -22.0 ], fov: 40 },  /* 2 gardens     */
   { p: [  5.2, 2.10, -3.4 ], t: [ -2.6, 7.00, -20.0 ], fov: 46 },  /* 3 craft       */
-  { p: [  0.0, 7.60, -16.0 ], t: [  0.0, 13.0, -40.0 ], fov: 42 }, /* 4 afterlight  */
+  /* Experience is the flight. The rig drops to the foot of it and looks
+     straight up the run, so forty treads fill the frame and recede — which is
+     what the section's rows are laid out against. No world constant moved to
+     get this: the architecture is the same, the camera is just on the ground
+     at the bottom instead of halfway up, and a low lens does the work that
+     lengthening the stairs would have done at the cost of retuning the hero. */
+  { p: [  0.0, 1.95, -10.5 ], t: [  0.0, 9.20, -34.0 ], fov: 52 }, /* 4 experience  */
+  /* Carried further up the run than it used to sit, so the climb through the
+     experience chapter passes the whole set of roles rather than stopping
+     level with the fourth. Still looking at the slab, just from higher. */
+  { p: [  0.0, 9.60, -30.5 ], t: [  0.0, 14.2, -42.0 ], fov: 42 }, /* 5 contact     */
   /* The last shot used to sit above the top of the flight looking down at
      the ground past it — target y 3 at z −34, with the slab standing at
      z −44 and its slot up at y 15.4, so the thing the whole page climbs
      toward was out of frame above the camera. It now looks at the slot, from
      far enough back that the slab very nearly fills the height. */
-  { p: [  0.0, 11.0, -19.0 ], t: [  0.0, 15.6, -44.0 ], fov: 40 }  /* 5 footer      */
+  { p: [  0.0, 11.0, -19.0 ], t: [  0.0, 15.6, -44.0 ], fov: 40 }  /* 6 footer      */
 ];
 const RIG = { prog: 0, smooth: 0, mx: 0, my: 0, tmx: 0, tmy: 0, intro: 0, focus: -1, focusAmt: 0, pointer: 0, hold: 0, holding: 0 };
 let curveP, curveT, tmpCam;
@@ -5133,6 +5296,26 @@ let anchors = [], maxScroll = 1, activeSec = 0;
    the moment the section is centred until its last row has cleared the foot
    of the frame, and only then covers the ground to waypoint 3. */
 const HOLD_SEC = 2;
+const XP_SEC = 4;                 /* the chapter that climbs the flight */
+/* The rig takes the stairs one at a time. Travelling the chapter at an even
+   rate slides past seven panels without ever settling on one, so progress
+   through this chapter is warped: it rests at each stop for `hold` of that
+   step's scroll, then eases to the next. RIG.smooth still damps on top of
+   this, which rounds the departures so the plateaus read as pauses rather
+   than as the camera being stopped and started. */
+function stairProgress(f, n, hold) {
+  /* n stops means n-1 moves, and the stops have to land on 0 and 1 so the
+     last one arrives at the top of the climb. Dividing by n instead put the
+     final pause a seventh short of the end, which let the panels drift
+     progressively further ahead of the lens the higher it got — one unit at
+     the bottom of the flight, nearly four at the top. */
+  const m = Math.max(1, n - 1);
+  const u = clamp(f, 0, 1) * m;
+  const i = Math.min(Math.floor(u), m - 1);
+  let t = u - i;
+  t = t < hold ? 0 : (t - hold) / (1 - hold);
+  return (i + t * t * (3 - 2 * t)) / m;
+}
 let holds = [];
 function measure() {
   maxScroll = Math.max(1, document.documentElement.scrollHeight - vpH());
@@ -5326,7 +5509,7 @@ function wireHeroExit() {
 function wireNav() {
   let last = 0;
   const rail = $('#rail');
-  const names = ['Top', 'Studio', 'Recent Work', 'Services', 'Contact', 'Colophon'];
+  const names = ['Top', 'Studio', 'Recent Work', 'Services', 'Experience', 'Contact', 'Colophon'];
   SECS.forEach((s, i) => {
     const b = document.createElement('button');
     b.innerHTML = '<i></i>'; b.title = names[i] || '';
@@ -5607,7 +5790,13 @@ function updateWorld(dt) {
   if (WORLD.lanternLights) WORLD.lanternLights.forEach((l, i) => {
     l.intensity = 2.6 * (1 + f * .55) * (.86 + .22 * Math.sin(clock * (2.3 + i * .7) + i * 2.1) + .1 * pulse);
   });
-  if (WORLD.lanternGlows) WORLD.lanternGlows.forEach(g => { g.quaternion.copy(camera.quaternion); });
+
+  /* the halo faces the camera, and breathes with the lamp inside it rather
+     than sitting at a fixed brightness beside a flickering light */
+  if (WORLD.lanternGlows) WORLD.lanternGlows.forEach((h, i) => {
+    h.quaternion.copy(camera.quaternion);
+    h.material.opacity = .40 * (.88 + .18 * Math.sin(clock * (2.3 + i * .7) + i * 2.1));
+  });
 
   /* haze slides across the courtyard */
   if (WORLD.haze) WORLD.haze.forEach(h => {
@@ -5682,6 +5871,8 @@ function frame(now) {
     }
   }
   RIG.prog = progressFor(scrollY);
+  if (XP_ANCHORS.length && RIG.prog >= XP_SEC && RIG.prog < XP_SEC + 1)
+    RIG.prog = XP_SEC + stairProgress(RIG.prog - XP_SEC, XP_ANCHORS.length, .46);
   RIG.holding = holdingAt(scrollY);
   RIG.smooth = REDUCE ? RIG.prog : damp(RIG.smooth, RIG.prog, 5.2, dt);
   RIG.mx = damp(RIG.mx, RIG.tmx, 2.6, dt);
@@ -5697,6 +5888,7 @@ function frame(now) {
 
   applyCamera();
   updateCursorLight(dt);      /* after applyCamera — unproject needs the new matrix */
+  updateXpAnchors();          /* likewise: these project through the same matrix */
   updateWorld(dt);
   render();
   queue();
@@ -5758,7 +5950,7 @@ const JOBS = [
 
 function boot() {
   makeGrain();
-  buildArchive();
+  buildArchive(); buildXpAnchors();
   wireWorkModal(); wireCardSheen();
   wireReveals(); wireNav(); wireHeroExit(); wireFocus(); wireCursor();
   document.body.classList.add('is-locked');
@@ -5787,6 +5979,10 @@ function fallback(err) {
   document.documentElement.classList.add('no-webgl');
   document.body.classList.add('no-webgl');
   document.body.classList.remove('is-locked');
+  /* xp-3d lifts the experience rows out of flow and leaves them dark until
+     the projection places them. With no renderer that projection never runs,
+     so the class has to come back off or the whole section is invisible. */
+  document.body.classList.remove('xp-3d');
   preEl.classList.add('done');
   $$('[data-rv], .mask-line').forEach(e => e.classList.add('rv-in'));
   window.__305 = window.__secret = { fallback: true, error: String(err && err.message || err) };
