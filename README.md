@@ -42,8 +42,11 @@ number formatting. Without `serve.py` running, Save falls back to copying the
 values to the clipboard. Partial saves preserve omitted settings and comments;
 invalid values are rejected, and a failed write leaves the source intact.
 
-Run the tuning-save regression checks with `python3 -B -m unittest test_serve.py`.
-They use temporary files and do not modify the portfolio.
+Run the checks with `python3 -B -m unittest discover -p 'test_*.py'` — the
+tuning-save regressions in `test_serve.py`, and `test_page.py`, which parses
+the page's inline script and asserts the tuning keys agree across `TUNE`,
+`TUNE_SCHEMA` and the panel's handlers. Both use temporary files and do not
+modify the portfolio. They also run in CI on every push.
 
 Other URL flags:
 

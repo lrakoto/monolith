@@ -1,0 +1,26 @@
+# The page has no runtime tests and a broken index.html fails silently — the
+# preloader just never finishes. These are the two checks worth having, run on
+# every push so they do not depend on whoever is editing remembering to.
+name: checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # test_page.py shells out to `node --check` on the inline script; without
+      # node that test skips itself and the page goes unchecked.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: python3 -B -m unittest discover -p 'test_*.py' -v

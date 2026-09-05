@@ -5,6 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ThreeOhFive Studios — Code and visual design for brand experiences</title>
 <meta name="description" content="Lova Rakoto — web developer and designer in Los Angeles. Code and visual design brought together to build brand experiences, in a live WebGL scene generated at runtime.">
+
+<!-- Social preview. A portfolio's job is to survive being pasted into a Slack
+     DM or a LinkedIn message, and without these it arrives as a bare grey URL
+     — no image, no title — which is a poor showing for a page whose whole
+     argument is how it looks.
+
+     ==> BEFORE DEPLOY: this page has no domain yet, so og:image is relative and
+     og:url is absent. Scrapers do not run JavaScript and several will not
+     resolve a relative image, so when there is a URL, set og:url and make both
+     image tags absolute against it. Those three lines are the only ones that
+     change; grep for SITE-URL. The card is assets/brand/og-cover.jpg, a 1200x630
+     capture of the hero — regenerate it if the scene's opening frame changes. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ThreeOhFive Studios">
+<meta property="og:title" content="ThreeOhFive Studios — Code and visual design for brand experiences">
+<meta property="og:description" content="Lova Rakoto — web developer and designer in Los Angeles. A portfolio built as a live WebGL scene: a concrete slab, forty steps, one slot of light.">
+<meta property="og:image" content="assets/brand/og-cover.jpg"><!-- SITE-URL: make absolute -->
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A board-formed concrete slab at night, lit by one horizontal slot, standing above a forty-step flight, with the numerals 3 0 5 across the frame.">
+<!-- SITE-URL: <meta property="og:url" content="https://example.com/"> -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ThreeOhFive Studios — Code and visual design for brand experiences">
+<meta name="twitter:description" content="Lova Rakoto — web developer and designer in Los Angeles. A portfolio built as a live WebGL scene: a concrete slab, forty steps, one slot of light.">
+<meta name="twitter:image" content="assets/brand/og-cover.jpg"><!-- SITE-URL: make absolute -->
+<meta name="twitter:image:alt" content="A board-formed concrete slab at night, lit by one horizontal slot, standing above a forty-step flight, with the numerals 3 0 5 across the frame.">
+
 <link rel="icon" href="assets/brand/icon-32.webp" sizes="32x32">
 <link rel="icon" href="assets/brand/icon-192.webp" sizes="192x192">
 <link rel="apple-touch-icon" href="assets/brand/icon-180.webp">
@@ -365,7 +392,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 /* Seven stops with a dwell on each. At 340vh a stop got half a viewport of
    scroll and the pause never registered — the climb read as one continuous
    slide past a wall of cards. */
-#experience{ min-height:760vh; }
+#experience{ min-height:900vh; }
 /* No scrim here. A chapter's scrim exists to hold its copy off the scene, but
    this chapter's copy is standing *in* the scene on the steps, each panel
    carrying its own ground — so the radial wash was only dimming the flight
@@ -1436,7 +1463,7 @@ const TUNE = {
   letterGlow:       2.00,
   fgPlane:          1.00,
   xpAim:            0.550,
-  xpRunout:         0.680,
+  xpRunout:         0.550,
   xpZoom:           6.00,
   xpSpread:         1.00,
   xpPark:           0.350,
