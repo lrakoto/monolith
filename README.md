@@ -39,7 +39,11 @@ slot, and moon values.
 Drag to see the change on the next frame; **SAVE TO CODE** writes the numbers
 back into the `const TUNE` block in `index.html`, preserving the file's own
 number formatting. Without `serve.py` running, Save falls back to copying the
-values to the clipboard.
+values to the clipboard. Partial saves preserve omitted settings and comments;
+invalid values are rejected, and a failed write leaves the source intact.
+
+Run the tuning-save regression checks with `python3 -B -m unittest test_serve.py`.
+They use temporary files and do not modify the portfolio.
 
 Other URL flags:
 

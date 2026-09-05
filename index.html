@@ -24,6 +24,18 @@
   --ember:#ff6f66;        /* the warm end, tied to the slot light in the scene */
   --gold:#c9a24a;
   --pad:clamp(20px, 3.4vw, 56px);
+  /* The page frame. Everything that touches an edge — the bar, the chapters,
+     the footer, the rail, the peek — is inset by --gut rather than --pad, so
+     one number holds them in line.
+
+     --pad alone tops out at 56px, which is a gutter on a laptop and a hairline
+     on an ultra-wide: at 3000px the service rows ran nearly three thousand
+     pixels wide to hold a 34ch paragraph, and the hero copy sat marooned in
+     the corner. Past --shell the gutter takes the surplus instead, so the
+     column stops growing and the page centres in the frame. Below it the
+     max() falls through to --pad and nothing about the old layout moves. */
+  --shell:1760px;
+  --gut:max(var(--pad), calc((100vw - var(--shell)) / 2));
   --nav-h:84px;
   --ease:cubic-bezier(.22,.61,.36,1);
   --ease-out:cubic-bezier(.16,1,.3,1);
@@ -49,9 +61,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   position:fixed; inset:0; width:100%; height:100%;
   display:block; z-index:0; background:#05070a;
 }
+/* The static overlay. Off at rest — the scene reads cleaner without a tile
+   of noise sitting over the concrete, and the post pass already carries its
+   own grain. The opacity is written inline from TUNE.grainOverlay, so the
+   slider can bring it back (it was authored at .055). */
 #grain{
   position:fixed; inset:-1px; z-index:60; pointer-events:none;
-  opacity:.055; mix-blend-mode:overlay;
+  opacity:0; mix-blend-mode:overlay;
   background-repeat:repeat; background-size:180px 180px;
 }
 #vignette{
@@ -125,7 +141,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
      860 against a 768 tablet — which carried the burger off the right edge.
      --vw is the layout viewport, written on every resize. */
   position:fixed; top:0; left:0; width:var(--vw, 100%); height:var(--nav-h); z-index:50;
-  display:flex; align-items:center; gap:24px; padding:0 var(--pad);
+  display:flex; align-items:center; gap:24px; padding:0 var(--gut);
   transition:transform .55s var(--ease);
 }
 /* The sticky wash sits on its own layer rather than on the bar. A
@@ -141,7 +157,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 }
 .nav.stuck::before{ opacity:1; }
 .nav::after{
-  content:''; position:absolute; left:var(--pad); right:var(--pad); bottom:0; height:1px;
+  content:''; position:absolute; left:var(--gut); right:var(--gut); bottom:0; height:1px;
   background:var(--line-soft); opacity:0; transition:opacity .5s;
 }
 .nav.stuck::after{ opacity:1; }
@@ -173,7 +189,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .nav-burger:hover i:nth-child(1){ width:17px; }
 
 /* ============================================================= hero */
-.hero{ position:relative; min-height:100svh; padding:0 var(--pad); display:flex; flex-direction:column; }
+.hero{ position:relative; min-height:100svh; padding:0 var(--gut); display:flex; flex-direction:column; }
 .hero::before{ content:''; position:absolute; left:0; right:0; top:0; height:46%; pointer-events:none;
   background:linear-gradient(rgba(3,6,9,.72), rgba(3,6,9,.34) 46%, transparent); }
 .hero-top{ padding-top:calc(var(--nav-h) + clamp(12px,2.6vh,34px)); max-width:min(560px,46vw); position:relative; z-index:2; }
@@ -229,7 +245,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 @media (max-width:820px){ .peek{ display:none; } }
 
 .hero-side{
-  position:absolute; z-index:2; right:var(--pad); top:50%; transform:translateY(-50%);
+  position:absolute; z-index:2; right:var(--gut); top:50%; transform:translateY(-50%);
   display:flex; flex-direction:column; align-items:center; gap:14px; pointer-events:none;
 }
 /* The tracking here was set for three CJK glyphs. Eleven latin characters at
@@ -240,7 +256,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 @keyframes cue{ 0%{transform:scaleX(0)} 42%{transform:scaleX(1)} 100%{transform:scaleX(1) translateX(100%)} }
 
 /* ============================================================= sections */
-.sec{ position:relative; padding:clamp(88px,15vh,190px) var(--pad); }
+.sec{ position:relative; padding:clamp(88px,15vh,190px) var(--gut); }
 .sec::before{
   content:''; position:absolute; inset:-22% -4%; z-index:-1; pointer-events:none;
   background:radial-gradient(110% 62% at 30% 50%, rgba(4,7,10,.88), rgba(4,7,10,.62) 42%, rgba(4,7,10,.18) 74%, rgba(4,7,10,0));
@@ -346,7 +362,10 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
    out of flow and pins each one to a stair tread — see updateXpAnchors. The
    section keeps its own height either way, because that scroll is what the
    camera climbs. */
-#experience{ min-height:340vh; }
+/* Seven stops with a dwell on each. At 340vh a stop got half a viewport of
+   scroll and the pause never registered — the climb read as one continuous
+   slide past a wall of cards. */
+#experience{ min-height:760vh; }
 /* No scrim here. A chapter's scrim exists to hold its copy off the scene, but
    this chapter's copy is standing *in* the scene on the steps, each panel
    carrying its own ground — so the radial wash was only dimming the flight
@@ -356,14 +375,22 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 body.xp-3d .xp{ position:fixed; inset:0; z-index:3; margin:0; pointer-events:none; }
 body.xp-3d .xp-k{ display:none; }
 body.xp-3d .xp ol{ border:0; }
+body.xp-3d .xp{ --xp-w:min(340px,32vw); }
 body.xp-3d .xp li{
-  position:absolute; top:0; left:0; width:min(310px,34vw);
+  position:absolute; top:0; left:0; width:var(--xp-w);
   margin:0; padding:11px 14px 12px; border:0;
-  background:linear-gradient(180deg, rgba(9,13,17,.80), rgba(9,13,17,.52));
+  background:linear-gradient(180deg, rgba(9,13,17,.86), rgba(9,13,17,.58));
   border-left:1px solid var(--brand);
   box-shadow:0 18px 44px -18px rgba(0,0,0,.9);
   opacity:0; will-change:transform, opacity;
+  transform-origin:0 50%;
 }
+/* The roles flank the run, and the ones on the left hang off their point to
+   the left instead of reaching back across it. Without this both columns
+   started at the centre line and the left-hand cards lay over the flight. */
+body.xp-3d .xp li.xp-l{ margin-left:calc(var(--xp-w) * -1); transform-origin:100% 50%; }
+body.xp-3d .xp li.xp-l{ border-left:0; border-right:1px solid var(--brand); text-align:right; }
+body.xp-3d .xp li.xp-l p{ margin-left:auto; }
 body.xp-3d .xp li::before{ display:none; }
 body.xp-3d .xp li p{ margin-top:4px; }
 .xp ol{ list-style:none; margin:0; padding:0; border-top:1px solid rgba(0,0,0,.55); }
@@ -655,7 +682,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
   padding:clamp(20px,2.4vw,30px) 0; border-bottom:1px solid var(--line-soft);
   cursor:pointer; transition:padding .5s var(--ease-out);
 }
-.les::before{ content:''; position:absolute; left:calc(var(--pad) * -1); right:0; top:0; bottom:0;
+.les::before{ content:''; position:absolute; left:calc(var(--gut) * -1); right:0; top:0; bottom:0;
   background:linear-gradient(90deg, rgba(228,96,108,.11), transparent 46%);
   opacity:0; transition:opacity .55s var(--ease); pointer-events:none; }
 .les:hover::before{ opacity:1; }
@@ -696,7 +723,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
 .cta:hover svg path{ stroke:#05070a; }
 
 /* — footer */
-.foot{ position:relative; padding:clamp(50px,8vh,96px) var(--pad) clamp(26px,4vh,40px);
+.foot{ position:relative; padding:clamp(50px,8vh,96px) var(--gut) clamp(26px,4vh,40px);
   border-top:1px solid var(--line-soft); }
 .foot-grid,.foot-base{ position:relative; }
 .foot-grid{ display:grid; grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,.6fr)); gap:clamp(22px,4vw,60px); }
@@ -710,7 +737,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
   font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
 
 /* ============================================================= progress rail */
-.rail{ position:fixed; right:calc(var(--pad) - 4px); top:50%; transform:translateY(-50%); z-index:45;
+.rail{ position:fixed; right:calc(var(--gut) - 4px); top:50%; transform:translateY(-50%); z-index:45;
   display:flex; flex-direction:column; gap:12px; align-items:center; }
 .rail button{ width:22px; height:10px; display:grid; place-items:center; }
 .rail i{ display:block; width:14px; height:1px; background:rgba(223,231,224,.26); transition:.5s var(--ease-out); }
@@ -737,7 +764,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
 @media (max-width:820px){
   .nav-links{
     display:flex; position:fixed; top:0; right:0; bottom:0; width:min(84vw,360px);
-    padding:calc(var(--nav-h) + 28px) var(--pad) 34px; flex-direction:column; align-items:flex-start; gap:0;
+    padding:calc(var(--nav-h) + 28px) var(--gut) 34px; flex-direction:column; align-items:flex-start; gap:0;
     background:rgba(3,6,9,.98); border-left:1px solid var(--line-soft);
     transform:translate3d(100%,0,0); opacity:0; visibility:hidden; pointer-events:none;
     transition:transform .65s var(--ease-out), opacity .4s, visibility 0s linear .65s;
@@ -808,7 +835,7 @@ body[data-layout-hero="b"] .chip .tx{
 /* the live window drops into the open right corner, away from the reading
    column and the oversized 3-D wordmark */
 body[data-layout-hero="b"] .peek{
-  left:auto; right:var(--pad); top:auto; bottom:clamp(38px,7vh,96px);
+  left:auto; right:var(--gut); top:auto; bottom:clamp(38px,7vh,96px);
 }
 body[data-layout-hero="b"] .peek-cap b{ font-size:clamp(20px,2.2vw,34px); letter-spacing:.18em; }
 /* The place name reads down the right edge, hung under the navigation — the
@@ -817,7 +844,7 @@ body[data-layout-hero="b"] .peek-cap b{ font-size:clamp(20px,2.2vw,34px); letter
    through the wordmark, so the latin setting trades size for length and reads
    as a fine rule of type instead of a second title competing with the 305. */
 body[data-layout-hero="b"] .hero-side{
-  left:auto; right:var(--pad); top:calc(var(--nav-h) + clamp(14px,3vh,42px));
+  left:auto; right:var(--gut); top:calc(var(--nav-h) + clamp(14px,3vh,42px));
   bottom:auto; transform:none; display:block;
 }
 body[data-layout-hero="b"] .hero-side .v{
@@ -1407,7 +1434,15 @@ const TUNE = {
   nearReach:        12.60,
   grassGlow:        14.00,
   letterGlow:       2.00,
-  fgPlane:          1.00
+  fgPlane:          1.00,
+  xpAim:            0.550,
+  xpRunout:         0.680,
+  xpZoom:           6.00,
+  xpSpread:         1.00,
+  xpPark:           0.350,
+  xpHold:           0.550,
+  grainOverlay:     0.000,
+  filmGrain:        0.000
 };
 
 /* label, min, max, step, group — the order here is the order shown */
@@ -1431,7 +1466,23 @@ const TUNE_SCHEMA = [
   ['nearReach',        'Near reach',   1,    16,    .1,   'Cursor lamp'],
   ['grassGlow',        'Grass glow',   0,    14,    .1,   'Cursor lamp'],
   ['letterGlow',       'Letter rim',   0,    14,    .1,   'Cursor lamp'],
-  ['fgPlane',          'Near plane z', -6,   10,    .1,   'Cursor lamp']
+  ['fgPlane',          'Near plane z', -6,   10,    .1,   'Cursor lamp'],
+  /* The experience chapter. Aim leans the lens toward the role it is level
+     with; zoom is the push-in on the pause; spread is how many stops either
+     side stay lit (1 is one card at a time); park pulls the card being read
+     toward a composed slot; dwell is the share of each step's scroll spent
+     standing still. All read every frame, so nothing needs a handler. */
+  ['xpAim',            'Camera aim',   0,    1,     .01,  'Timeline'],
+  ['xpRunout',         'Stops end by', .3,   1,     .01,  'Timeline'],
+  ['xpZoom',           'Dwell zoom',   0,    16,    .5,   'Timeline'],
+  ['xpSpread',         'Cards lit',    .5,   3,     .05,  'Timeline'],
+  ['xpPark',           'Screen park',  0,    1,     .01,  'Timeline'],
+  ['xpHold',           'Dwell',        0,    .85,   .01,  'Timeline'],
+  /* Both off by default. The DOM tile is the coarse static over everything;
+     the second is the fine per-pixel grain inside the composite pass. They
+     were .055 and .020 when the scene shipped with them on. */
+  ['grainOverlay',     'Static overlay', 0,   .2,    .005, 'Film'],
+  ['filmGrain',        'Film grain',    0,    .08,   .002, 'Film']
 ];
 
 /* ------------------------------------------------------------ 1 · canvas */
@@ -2733,13 +2784,14 @@ function buildTorii() {
   lc.position.set(0, H + .11, 0); lc.castShadow = true; g.add(lc);
 
   /* one strip of light along the underside, aimed down at the ground the
-     visitor is about to walk over — the same warm as the slot, and the only
-     other place in the scene it is allowed to appear */
+     visitor is about to walk over. It used to borrow the slot's orange; it
+     is a lamp, so it now sits with the bollards on the golden hue and leaves
+     the slot's warm to the slot. */
   const strip = new THREE.Mesh(new THREE.PlaneGeometry(SPAN * 2 - T * 2.4, .11),
-    new THREE.MeshBasicMaterial({ color: hdr(.80, .40, .18), fog: true, toneMapped: false }));
+    new THREE.MeshBasicMaterial({ color: hdr(.80, .63, .31), fog: true, toneMapped: false }));
   strip.rotation.x = Math.PI / 2;                 /* +z turns to −y: it faces down */
   strip.position.set(0, H - 1.055, 0); g.add(strip);
-  const lt = new THREE.PointLight(0xffa452, 1.5, 9, 2);
+  const lt = new THREE.PointLight(0xffd085, 1.5, 9, 2);
   lt.position.set(0, H - 1.5, 0); g.add(lt);
 
   /* it stands at the foot of the flight, not over the court — small enough
@@ -2768,25 +2820,26 @@ function buildLantern(x, z, s, y) {
   const cap = new THREE.Mesh(new THREE.BoxGeometry(.56, .11, .56), dark);
   cap.position.y = 2.18; cap.castShadow = true; g.add(cap);
 
-  const paneMat = new THREE.MeshBasicMaterial({ color: hdr(1.90, .92, .40), fog: false, toneMapped: false });
+  const paneMat = new THREE.MeshBasicMaterial({ color: hdr(1.90, 1.50, .76), fog: false, toneMapped: false });
   [[.234, 0], [-.234, Math.PI]].forEach(p => {
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(.13, 1.44), paneMat);
     pane.position.set(0, 1.16, p[0]); pane.rotation.y = p[1]; g.add(pane);
   });
   WORLD.lanternPane = WORLD.lanternPane || paneMat;
 
-  /* The halo, with the brown taken out of it. texGlow ramps inner -> mid at
-     .28 -> white at .62, and the old mid was rgba(238,124,40) — a genuinely
-     brown orange. Interpolating that toward white across a low-alpha band and
-     then adding it is what put a dull brown ring around each lamp. The core
-     is a warm cream now and the mid stop drops to a twelfth alpha, so the
-     falloff never accumulates enough colour to go muddy. */
+  /* The halo. Dropping the mid stop to a twelfth alpha stopped the falloff
+     going muddy, but it was still an orange falloff — hue 21, which is a
+     colour that reads as gold at full brightness and as brown the moment it
+     is dimmed, and this one spends its whole life dim. Every lamp in the
+     scene is now on hue 38-39 instead: same warmth, enough green under it
+     that the faint end of the ramp stays golden rather than turning to mud.
+     The slot keeps its own orange — that one is the feature, not a lamp. */
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 3.2),
-    new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,206,152,.88)', 'rgba(255,158,104,.12)')),
+    new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,224,176,.88)', 'rgba(255,208,126,.12)')),
       transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .40 }));
   glow.position.y = 1.20; glow.renderOrder = 2; g.add(glow);
 
-  const lt = new THREE.PointLight(0xff9a44, 2.4, 8.5, 2);
+  const lt = new THREE.PointLight(0xffd07e, 2.4, 8.5, 2);
   lt.position.set(0, 1.25, 0); g.add(lt);
   WORLD.lanternLights = WORLD.lanternLights || [];
   WORLD.lanternLights.push(lt);
@@ -3095,7 +3148,7 @@ function wordMaterial(canvasEl) {
   const m = new THREE.MeshBasicMaterial({ map: tx(canvasEl, { aniso: 16 }), transparent: true,
     depthWrite: false, side: THREE.DoubleSide, fog: true, opacity: 1 });
   m.onBeforeCompile = sh => injectLampGlow(sh,
-    { glow: CUR_UNI.letterGlow, weight: 1, col: new THREE.Color(0xffc36a), mix: 1, rangeMul: 1.75 });
+    { glow: CUR_UNI.letterGlow, weight: 1, col: new THREE.Color(0xffd489), mix: 1, rangeMul: 1.75 });
   return m;
 }
 const WORD = { glyphs: [], group: null, ink: null, reveal: 0 };
@@ -4163,50 +4216,127 @@ const WORK_INFO = {
    Newest is nearest. You start at the bottom of the flight beside the current
    role and climb away from it into the older work. */
 const XP_ANCHORS = [];
+/* Where a role stands relative to the lens at its stop: how far ahead, how far
+   to the side, how far below the aim line. Angles, in effect — at 9.2 by 3.15
+   a card sits about nineteen degrees off axis, which lands it clear of the
+   flight without leaving the frame on any aspect the page supports. The rest
+   of the chapter's numbers — the aim, the dwell zoom, how many roles stay lit,
+   how hard the read one is held, and where the stops end — are on the tuning
+   panel, because those are composition decisions and the only honest way to
+   make one is to watch it move. */
+const XP = { dist: 9.2, side: 3.15, drop: -0.55 };
 function buildXpAnchors() {
   const rows = $$('.xp li');
   if (!rows.length || COARSE) return;
-  /* Spaced from the bottom riser upward — STAIR_Z0 is where the flight
-     actually starts, and an earlier pass began these three units in front of
-     it, which put the first roles out on the court at a clamped height with
-     no tread under them at all. Every anchor now solves its own tread from
-     the same constants the stairs are built from, and floats a fixed height
-     above it. */
-  /* Matched to the rig's own travel through the chapter (-10.5 to -30.5), so
-     every panel sits the same one unit ahead of the lens when it pauses,
-     instead of the gap widening as the climb goes on. */
-  const SPAN = 20.0;
   rows.forEach((el, i) => {
-    const t = rows.length > 1 ? i / (rows.length - 1) : 0;
-    const z = STAIR_Z0 - 0.5 - t * SPAN;
-    const step = (STAIR_Z0 - z) / STAIR_RUN;          /* which tread that is */
-    const y = (step + 1) * (PODIUM / STEPS) + 1.55;
-    const x = (i % 2 ? 1 : -1) * 3.5;
-    XP_ANCHORS.push({ v: new THREE.Vector3(x, y, z), el: el });
+    const side = i % 2 ? 1 : -1;
+    if (side < 0) el.classList.add('xp-l');
+    XP_ANCHORS.push({ v: new THREE.Vector3(), el: el, side: side });
   });
   document.body.classList.add('xp-3d');
 }
 
-const _xpV = new THREE.Vector3();
-function updateXpAnchors() {
-  if (!XP_ANCHORS.length) return;
-  /* only while the chapter holds the frame, eased so they arrive and leave */
-  const near = 1 - clamp(Math.abs(RIG.smooth - 4) / 1.15, 0, 1);
-  const W = vpW(), H = vpH();
-  for (let i = 0; i < XP_ANCHORS.length; i++) {
-    const a = XP_ANCHORS[i], el = a.el;
-    if (near <= .002) { if (el.style.opacity !== '0') el.style.opacity = '0'; continue; }
-    _xpV.copy(a.v).project(camera);
-    /* behind the lens, or outside the frame by more than its own width */
-    const off = _xpV.z > 1 || _xpV.x < -1.6 || _xpV.x > 1.6 || _xpV.y < -1.7 || _xpV.y > 1.7;
-    if (off) { el.style.opacity = '0'; continue; }
-    const sx = (_xpV.x * .5 + .5) * W, sy = (-_xpV.y * .5 + .5) * H;
-    /* fade the ones still far up the flight, so the nearest reads loudest */
-    const depth = clamp(1 - (camera.position.distanceTo(a.v) - 3) / 26, 0, 1);
-    el.style.transform = 'translate3d(' + Math.round(sx) + 'px,' + Math.round(sy) + 'px,0)';
-    el.style.opacity = (near * (.18 + .82 * depth * depth)).toFixed(3);
+/* Where the roles actually stand.
+   ------------------------------------------------------------------------
+   They used to be pinned to treads — spaced along the flight in world z and
+   flanked 3.5 units either side of the centre line. That reads fine written
+   down and fails in perspective, because the lens climbs the same run the
+   roles are laid along. At the pause the nearest card sat one unit ahead of
+   the camera and three and a half to the side, which is seventy-five degrees
+   off axis: it was culled off the edge of the frame. Everything four steps
+   further up was near enough the vanishing point to pile into a single band
+   of overlapping panels in the middle of the picture. Hence a chapter that
+   showed all seven roles at once and framed none of them.
+
+   So each role is placed off the rig's own pose at the stop that belongs to
+   it: read the curve where the climb will pause, then set the card a fixed
+   distance ahead of the lens and a fixed distance to one side of it. The
+   offset is now angular by construction — every card arrives the same size,
+   in the same place in the frame, whichever end of the flight it is at — and
+   because the rig is still climbing the stairs, the cards still stand on
+   them. Needs the curve, so it runs after buildRig rather than in boot. */
+/* How far into the chapter the last role stands, as a share of the chapter.
+   Not a free number: the chapter's scroll runs from this section's centre to
+   the *next* section's centre, so its back end is spent with the contact copy
+   already climbing into the frame. Roles left standing there are read over
+   that copy, against a slab close enough to fill the picture. So the stops end
+   where the next section's top is still below the fold, and the rest of the
+   chapter is a plain run to the waypoint with an empty frame. Solved in
+   measure(), because it depends on the viewport; TUNE.xpRunout is a ceiling
+   on it, not the value — and the ceiling is the tighter of the two here,
+   because the back of the climb is also where the slab closes in far enough
+   to fill the frame, and a role read against a flat wall of concrete has
+   nothing behind it. The section is long enough that two thirds of it still
+   gives every stop about half a screen of scroll to itself. */
+let XP_RUN = .78;
+const _xpF = new THREE.Vector3(), _xpR = new THREE.Vector3(), _xpUp = new THREE.Vector3(0, 1, 0);
+function placeXpAnchors() {
+  if (!XP_ANCHORS.length || !curveP) return;
+  const n = XP_ANCHORS.length, N = CAM.length - 1;
+  const P = new THREE.Vector3(), T = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const a = XP_ANCHORS[i];
+    const u = (XP_SEC + (n > 1 ? i / (n - 1) : 0) * XP_RUN) / N;
+    curveP.getPoint(u, P); curveT.getPoint(u, T);
+    _xpF.subVectors(T, P).normalize();
+    _xpR.crossVectors(_xpF, _xpUp).normalize();
+    a.v.copy(P).addScaledVector(_xpF, XP.dist).addScaledVector(_xpR, a.side * XP.side);
+    a.v.y += XP.drop;
   }
 }
+
+const _xpV = new THREE.Vector3();
+let XP_CW = 0;                       /* card width, measured once per layout */
+/* How much of the frame the chapter has. A plateau, not a peak: it ramps up
+   over the approach, holds at full for the whole climb, and lets go on the
+   way out. The old triangle fell away from the section's midpoint, which was
+   right when all seven roles were on screen together and the set as a whole
+   was arriving — with one card holding the frame at a time it meant the first
+   role read at full strength and the last at a tenth, because the last one is
+   read at the far end of the chapter. Both ends land on a stop exactly:
+   stairProgress puts stop 0 at XP_SEC and the last at XP_SEC + 1. */
+function xpNear() {
+  if (!XP_ANCHORS.length) return 0;
+  return clamp(Math.min((RIG.smooth - XP_SEC + .40) / .40,
+                        (XP_SEC + XP_RUN + .17 - RIG.smooth) / .17), 0, 1);
+}
+function updateXpAnchors() {
+  if (!XP_ANCHORS.length) return;
+  const near = xpNear();
+  const W = vpW(), H = vpH();
+  if (!XP_CW) XP_CW = XP_ANCHORS[0].el.offsetWidth || 300;
+  for (let i = 0; i < XP_ANCHORS.length; i++) {
+    const a = XP_ANCHORS[i], el = a.el;
+    /* How near the climb is to standing at this role, in stops rather than in
+       metres. The old fade was a distance falloff 26 units deep, which at
+       three unit spacing left every card on screen at nine tenths of full
+       strength — the reason seven of them were legible at once. Counted in
+       stops, one card holds the frame and its neighbours are gone by the time
+       the rig has finished arriving. */
+    const w = clamp(1 - Math.abs(i - RIG.xp) / TUNE.xpSpread, 0, 1);
+    const amt = near * w * w;
+    if (amt <= .004) { if (el.style.opacity !== '0') el.style.opacity = '0'; continue; }
+    _xpV.copy(a.v).project(camera);
+    if (_xpV.z > 1) { el.style.opacity = '0'; continue; }   /* behind the lens */
+    let sx = (_xpV.x * .5 + .5) * W, sy = (-_xpV.y * .5 + .5) * H;
+    /* Parked, the card is pulled part of the way to a composed slot and held
+       there. The anchor alone still carries the rig's breathing and the
+       pointer parallax, which is life on a card you are passing and a wobble
+       on one you are reading — this settles it without cutting it loose. */
+    const k = TUNE.xpPark * w * w;
+    if (k > .001) {
+      sx = lerp(sx, W * (.5 + a.side * .19), k);
+      sy = lerp(sy, H * .46, k);
+    }
+    /* never let a card that is being read hang off the edge */
+    const half = a.side < 0 ? XP_CW : 0;
+    sx = clamp(sx, 16 + half, W - 16 - (XP_CW - half));
+    el.style.transform = 'translate3d(' + Math.round(sx) + 'px,' + Math.round(sy) + 'px,0) scale('
+      + (.94 + .06 * w).toFixed(3) + ')';
+    el.style.opacity = amt.toFixed(3);
+  }
+}
+
 
 function wireCardSheen() {
   const cards = $$('.acard');
@@ -4504,7 +4634,7 @@ function buildLights() {
 
   /* the flight is the spine of the composition — without a lamp of its own it
      falls into the same black as the ground and the eye has nothing to climb */
-  const stairL = new THREE.PointLight(0xffa049, 4.2, 17, 2);
+  const stairL = new THREE.PointLight(0xffcf7d, 4.2, 17, 2);
   stairL.position.set(0, 7.6, -26.0); scene.add(stairL);
 
   /* The cursor, as a light. The scene carries only the slot and the moon, so
@@ -4988,7 +5118,7 @@ function initPost() {
   POST.comp = new THREE.ShaderMaterial({
     uniforms: {
       tS: { value: null }, tB: { value: null }, uRes: { value: new THREE.Vector2(w, h) },
-      uT: { value: 0 }, uBloom: { value: .34 }, uCA: { value: 1 }, uGrain: { value: .020 },
+      uT: { value: 0 }, uBloom: { value: .34 }, uCA: { value: 1 }, uGrain: { value: TUNE.filmGrain },
       uVig: { value: 1 }, uExp: { value: .62 }, uFade: { value: 1 }, uSat: { value: 1.05 }
     },
     vertexShader: QUAD_VS,
@@ -5187,6 +5317,11 @@ function initTuning() {
     grassGlow:       v => { CUR_UNI.grassGlow.value = v; },
     letterGlow:      v => { CUR_UNI.letterGlow.value = v; },
     fgPlane:         v => { FG_LAMP.z = v; },
+    /* the only timeline value that is baked rather than read each frame —
+       measure() resolves it against the layout and re-places every role */
+    xpRunout:        measure,
+    grainOverlay:    applyGrainOverlay,
+    filmGrain:       v => { if (POST.comp) POST.comp.uniforms.uGrain.value = v; },
     courtRoughness:  v => { WORLD.floorMat.roughness = v; },
     courtReflect:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uReflect.value = v; },
     courtFresnel:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uFres.value = v; },
@@ -5228,7 +5363,7 @@ const CAM = [
      far enough back that the slab very nearly fills the height. */
   { p: [  0.0, 11.0, -19.0 ], t: [  0.0, 15.6, -44.0 ], fov: 40 }  /* 6 footer      */
 ];
-const RIG = { prog: 0, smooth: 0, mx: 0, my: 0, tmx: 0, tmy: 0, intro: 0, focus: -1, focusAmt: 0, pointer: 0, hold: 0, holding: 0 };
+const RIG = { prog: 0, smooth: 0, mx: 0, my: 0, tmx: 0, tmy: 0, intro: 0, focus: -1, focusAmt: 0, pointer: 0, hold: 0, holding: 0, xp: 0 };
 let curveP, curveT, tmpCam;
 
 function buildRig() {
@@ -5250,6 +5385,21 @@ function fitAspect(p, t, fov) {
   p.y += nf * 1.1;
   return fov * (1 + nf * .40);
 }
+/* The role the climb is standing at, as a world point, lerped between the two
+   it lies between so the lens pans across rather than cutting. */
+const _xpAim = new THREE.Vector3();
+function xpTarget(out) {
+  const n = XP_ANCHORS.length;
+  const i = clamp(Math.floor(RIG.xp), 0, n - 1), j = Math.min(i + 1, n - 1);
+  return out.copy(XP_ANCHORS[i].v).lerp(XP_ANCHORS[j].v, RIG.xp - i);
+}
+/* 1 while parked at a stop, 0 halfway between two. stairProgress lands the
+   fractional part on 0 at every plateau, so this is just that read as a
+   curve — what the dwell zoom rides on. */
+function xpParked() {
+  const f = RIG.xp - Math.floor(RIG.xp);
+  return 1 - 4 * f * (1 - f);
+}
 function applyCamera() {
   const N = CAM.length - 1;
   const u = clamp(RIG.smooth / N, 0, 1);
@@ -5257,7 +5407,19 @@ function applyCamera() {
   const i = clamp(Math.floor(RIG.smooth), 0, N - 1), f = clamp(RIG.smooth - i, 0, 1);
   let fov = lerp(CAM[i].fov, CAM[i + 1].fov, f);
 
+  /* The experience chapter looks at what it has climbed to. The rig still
+     travels the same curve — the climb is the chapter — but the lens leans
+     toward the role it is level with, so the run is a sequence of looks
+     rather than one long stare up the treads. The aim is deliberately partial:
+     taken all the way it centres the card and throws away the flight behind
+     it, and the flight is what the section is about. */
+  const xpN = xpNear();
+  if (xpN > .002) _t.lerp(xpTarget(_xpAim), TUNE.xpAim * xpN);
+
   fov = fitAspect(_p, _t, fov);
+
+  /* and pushes in on the pause, which is what makes a stop read as a stop */
+  if (xpN > .002) fov -= TUNE.xpZoom * xpN * xpParked();
 
   /* the opening dolly: a long lens easing in from further back */
   const io = 1 - RIG.intro;
@@ -5318,6 +5480,7 @@ function stairProgress(f, n, hold) {
 }
 let holds = [];
 function measure() {
+  XP_CW = 0;                        /* re-read on the next frame that needs it */
   maxScroll = Math.max(1, document.documentElement.scrollHeight - vpH());
   anchors = SECS.map((el, i) => {
     if (i === 0) return 0;
@@ -5333,6 +5496,13 @@ function measure() {
     holds[HOLD_SEC] = clamp(hs.offsetTop + hs.offsetHeight - vpH(),
                             anchors[HOLD_SEC], anchors[HOLD_SEC + 1] - 1);
   }
+
+  /* the last role stands while the next chapter's head is still a tenth of a
+     screen below the fold, whichever comes first — that or the ceiling */
+  const nx = SECS[XP_SEC + 1], a = anchors[XP_SEC], b = anchors[XP_SEC + 1];
+  if (nx && b > a)
+    XP_RUN = Math.min(TUNE.xpRunout, clamp((nx.offsetTop - vpH() * .9 - a) / (b - a), .3, 1));
+  placeXpAnchors();
 }
 /* Kept pure. The nav's scroll handler calls this as well as the frame loop
    does, and a function that quietly wrote the hold flag would have its answer
@@ -5606,7 +5776,12 @@ function wireCursor() {
   })();
 }
 
+/* The tile is only ever baked once, and only if something asks to see it —
+   with the overlay off at rest that keeps a toDataURL out of the boot. */
+let GRAIN_TILE = false;
 function makeGrain() {
+  if (GRAIN_TILE) return;
+  GRAIN_TILE = true;
   const S = 180, c = cvs(S, S), x = c.getContext('2d');
   const im = x.createImageData(S, S), d = im.data, r = mulberry32(9);
   for (let i = 0; i < S * S; i++) {
@@ -5615,6 +5790,10 @@ function makeGrain() {
   }
   x.putImageData(im, 0, 0);
   $('#grain').style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')';
+}
+function applyGrainOverlay(v) {
+  if (v > 0) makeGrain();
+  $('#grain').style.opacity = String(v);
 }
 
 /* ============================================ 12 · the card viewports */
@@ -5871,10 +6050,25 @@ function frame(now) {
     }
   }
   RIG.prog = progressFor(scrollY);
-  if (XP_ANCHORS.length && RIG.prog >= XP_SEC && RIG.prog < XP_SEC + 1)
-    RIG.prog = XP_SEC + stairProgress(RIG.prog - XP_SEC, XP_ANCHORS.length, .46);
+  /* The stops live in the front of the chapter, not all of it. Spread over
+     the whole span the last role was still lit at waypoint 5 — which is the
+     contact chapter's own frame, with its copy already on screen behind the
+     card, and a camera close enough to the slab that the role was read
+     against a flat wall of concrete. Ending the stops at xpRunout leaves the
+     last stretch as a plain run to the waypoint: the roles finish, the frame
+     clears, and the next chapter arrives to an empty one. */
+  if (XP_ANCHORS.length && RIG.prog >= XP_SEC && RIG.prog < XP_SEC + 1) {
+    const f = RIG.prog - XP_SEC, K = XP_RUN;
+    if (f < K) RIG.prog = XP_SEC + stairProgress(f / K, XP_ANCHORS.length, TUNE.xpHold) * K;
+  }
   RIG.holding = holdingAt(scrollY);
   RIG.smooth = REDUCE ? RIG.prog : damp(RIG.smooth, RIG.prog, 5.2, dt);
+  /* which role the climb is standing at, as a continuous stop index —
+     stairProgress divides that stretch into exactly this, so unwinding it
+     recovers the stop the camera and the cards both key off */
+  if (XP_ANCHORS.length)
+    RIG.xp = clamp((RIG.smooth - XP_SEC) / XP_RUN * (XP_ANCHORS.length - 1),
+                   0, XP_ANCHORS.length - 1);
   RIG.mx = damp(RIG.mx, RIG.tmx, 2.6, dt);
   RIG.my = damp(RIG.my, RIG.tmy, 2.6, dt);
   /* ramped, not switched — the sway has to arrive and leave, or the frame
@@ -5942,14 +6136,14 @@ const JOBS = [
     /* after the layer assignments above, not before — the mirror camera is
        set to layer 0 and what it excludes depends on them having run */
     initMirror(); buildPuddles(); initTuning();
-    layoutWord(); measure();
+    layoutWord(); measure();          /* measure() places the roles */
     /* nothing that casts a shadow ever moves, so bake it once */
     if (WANT_SHADOW && WORLD.key) { WORLD.key.shadow.autoUpdate = false; WORLD.key.shadow.needsUpdate = true; }
   }]
 ];
 
 function boot() {
-  makeGrain();
+  applyGrainOverlay(TUNE.grainOverlay);
   buildArchive(); buildXpAnchors();
   wireWorkModal(); wireCardSheen();
   wireReveals(); wireNav(); wireHeroExit(); wireFocus(); wireCursor();
@@ -5983,6 +6177,15 @@ function fallback(err) {
      the projection places them. With no renderer that projection never runs,
      so the class has to come back off or the whole section is invisible. */
   document.body.classList.remove('xp-3d');
+  /* Navigation still needs the static layout when no renderer was created.
+     Re-measure after the experience rows return to normal document flow. */
+  const measureFallback = () => {
+    document.documentElement.style.setProperty('--vw', vpW() + 'px');
+    measure();
+  };
+  measureFallback();
+  addEventListener('resize', measureFallback, { passive: true });
+  if (document.fonts) document.fonts.ready.then(measureFallback);
   preEl.classList.add('done');
   $$('[data-rv], .mask-line').forEach(e => e.classList.add('rv-in'));
   window.__305 = window.__secret = { fallback: true, error: String(err && err.message || err) };

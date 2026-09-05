@@ -21,9 +21,12 @@ values to the clipboard.
 
 import http.server
 import json
+import math
+import os
 import re
 import socketserver
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -49,28 +52,49 @@ def format_value(value, template):
 
 
 def write_tune(values):
+    if not isinstance(values, dict):
+        raise ValueError("expected a JSON object of tuning values")
     src = INDEX.read_text(encoding="utf-8")
     match = TUNE_RE.search(src)
     if not match:
         raise ValueError("could not find the `const TUNE = { ... };` block in index.html")
 
-    # keep the order and the number style the file already has; ignore any key
-    # the page invented that is not already declared here
-    existing = re.findall(r"^\s*(\w+)\s*:\s*([\-\d.]+)", match.group(2), re.M)
-    if not existing:
-        raise ValueError("the TUNE block has no key: value lines to rewrite")
-    width = max(len(k) for k, _ in existing) + 1
-    lines = [
-        f"  {(key + ':').ljust(width)} {format_value(values[key], template)},"
-        for key, template in existing
-        if key in values
-    ]
-    # the captured group runs from just after `{` to just before the closing
-    # `\n};`, so it opens with a newline and must not end with one
-    body = "\n" + "\n".join(lines).rstrip(",")
+    # Replace supplied numeric literals without losing omitted settings,
+    # comments or settings added since the browser tab loaded.
+    value_re = re.compile(r"^(\s*(\w+)\s*:\s*)(-?(?:\d+(?:\.\d*)?|\.\d+))", re.M)
+    known = {m.group(2) for m in value_re.finditer(match.group(2))}
+    updates = known.intersection(values)
+    if not updates:
+        raise ValueError("no recognized tuning values supplied")
+    for key in updates:
+        value = values[key]
+        if type(value) not in (int, float) or not math.isfinite(value):
+            raise ValueError(f"{key} must be a finite number")
 
-    INDEX.write_text(src[: match.start(2)] + body + src[match.end(2):], encoding="utf-8")
-    return len(lines)
+    def replace_value(m):
+        key = m.group(2)
+        if key not in updates:
+            return m.group(0)
+        return m.group(1) + format_value(values[key], m.group(3))
+
+    body = value_re.sub(replace_value, match.group(2))
+    updated = src[:match.start(2)] + body + src[match.end(2):]
+
+    # Stage alongside the original so replacement is atomic. Failed writes
+    # leave the source intact, and the original file permissions survive.
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                         dir=INDEX.parent, prefix=".tune-",
+                                         delete=False) as staged:
+            temporary = Path(staged.name)
+            os.fchmod(staged.fileno(), INDEX.stat().st_mode & 0o777)
+            staged.write(updated)
+        os.replace(temporary, INDEX)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
+    return len(updates)
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -87,7 +111,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             count = write_tune(values)
         except Exception as err:  # report it to the panel rather than 500-ing silently
             body = str(err).encode()
-            self.send_response(500)
+            self.send_response(400 if isinstance(err, ValueError) else 500)
             self.send_header("content-type", "text/plain")
             self.send_header("content-length", str(len(body)))
             self.end_headers()
