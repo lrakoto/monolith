@@ -111,6 +111,37 @@ Never upload `serve.py`, `test_*.py`, `AGENTS.md`, `CLAUDE.md` or `.github/`.
 `serve.py` has an endpoint that writes to `index.html`; it is a local dev tool
 and has no business on a public host.
 
+## The preview copy at /portfolio-a/
+
+A second, complete copy of the page lives at
+**https://threeohfivestudios.com/portfolio-a/**, published by
+`.github/workflows/preview.yml` on every push to `scene-vegetation` or to any
+`preview/**` branch, and by hand from the Actions tab. Same FTP account, same
+secrets, same test gate — the only difference from `deploy.yml` is the trailing
+`-a` in `server-dir` and in the Cloudflare purge prefix.
+
+```
+/public_html/threeohfivestudios.com/portfolio/    main, the live page
+/public_html/threeohfivestudios.com/portfolio-a/  a branch, for looking at
+```
+
+It exists so a version can be seen on the real host — behind Cloudflare, with
+the real fonts, on a phone on cellular — without taking the live page down to
+do it. Nothing in that workflow can write to `/portfolio/`: the folder is
+named in full, once, and the two never share a path.
+
+Worth knowing:
+
+- **It is public and unlisted, not private.** Anyone with the URL has it, and
+  search engines will index it if they find a link to it. It is a near-duplicate
+  of `/portfolio/`, so if it is going to stay up for long it wants a
+  `<meta name="robots" content="noindex">` or a `robots.txt` rule, or Google
+  picks one of the two and it may not be the one you want.
+- **To take it down**, delete the `portfolio-a` folder in cPanel File Manager
+  and delete `preview.yml`. Deleting only the workflow leaves the copy served.
+- The résumé button in it points at the same WordPress media-library PDF as the
+  live page. Two copies of the page, one PDF.
+
 ## The homepage redirect  ← the thing to undo first
 
 The site root currently **302s to `/portfolio/`**. That is a block in
