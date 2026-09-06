@@ -4858,14 +4858,23 @@ const DESIGN_DIR = 'assets/work/design/';
 const CARD_PLATES = [[9101, .70, .42, 'autodex'], [9203, .32, .58, 'shop'], [9307, .54, .30, 'scene']];
 
 function buildCardCloth() {
-  if (COARSE) return;                     /* no pointer to brush the cloth with */
+  /* The plate is the work. texCardPlate composites the actual capture of each
+     project onto a generated card, and it needs no pointer to do it — so it
+     must not sit behind the coarse test. It used to, and every touch device
+     fell through to the flat CSS fill underneath: the grey rectangle with
+     three lines on it that the generated plates were written to replace. The
+     work section on a phone showed no work.
+
+     Painted as a background here, and cleared again by .on-cloth for anyone
+     who does get the simulation, so the two never both draw. */
   $$('.cards .card-fr').forEach((fr, i) => {
-    /* A canvas, not an Image. clothPlate only needs width, height and
-       something drawImage accepts, and generating the plate here drops the
-       load step, the CSS round-trip and the data-URI escaping along with it.
-       The CSS backgrounds stay as the fallback for the coarse-pointer path,
-       which never reaches this function. */
     const src = texCardPlate.apply(null, CARD_PLATES[i % CARD_PLATES.length]);
+    fr.style.backgroundImage =
+      'linear-gradient(180deg,rgba(3,6,9,.04) 36%,rgba(3,6,9,.72) 100%), url(' +
+      src.toDataURL('image/jpeg', .86) + ')';
+    fr.style.backgroundSize = 'cover';
+    fr.style.backgroundPosition = 'center';
+    if (COARSE) return;                   /* no pointer to brush the cloth with */
     const dpr = Math.min(devicePixelRatio || 1, 2);
     let plate = null, pw = 0, ph = 0;
     const get = () => {
