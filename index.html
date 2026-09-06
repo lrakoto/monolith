@@ -2067,21 +2067,42 @@ function texSky() {
   g.addColorStop(1, 'rgb(14,22,28)');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
 
-  /* the galactic band: a soft diagonal of dust, well under the noise floor of
-     anything else in the frame, there to stop the upper sky being flat */
-  x.save();
-  x.translate(W * .5, H * .30); x.rotate(-.42);
-  const mw = x.createLinearGradient(0, -H * .16, 0, H * .16);
+  /* The galactic band: a soft diagonal of dust, well under the noise floor of
+     anything else in the frame, there to stop the upper sky being flat.
+
+     Built on its own canvas and then composited, which is the whole trick.
+     It used to be painted straight onto the sky and eroded in place with a
+     destination-out — but destination-out writes to *alpha*, this texture is
+     rendered by an opaque material, and the upload divides the colour back
+     out by the alpha it just lowered. So the erosion never subtracted
+     anything; it multiplied. The "soft dust" arrived as a hard bright slab
+     with two straight edges and a corner sitting inside the frame, which was
+     the only straight line in the sky and the first thing anyone saw in it.
+     Composited from a scratch canvas the erase lands on the band's own alpha,
+     source-over does the blend, and the sky underneath stays opaque. */
+  const bandH = Math.round(H * .32), bandW = W * 2;
+  const bc = cvs(bandW, bandH), bx = bc.getContext('2d');
+  const mw = bx.createLinearGradient(0, 0, 0, bandH);
   mw.addColorStop(0, 'rgba(120,150,180,0)');
   mw.addColorStop(.42, 'rgba(126,152,178,.055)');
   mw.addColorStop(.54, 'rgba(140,164,188,.075)');
   mw.addColorStop(1, 'rgba(120,150,180,0)');
-  x.fillStyle = mw; x.fillRect(-W, -H * .16, W * 2, H * .32);
-  x.globalCompositeOperation = 'destination-out';
-  x.globalAlpha = .55;
-  x.drawImage(fbmCanvas(512, 256, 991, 5, 4, 1.1), -W * .5, -H * .16, W * 1.5, H * .32);
+  bx.fillStyle = mw; bx.fillRect(0, 0, bandW, bandH);
+  bx.globalCompositeOperation = 'destination-out';
+  bx.globalAlpha = .55;
+  bx.drawImage(fbmCanvas(512, 256, 991, 5, 4, 1.1), 0, 0, bandW, bandH);
+  /* and both ends taper away. The band is longer than the canvas is wide but
+     it is also rotated, so a square end lands inside the frame — it has to
+     leave the sky rather than stop in it. */
+  bx.globalAlpha = 1;
+  const ends = bx.createLinearGradient(0, 0, bandW, 0);
+  ends.addColorStop(0, 'rgb(0,0,0)');        ends.addColorStop(.26, 'rgba(0,0,0,0)');
+  ends.addColorStop(.74, 'rgba(0,0,0,0)');   ends.addColorStop(1, 'rgb(0,0,0)');
+  bx.fillStyle = ends; bx.fillRect(0, 0, bandW, bandH);
+  x.save();
+  x.translate(W * .5, H * .30); x.rotate(-.42);
+  x.drawImage(bc, -W, -bandH / 2);
   x.restore();
-  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
   /* cloud, and a low warm bloom off the valley behind the ridge */
   x.globalAlpha = .34; x.globalCompositeOperation = 'overlay';
   x.drawImage(fbmCanvas(W, H, 313, 5, 3, .9), 0, 0);
@@ -2122,26 +2143,34 @@ function texSky() {
   return c;
 }
 
-/* the wooded ridge the valley closes with — black, ragged, mostly fog */
-function texRidge() {
+/* The wooded ridge the valley closes with — black, ragged, mostly fog.
+
+   Seeded and scalable now, because the same generator draws the far ridge and
+   the nearer stands that close the sides. The two want different silhouettes
+   and nothing else: a ridge four hundred metres out is a fringe on a landform
+   and reads as one shape, while a stand thirty metres behind the hall has to
+   have gaps in it and trees you can count, or it reads as a painted backdrop
+   propped against the sky. `spread` is the whole difference — how far apart
+   the conifers stand and how far above the crest they get. */
+function texRidge(seed, opt) {
+  opt = opt || {};
   const W = 2048, H = 512, c = cvs(W, H), x = c.getContext('2d');
-  const n = noise2D(1207), rnd = mulberry32(1207);
+  const sd = seed || 1207;
+  const n = noise2D(sd), rnd = mulberry32(sd);
+  const land = opt.land === undefined ? .84 : opt.land;
+  const crest = t => .46 + .30 * (fbm(n, t * 2.4, .5, 4, 2.1, .55) * .5 + .5)
+                         + .16 * (fbm(n, t * 7.5, 3.1, 3, 2.2, .5) * .5 + .5);
   x.beginPath(); x.moveTo(0, H);
-  for (let i = 0; i <= W; i += 4) {
-    const t = i / W;
-    const ridge = .46 + .30 * (fbm(n, t * 2.4, .5, 4, 2.1, .55) * .5 + .5)
-                      + .16 * (fbm(n, t * 7.5, 3.1, 3, 2.2, .5) * .5 + .5);
-    x.lineTo(i, H - ridge * H * .84);
-  }
+  for (let i = 0; i <= W; i += 4) x.lineTo(i, H - crest(i / W) * H * land);
   x.lineTo(W, H); x.closePath();
-  x.fillStyle = '#050809'; x.fill();
+  x.fillStyle = opt.ink || '#050809'; x.fill();
   /* conifer spikes along the crest so the silhouette reads as forest */
-  x.fillStyle = '#050809';
-  for (let i = 0; i < 460; i++) {
-    const px = rnd() * W, t = px / W;
-    const ridge = .46 + .30 * (fbm(n, t * 2.4, .5, 4, 2.1, .55) * .5 + .5)
-                      + .16 * (fbm(n, t * 7.5, 3.1, 3, 2.2, .5) * .5 + .5);
-    const by = H - ridge * H * .84, hh = 8 + rnd() * 30, ww = 3 + rnd() * 6;
+  x.fillStyle = opt.ink || '#050809';
+  const spread = opt.spread || 1;
+  for (let i = 0; i < (opt.trees || 460); i++) {
+    const px = rnd() * W;
+    const by = H - crest(px / W) * H * land;
+    const hh = (8 + rnd() * 30) * spread, ww = (3 + rnd() * 6) * spread;
     x.beginPath(); x.moveTo(px, by - hh); x.lineTo(px + ww, by + 4); x.lineTo(px - ww, by + 4);
     x.closePath(); x.fill();
   }
@@ -2729,6 +2758,39 @@ function buildShell() {
     m.position.set(r[4], r[1], r[0]); m.renderOrder = 1; scene.add(m);
   });
 
+  /* Two stands of trees swung in to close the sides. Behind the ridge, the
+     valley was shut; either side of the hall it simply stopped, and the frame
+     edges were bare sky from the hero all the way to the contact shot.
+
+     Where they go was measured rather than guessed. Every waypoint here looks
+     up and forward, so the cone the rig can see opens with distance: nothing
+     out at eye level is ever in frame nearer than z −5, at z −35 the sides of
+     the frame are only forty-five metres out, and by z −65 they are ninety.
+     Walls run parallel to the approach at x ±70 — the obvious way to line an
+     avenue with trees — are outside the frustum at every point on the curve
+     and would have cost two draw calls to render nothing. These run along
+     that opening cone instead, from just outside the hall to the far corners,
+     which is the one place a side stand is both off the approach and on
+     screen.
+
+     Nearer than the ridge and lifted a little, so they overlap it and the
+     background stops being one flat cut-out. DoubleSide because they are
+     angled and the rig passes far enough along the curve to see the left one
+     from its back. */
+  [[-1, 3301], [1, 3319]].forEach(([sx, seed]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(92, 27),
+      new THREE.MeshBasicMaterial({
+        map: tx(texRidge(seed, { spread: 1.45, trees: 300, land: .70 })),
+        transparent: true, color: 0x080d13, depthWrite: false, fog: false,
+        side: THREE.DoubleSide }));
+    /* held just under the hall's eave line, which is the same limit the far
+       ridge is kept to — a crest that climbs past it stops reading as
+       distance and starts reading as a cut-out propped behind the set */
+    m.position.set(sx * 60, 11.5, -62);
+    m.rotation.y = sx * .58;                   /* swung to lie along the cone */
+    m.renderOrder = 1; scene.add(m);
+  });
+
   /* floor + podium */
   const fT = texFloor();
   const floorMat = new THREE.MeshStandardMaterial({
@@ -2938,7 +3000,7 @@ function buildMonolith() {
   const vineZ = MONO.d / 2 + .06;              /* just clear of the face, no z-fighting */
   [[-1, 7011, 4.6], [1, 7027, 5.2]].forEach(([sx, seed, wide]) => {
     const vm = new THREE.Mesh(new THREE.PlaneGeometry(wide, 7.4, 10, 14),
-      cutoutMaterial(texVineCutout(seed, { runners: 17 }), .030, 0x88a173, 1.25));
+      cutoutMaterial(texVineCutout(seed, { runners: 17 }), .030, 0x89967d, 1.25));
     vm.position.set(sx * (MONO.w / 2 - wide / 2 - .35), 3.5, vineZ);
     vm.scale.x = sx;                           /* mirrored, so the pair is not one plate twice */
     vm.renderOrder = 3;
@@ -2954,7 +3016,7 @@ function buildMonolith() {
      same real size on a canvas that maps twice the pixels to the metre. */
   [[-1, 7103], [1, 7119]].forEach(([sx, seed]) => {
     const vm = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 3.4, 12, 8),
-      cutoutMaterial(texVineCutout(seed, { w: 792, h: 408, runners: 22, leaf: .58 }), .030, 0x88a173, 1.25));
+      cutoutMaterial(texVineCutout(seed, { w: 792, h: 408, runners: 22, leaf: .58 }), .030, 0x89967d, 1.25));
     vm.position.set(sx * 3.3, 1.5, vineZ + .04);
     vm.scale.x = sx;
     vm.renderOrder = 4;
@@ -3634,7 +3696,12 @@ function buildStairPlanting() {
      daylit — a green that bright reads as a plant photographed at noon and
      pasted in. Held down here and lifted by the bollards instead, which is the
      same trick the reference is doing: dark foliage, lit edges. */
-  const mats = plates.map((c, i) => cutoutMaterial(c, .085 + i * .014, 0x74895f, 1.7));
+  /* Pulled well back off the green. The tint multiplies a canvas that is
+     already green, so saturation compounds — at 0x74895f the fronds read as
+     houseplants under a grow light rather than as wet foliage at night. Most
+     of the way to a grey-green, and the bollards put the colour back where
+     they touch it. */
+  const mats = plates.map((c, i) => cutoutMaterial(c, .085 + i * .014, 0x748068, 1.7));
   const rnd = mulberry32(4242);
   WORLD.planting = [];
 
@@ -3712,7 +3779,7 @@ function buildStairPlanting() {
     });
   }
   const mossMesh = new THREE.Mesh(mergeGeos(mossGeos),
-    cutoutMaterial(texMossCutout(5150), 0, 0x62805a, 1.45));
+    cutoutMaterial(texMossCutout(5150), 0, 0x657661, 1.45));
   mossMesh.renderOrder = 11;                     /* under the ferns, over the stone */
   scene.add(mossMesh); WORLD.planting.push(mossMesh);
 
