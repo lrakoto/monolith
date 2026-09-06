@@ -49,16 +49,27 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps                     # explicit FTPS; see README if the host refuses
           server-dir: /threeohfivestudios.com/portfolio/
-          # Everything that is not the website. serve.py above all: it has an
-          # endpoint that writes to index.html and must never reach a public host.
+          # Everything that is not the website. Named rather than globbed,
+          # because *.md would take FONT-LICENSES.md with it — the embedded
+          # faces are licensed on the condition that attribution travels with
+          # them, so that one file is part of the site and ships.
+          #
+          # serve.py matters most: it has an endpoint that writes to
+          # index.html and must never reach a public host. DEPLOY.md is here
+          # for a quieter reason — it names the cPanel home directory, the
+          # deploy layout and the .htaccess backup, none of which needs to be
+          # readable by anyone who guesses the filename.
           exclude: |
             **/.git*
             **/.git*/**
             **/.github/**
             **/*.py
-            **/*.md
             **/__pycache__/**
             **/.DS_Store
+            README.md
+            AGENTS.md
+            CLAUDE.md
+            DEPLOY.md
 
       # Cloudflare sits in front, so a fresh file on disk is not a fresh file
       # to visitors. Skipped rather than failed when the secrets are absent —
