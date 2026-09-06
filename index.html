@@ -3533,7 +3533,11 @@ function buildAtmosphere() {
   fg.setAttribute('position', new THREE.BufferAttribute(fpos, 3));
   fg.setAttribute('aSeed', new THREE.BufferAttribute(fseed, 1));
   const fly = new THREE.Points(fg, new THREE.ShaderMaterial({
-    uniforms: { uT: WORLD.uT, uTex: { value: tx(texGlow('rgba(255,246,196,1)', 'rgba(196,214,96,.30)')) },
+    /* Warmer than the first pass, which sat at a yellow-green and read as
+       pollen. A firefly's lantern is closer to a candle than to a leaf, and
+       against this scene's blue night the warm end is also the only place it
+       can be bright without going white. */
+    uniforms: { uT: WORLD.uT, uTex: { value: tx(texGlow('rgba(255,238,172,1)', 'rgba(255,176,74,.32)')) },
       uSize: { value: vpH() * .5 } },
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
     vertexShader:
@@ -3544,14 +3548,14 @@ function buildAtmosphere() {
       ' p.z += cos(uT*(0.15+aSeed*0.17) + s*2.3)*1.15;\n' +
       ' vec4 mv = modelViewMatrix * vec4(p,1.0);\n' +
       ' float b = sin(uT*(0.52+aSeed*0.80) + s*3.1)*0.5 + 0.5;\n' +
-      ' vA = pow(b, 3.4) * (0.55 + aSeed*0.45);\n' +
-      ' gl_PointSize = uSize*(0.013+aSeed*0.017)/max(-mv.z,0.6);\n' +
+      ' vA = pow(b, 2.8) * (0.55 + aSeed*0.45);\n' +
+      ' gl_PointSize = uSize*(0.019+aSeed*0.024)/max(-mv.z,0.6);\n' +
       ' gl_Position = projectionMatrix * mv; }',
     fragmentShader:
       'uniform sampler2D uTex; varying float vA;\n' +
       'void main(){ if (vA <= 0.004) discard;\n' +
       ' vec4 t=texture2D(uTex, gl_PointCoord);\n' +
-      ' gl_FragColor = vec4(t.rgb*vec3(1.30,1.22,0.52), t.a*vA*0.85); }'
+      ' gl_FragColor = vec4(t.rgb*vec3(1.60,1.10,0.42), t.a*vA*1.30); }'
   }));
   fly.frustumCulled = false; fly.renderOrder = 5;
   scene.add(fly); WORLD.flies = fly;
