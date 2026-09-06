@@ -220,6 +220,14 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .nav-link:hover .alt{ transform:none; }
 .nav-link.on{ color:var(--bone); }
 .nav-link.on::after{ content:''; position:absolute; left:0; bottom:0; width:100%; height:1px; background:var(--brand); }
+/* The one piece of chrome that is a mark rather than a word. It sits after
+   the links and keeps their optical weight — same muted bone, same lift to
+   full bone on hover — so it reads as one more item in the set. */
+.nav-icon{ display:flex; align-items:center; margin-left:clamp(16px,2.2vw,34px);
+  color:var(--bone-dim); transition:color .3s var(--ease); flex:0 0 auto; }
+.nav-icon:hover{ color:var(--bone); }
+.nav-icon svg{ display:block; }
+
 .nav-burger{ display:none; margin-left:clamp(18px,2.6vw,42px); width:26px; height:16px; position:relative; flex:0 0 auto; }
 .nav-burger i{ position:absolute; right:0; height:1.5px; background:var(--bone); transition:width .45s var(--ease-out), transform .45s var(--ease-out); }
 .nav-burger i:nth-child(1){ top:4px; width:26px; }
@@ -818,6 +826,13 @@ body.xp-3d .xp li p{ margin-top:4px; }
   font-size:11px; font-weight:500; letter-spacing:.22em; text-transform:uppercase;
   transition:color .45s var(--ease), border-color .45s;
 }
+/* Two actions on the closing chapter, so they need a row of their own that
+   wraps rather than a margin each. The margin moves to the row. */
+.fin-acts{ display:flex; flex-wrap:wrap; gap:14px 18px; margin-top:44px; }
+.fin-acts .cta{ margin-top:0; }
+.cta-2{ color:var(--bone-dim); }
+.cta-2:hover{ color:#05070a; }
+
 .cta i{ position:absolute; inset:0; background:var(--bone); transform:translate3d(0,101%,0);
   transition:transform .62s var(--ease-out); z-index:-1; }
 .cta span,.cta svg{ position:relative; z-index:1; }
@@ -1012,7 +1027,7 @@ body[data-layout-closing="b"] .fin{
 }
 body[data-layout-closing="b"] .fin .eyebrow{ grid-column:1; grid-row:1; margin:0; }
 body[data-layout-closing="b"] .fin p{ grid-column:1; grid-row:2; margin:0; max-width:52ch; }
-body[data-layout-closing="b"] .fin .cta{ grid-column:1; grid-row:3; justify-self:start; margin-top:4px; }
+body[data-layout-closing="b"] .fin .fin-acts{ grid-column:1; grid-row:3; justify-self:start; margin-top:4px; }
 
 /* — footer B · manifesto: the statement leads, the navigation becomes a
      compact ruled index beneath it. */
@@ -1084,7 +1099,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   body[data-layout-closing="b"] .fin{ display:flex; align-items:center; text-align:center; gap:0; }
   body[data-layout-closing="b"] .fin .eyebrow{ margin:0 0 26px; }
   body[data-layout-closing="b"] .fin p{ margin:26px auto 0; }
-  body[data-layout-closing="b"] .fin .cta{ margin-top:40px; }
+  body[data-layout-closing="b"] .fin .fin-acts{ margin-top:40px; justify-content:center; }
 
   body[data-layout-footer="b"] .foot-grid{ grid-template-columns:1fr; }
   body[data-layout-footer="b"] .foot-brand{ grid-column:auto; grid-template-columns:minmax(0,1fr); row-gap:16px; }
@@ -1168,6 +1183,12 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <a class="nav-link" href="#experience" data-cursor><span>Experience</span><span class="alt">04</span></a>
     <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">05</span></a>
   </nav>
+  <a class="nav-icon" href="https://www.linkedin.com/in/lovarakoto/" target="_blank" rel="noopener"
+     aria-label="LinkedIn profile" title="LinkedIn" data-cursor>
+    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM2.9 21.5h4.16V9.4H2.9v12.1zM9.6 9.4h3.99v1.66h.06c.56-1.02 1.92-2.1 3.95-2.1 4.22 0 5 2.65 5 6.1v6.44h-4.16v-5.71c0-1.36-.03-3.12-1.96-3.12-1.96 0-2.26 1.48-2.26 3.02v5.81H9.6V9.4z"/>
+    </svg>
+  </a>
   <button class="nav-burger" aria-label="Menu" data-cursor><i></i><i></i></button>
 </header>
 
@@ -1372,10 +1393,22 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   <div class="eyebrow" data-rv="fade">05 — Contact</div>
   <p class="body-lg" data-rv="up">If you have a project that needs design and engineering held by the same
     pair of hands, I would like to hear about it. Based in Los Angeles, working anywhere.</p>
-  <a class="cta" href="mailto:lova@threeohfivestudios.com" data-rv="fade" data-cursor>
-    <i></i><span>Start a project</span>
-    <svg viewBox="0 0 14 14" fill="none" width="13" height="13"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg>
-  </a>
+  <div class="fin-acts">
+    <a class="cta" href="mailto:lova@threeohfivestudios.com" data-rv="fade" data-cursor>
+      <i></i><span>Start a project</span>
+      <svg viewBox="0 0 14 14" fill="none" width="13" height="13"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg>
+    </a>
+    <!-- The résumé lives in WordPress's media library, which is the same
+         origin as this page and the place it is actually kept up to date.
+         Copying it in here would give the site two of them and let one go
+         stale, so this points at the one Lova replaces. -->
+    <a class="cta cta-2" href="/wp-content/uploads/2026/03/Lova_Resume_2026.pdf" download data-rv="fade" data-cursor>
+      <i></i><span>Download résumé</span>
+      <svg viewBox="0 0 14 14" fill="none" width="13" height="13">
+        <path d="M7 2v8M3.6 6.6 7 10l3.4-3.4M2.5 12h9" stroke="#dfe7e0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
 </section>
 
 <!-- ============================================================ footer -->
