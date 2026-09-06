@@ -3,35 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ThreeOhFive Studios — Code and visual design for brand experiences</title>
-<meta name="description" content="Lova Rakoto — web developer and designer in Los Angeles. Code and visual design brought together to build brand experiences, in a live WebGL scene generated at runtime.">
+<title>Lova Rakoto — Web developer and designer in Los Angeles</title>
+<meta name="description" content="I specialize in helping businesses and individuals create an impactful, thoughtful, and elegant digital presence. Ten years designing and building for brands like Mattel, Newegg and USC — in a portfolio whose every surface is generated in the browser at load.">
 
 <!-- Social preview. A portfolio's job is to survive being pasted into a Slack
      DM or a LinkedIn message, and without these it arrives as a bare grey URL
      — no image, no title — which is a poor showing for a page whose whole
      argument is how it looks.
 
-     ==> BEFORE DEPLOY: this page has no domain yet, so og:image is relative and
-     og:url is absent. Scrapers do not run JavaScript and several will not
-     resolve a relative image, so when there is a URL, set og:url and make both
-     image tags absolute against it. Those three lines are the only ones that
-     change; grep for SITE-URL. The card is assets/brand/og-cover.jpg, a 1200x630
-     capture of the hero — regenerate it if the scene's opening frame changes. -->
+     The absolute URLs are deliberate: scrapers do not run JavaScript and
+     several will not resolve a relative og:image, so these have to name the
+     host. If the page ever moves, grep SITE-URL — those three lines are the
+     only ones that carry the address. The card is assets/brand/og-cover.jpg,
+     a 1200x630 capture of the hero; regenerate it when the opening frame
+     changes, or the preview shows a page that no longer exists. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ThreeOhFive Studios">
-<meta property="og:title" content="ThreeOhFive Studios — Code and visual design for brand experiences">
-<meta property="og:description" content="Lova Rakoto — web developer and designer in Los Angeles. A portfolio built as a live WebGL scene: a concrete slab, forty steps, one slot of light.">
-<meta property="og:image" content="assets/brand/og-cover.jpg"><!-- SITE-URL: make absolute -->
+<meta property="og:title" content="Lova Rakoto — Web developer and designer in Los Angeles">
+<meta property="og:description" content="Ten years designing and building for brands like Mattel, Newegg and USC. A portfolio built as a live WebGL scene: a concrete slab, forty steps, one slot of light.">
+<meta property="og:image" content="https://threeohfivestudios.com/portfolio/assets/brand/og-cover.jpg"><!-- SITE-URL -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A board-formed concrete slab at night, lit by one horizontal slot, standing above a forty-step flight, with the numerals 3 0 5 across the frame.">
-<!-- SITE-URL: <meta property="og:url" content="https://example.com/"> -->
+<meta property="og:url" content="https://threeohfivestudios.com/portfolio/"><!-- SITE-URL -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ThreeOhFive Studios — Code and visual design for brand experiences">
-<meta name="twitter:description" content="Lova Rakoto — web developer and designer in Los Angeles. A portfolio built as a live WebGL scene: a concrete slab, forty steps, one slot of light.">
-<meta name="twitter:image" content="assets/brand/og-cover.jpg"><!-- SITE-URL: make absolute -->
+<meta name="twitter:title" content="Lova Rakoto — Web developer and designer in Los Angeles">
+<meta name="twitter:description" content="Ten years designing and building for brands like Mattel, Newegg and USC. A portfolio built as a live WebGL scene: a concrete slab, forty steps, one slot of light.">
+<meta name="twitter:image" content="https://threeohfivestudios.com/portfolio/assets/brand/og-cover.jpg"><!-- SITE-URL -->
 <meta name="twitter:image:alt" content="A board-formed concrete slab at night, lit by one horizontal slot, standing above a forty-step flight, with the numerals 3 0 5 across the frame.">
 
+<link rel="canonical" href="https://threeohfivestudios.com/portfolio/">
 <link rel="icon" href="assets/brand/icon-32.webp" sizes="32x32">
 <link rel="icon" href="assets/brand/icon-192.webp" sizes="192x192">
 <link rel="apple-touch-icon" href="assets/brand/icon-180.webp">
@@ -1097,6 +1098,20 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
    to a line. Standing the numeral above the label gives the copy the whole
    column back. */
 @media (max-width:560px){
+  /* The roles, on a phone.
+     The desktop row is a year in a column beside a title, with each role
+     indented one step further than the last — the list climbing the way the
+     scene does. On a 414px frame that furniture costs eighty-odd pixels of
+     the four hundred, and it buys a staircase nobody can see at that width.
+     The year goes above its title, the indent goes to nothing, and the text
+     gets the whole measure back: a third more room, and the rows read as a
+     timeline rather than as a table that has run out of space. */
+  .xp li{ grid-template-columns:minmax(0,1fr); gap:2px; padding:18px 0 20px; --going:0px; }
+  .xp li .xp-y{ grid-column:1; font-size:10px; }
+  .xp li b{ grid-column:1; font-size:15px; line-height:1.35; }
+  .xp li p{ grid-column:1; margin-top:7px; font-size:13px; }
+  .xp li:nth-child(n){ margin-left:0; }
+
   body[data-layout-hero="b"] .chip{ flex-direction:column; gap:4px; }
   body[data-layout-hero="b"] .chip .num{ font-size:clamp(22px,7.4vw,30px); }
   body[data-layout-hero="b"] .chip .tx{ padding-top:0; }
