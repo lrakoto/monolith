@@ -663,7 +663,12 @@ body.xp-3d .xp li p{ margin-top:4px; }
   outline:1px solid var(--line-soft); outline-offset:-1px;
   transition:outline-color .5s var(--ease);
 }
-.acard-fr img{ width:100%; height:100%; object-fit:cover; display:block;
+/* Anchored to the top, not the middle. The website projects are single tall
+   composites — a whole site in one image, four thousand pixels down — and a
+   4:3 frame cropping from the centre lands somewhere in the middle of a page
+   nobody can identify. The top is the hero, which is the part that says which
+   site this is. Harmless on the images that already match the frame. */
+.acard-fr img{ width:100%; height:100%; object-fit:cover; object-position:top; display:block;
   transition:transform .9s var(--ease-out), filter .5s; filter:saturate(.94); }
 .acard:hover .acard-fr{ outline-color:rgba(223,231,224,.30); }
 .acard:hover .acard-fr img{ transform:scale(1.035); filter:saturate(1); }
@@ -4653,12 +4658,19 @@ function wireWorkModal() {
       facts.appendChild(dt); facts.appendChild(dd);
     });
 
-    ctatx.textContent = d.cta.label;
-    cta.setAttribute('href', d.cta.href);
-    const external = d.cta.href.charAt(0) !== '#';
-    if (external) { cta.setAttribute('target', '_blank'); cta.setAttribute('rel', 'noopener'); }
-    else { cta.removeAttribute('target'); cta.removeAttribute('rel'); }
-    cta.onclick = external ? null : () => dlg.close();
+    /* A panel need not have a way out. The design projects have nowhere left
+       to send anyone — the work is in the panel — so the button is hidden
+       rather than pointed somewhere weak. hidden, not display:none, so the
+       focus order loses it too and Tab does not stop on an invisible link. */
+    cta.hidden = !d.cta;
+    if (d.cta) {
+      ctatx.textContent = d.cta.label;
+      cta.setAttribute('href', d.cta.href);
+      const external = d.cta.href.charAt(0) !== '#';
+      if (external) { cta.setAttribute('target', '_blank'); cta.setAttribute('rel', 'noopener'); }
+      else { cta.removeAttribute('target'); cta.removeAttribute('rel'); }
+      cta.onclick = external ? null : () => dlg.close();
+    }
 
     dlg.querySelector('.wmodal-wrap').scrollTop = 0;
     dlg.showModal();
@@ -4682,10 +4694,12 @@ function wireWorkModal() {
     const d = DESIGN_WORK.filter(x => x.slug === slug)[0]; if (!d) return;
     const media = d.vimeo.map(id => ({ type: 'vid', id: id }))
       .concat(d.images.map(f => ({ type: 'img', src: DESIGN_DIR + f })));
+    /* No link out. It used to send the reader to the same project on the old
+       design site, which is a worse copy of what they are already looking at —
+       the images here are the same ones, larger, and the panel carries the
+       facts the old page put in a caption. */
     show({ tag: d.meta.Client ? 'Client — ' + d.meta.Client : 'Design', title: d.title,
-           body: '', facts: d.meta, media: media,
-           cta: { label: 'See it on the studio site',
-                  href: 'https://threeohfivestudios.com/design/#modal-' + slug } });
+           body: '', facts: d.meta, media: media });
   }
 
   $$('.card[data-work]').forEach(card => {
@@ -4724,8 +4738,41 @@ const DESIGN_WORK = [
     vimeo: [],
     meta: { "Client": "Newegg Inc.", "Software": "Photoshop, Illustrator", "Media": "Email",
             "Time": "2 years", "Tags": "Campaigns, retouching, layout, product rendering" } },
+  /* The web work, brought over from Behance. The archive was all print,
+     menus and packaging from the graphic-design years, while the experience
+     chapter says web developer from 2023 — so the grid was quietly arguing
+     against the timeline. Each is one tall composite of the whole site, which
+     is how they were presented there and reads well in a panel that scrolls. */
+  { slug: "manhattan", title: "Manhattan Funding", thumb: "manhattan.jpg",
+    images: ["manhattan.jpg"], vimeo: [],
+    meta: { "Client": "Manhattan Funding", "Role": "Design and build", "Media": "Web",
+            "Tags": "Vehicle finance, responsive, landing pages" } },
+  { slug: "tranomics", title: "Tranomics", thumb: "tranomics.jpg",
+    images: ["tranomics.jpg"], vimeo: [],
+    meta: { "Client": "Tranomics", "Role": "Design and build", "Media": "Web",
+            "Tags": "Logistics, illustration, responsive" } },
+  { slug: "blackout", title: "Blackout Defense", thumb: "blackout.jpg",
+    images: ["blackout.jpg"], vimeo: [],
+    meta: { "Client": "Blackout Defense", "Role": "Design and build", "Media": "Web",
+            "Tags": "E-commerce, product, responsive" } },
+  { slug: "godayone", title: "Go Day One", thumb: "godayone.jpg",
+    images: ["godayone.jpg"], vimeo: [],
+    meta: { "Client": "Go Day One", "Role": "Design and build", "Media": "Web",
+            "Tags": "Onboarding, marketing site, responsive" } },
+  { slug: "alliance", title: "Alliance Française d'Atlanta", thumb: "alliance.jpg",
+    images: ["alliance.jpg"], vimeo: [],
+    meta: { "Client": "Alliance Française d'Atlanta", "Role": "Design and build", "Media": "Web",
+            "Tags": "Education, membership, responsive" } },
+  { slug: "lewislaw", title: "Lewis Law", thumb: "lewislaw.jpg",
+    images: ["lewislaw.jpg"], vimeo: [],
+    meta: { "Client": "Lewis Law", "Role": "Design and build", "Media": "Web",
+            "Tags": "Professional services, responsive" } },
+  { slug: "erikka", title: "Erikka Dawn", thumb: "erikka.jpg",
+    images: ["erikka.jpg"], vimeo: [],
+    meta: { "Client": "Erikka Dawn", "Role": "Design and build", "Media": "Web",
+            "Tags": "Personal brand, portfolio, responsive" } },
   { slug: "cards", title: "Flavor Cards",
-    thumb: "thumb_cards2.jpg",
+    thumb: "cards.jpg",
     images: ["cards.jpg"],
     vimeo: ["172980201"],
     meta: { "Client": "Ten Ren's Tea Time", "Software": "Photoshop, Illustrator", "Media": "Print", "Time": "2 per week", "Tags": "Promotional, layout, photography" } },
@@ -4740,7 +4787,7 @@ const DESIGN_WORK = [
     vimeo: ["172980243"],
     meta: { "Client": "Pilot Electronics", "Software": "Photoshop, Illustrator, After Effects, Cinema 4D", "Media": "Digital", "Time": "14 weeks", "Tags": "Branding, Motion Graphics, Rendering" } },
   { slug: "teastory", title: "Teastory Packaging",
-    thumb: "thumb_teastory.jpg",
+    thumb: "box1.jpg",
     images: ["box1.jpg", "box2.jpg"],
     vimeo: [],
     meta: { "Client": "Self Study", "Software": "Photoshop, Illustrator", "Media": "Print", "Time": "2 weeks", "Tags": "Packaging, Branding" } },
@@ -4754,7 +4801,7 @@ const DESIGN_WORK = [
     images: ["ara1.jpg", "ara2.jpg", "ara3.png"],
     vimeo: ["172980106"],
     meta: { "Client": "A.R.A.", "Software": "Photoshop, Illustrator, After Effects, Coda", "Media": "Digital, Mobile", "Time": "11 weeks", "Tags": "Web, branding, motion graphics", "Link": "" } },
-  { slug: "pilot", title: "Pilot Campaign",
+  { slug: "pilot", title: "Light Pulse Campaign",
     thumb: "thumb_pilot.jpg",
     images: ["lit2.jpg", "lit1.jpg", "lit3.jpg", "lit4.jpg", "lit6.jpg", "lit5.jpg", "lit7.jpg", "lit8.jpg"],
     vimeo: ["174443851"],
