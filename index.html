@@ -4132,12 +4132,9 @@ function buildStairPlanting() {
   mossMesh.renderOrder = 11;                     /* under the ferns, over the stone */
   scene.add(mossMesh); WORLD.planting.push(mossMesh);
 
-  /* Pads on the four pools that carry them, at a metre and a half across.
-     Layer 1 with the water, so they stay out of the mirror camera — a pad
-     floating *on* a pool has no business being reflected *in* it. Lifted
-     three centimetres, above the water's own two, and drawn after it. */
-  PUDDLES.forEach((pd, i) => {
-    if (i > 3) return;                            /* only the wide ones carry pads */
+  /* rafts collect at the banks and around emergent stones, leaving the
+     middle open so the lower level reads as one pond. */
+  POND_RAFTS.forEach((pd, i) => {
     const [cx, cz, w, l] = pd;
     const pw = w * .60, pl = l * .62;
     const t = texLilyPads(9101 + i * 37, { w: 512, h: Math.round(512 * pl / pw),
@@ -6131,7 +6128,6 @@ function aimPools(list, M) {
 function renderMirror() {
   if (!MIRROR.on) return;
   renderMirrorPlane(MIRROR, WORLD.floor);
-  aimPools(PUD, MIRROR);
 
   /* the landing only exists on screen once the rig has climbed the flight */
   MIRROR2.live = RIG.smooth > 2.55;
@@ -6142,38 +6138,16 @@ function renderMirror() {
   LAND.group.visible = MIRROR2.live;
 }
 
-/* --------------------------------------------------------- 6b · puddles
-   Discrete pools standing on the court, sampling the same mirrored buffer
-   the paving does. The floor-wide reflection is a wash — physically right,
-   but even, and an even reflection reads as polish. Standing water reads as
-   weather: it has an edge, it holds a brighter and sharper image than the
-   stone around it, and it puts the slab upside down at the visitor's feet.
-
-   Straight out of the Pyxel street, including the trick that makes it work
-   there — each pool magnifies the reflection around its *own* projected
-   centre and pulls the sample upward, so the thing standing above it fills
-   it instead of appearing as a distant speck. A true reflection is
-   geometrically correct and, in a pool a metre across, shows almost nothing.
-
-   They sit on layer 1 with the foreground, which keeps them out of the
-   mirror camera: a puddle that reflected the other puddles would be reading
-   the buffer it is drawn into.                                           */
-const PUDDLES = [
-  /*  x       z      w     l    bias  zoom
-      Placed where the court is actually on screen, which is not where the
-      water would naturally collect. Every camera waypoint in this rig looks
-      *up* at the slab, and the foreground grass banks wall off the bottom of
-      the hero — so the middle of the approach, which is where these wanted to
-      go, is behind grass in one shot and below frame in the rest. The open
-      court reads either side of the flight, and that is where they live. */
-  [ -13.6,  -8.6,  7.0, 4.2, .130, .78 ],
-  [ -10.4, -14.2,  5.4, 3.4, .140, .76 ],
-  [  12.8,  -9.4,  6.4, 4.0, .132, .78 ],
-  [  16.0, -15.0,  5.0, 3.2, .142, .76 ],
-  [  -8.2,  -6.4,  4.4, 2.6, .115, .82 ],
-  [   9.4,  -6.0,  4.0, 2.4, .112, .82 ]
+/* ----------------------------------------------------------- 6b · water
+   A continuous lower pond and separate pools on the upper landing. The
+   footprint table is only planting: those rafts share one water surface,
+   rather than sitting in separate magnified puddles on a paved court. */
+const POND_RAFTS = [
+  /* x, z and raft footprint; water itself is now one continuous surface */
+  [-11.8,-8.8,6.2,4.2], [12.2,-10.2,6.4,4.4],
+  [-8.2,-2.0,4.8,3.6], [8.8,-1.2,5.4,3.8],
+  [-5.4,5.4,3.8,2.8], [6.2,4.6,4.8,3.4]
 ];
-const PUD = { mats: [], centres: [] };
 /* the water can stand still without disconnecting the rest of the scene's
    clock. Reduced motion keeps the reflection but freezes the new shimmer. */
 const WET_TIME = { value: 0 };
@@ -6331,9 +6305,78 @@ function buildStairGlints() {
   WORLD.stairGlintMat = material;
 }
 
+/* the lower court is one body of water. A standard material keeps the sky,
+   lamp specular and depth colour on phones; desktop adds the existing mirror
+   buffer. The surface stays below the first riser and out of its own mirror. */
+function buildPond() {
+  const mat=new THREE.MeshPhysicalMaterial({color:0x0d292c,roughness:.16,
+    metalness:.02,clearcoat:.8,clearcoatRoughness:.12,envMapIntensity:1.5,
+    transparent:true,opacity:TUNE.puddleOpacity,depthWrite:false});
+  const uni={
+    uPondTime:WET_TIME,
+    uPondRipple:{value:TUNE.puddleRipple},uPondShimmer:{value:TUNE.puddleShimmer},
+    uPondReflect:{value:TUNE.courtReflect},uPondFresnel:{value:TUNE.courtFresnel},
+    uPondMatrix:{value:MIRROR.texMat},tPondMirror:{value:MIRROR.target?MIRROR.target.texture:null}
+  };
+  if(MIRROR.on) mat.defines.POND_REFLECTION=1;
+  mat.onBeforeCompile=sh=>{
+    Object.assign(sh.uniforms,uni);
+    sh.vertexShader='varying vec3 vPondWorld; varying vec4 vPondMirror; uniform mat4 uPondMatrix;\n'+sh.vertexShader;
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',
+      `#include <begin_vertex>
+       vPondWorld=(modelMatrix*vec4(transformed,1.)).xyz;
+       vPondMirror=uPondMatrix*vec4(vPondWorld,1.);`);
+    sh.fragmentShader=`varying vec3 vPondWorld; varying vec4 vPondMirror;
+      uniform float uPondTime,uPondRipple,uPondShimmer,uPondReflect,uPondFresnel;
+      uniform sampler2D tPondMirror;
+      `+sh.fragmentShader;
+    sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',
+      `#include <color_fragment>
+       vec2 pondP=vec2(vPondWorld.x/21.,(vPondWorld.z+4.)/18.);
+       float pondEdge=length(pondP)+.028*sin(vPondWorld.x*.66+vPondWorld.z*.31)
+         +.018*sin(vPondWorld.z*1.1-vPondWorld.x*.27);
+       if(pondEdge>1.) discard;
+       diffuseColor.a*=1.-smoothstep(.945,1.,pondEdge);
+       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.035,.078,.063),smoothstep(.72,.98,pondEdge));`);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_maps>',
+      `#include <normal_fragment_maps>
+       float pondA=vPondWorld.x*1.35+vPondWorld.z*.75-uPondTime*.42;
+       float pondB=vPondWorld.z*2.1-vPondWorld.x*.42+uPondTime*.29;
+       vec3 pondN=normalize(vec3((cos(pondA)*.032-cos(pondB)*.012)*uPondRipple,1.,
+         (cos(pondA)*.018+cos(pondB)*.040)*uPondRipple));
+       normal=normalize((viewMatrix*vec4(pondN,0.)).xyz);`);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <output_fragment>',
+      `vec3 pondView=normalize(cameraPosition-vPondWorld);
+       float pondFres=pow(1.-clamp(pondView.y,0.,1.),2.8);
+       #ifdef POND_REFLECTION
+         vec2 pondUV=vPondMirror.xy/max(vPondMirror.w,.0001);
+         pondUV+=pondN.xz*.07;
+         vec3 pondReflection=texture2D(tPondMirror,clamp(pondUV,.002,.998)).rgb;
+         outgoingLight=mix(outgoingLight,pondReflection*vec3(.74,.90,.94),
+           clamp((.18+pondFres*(.55+uPondFresnel*.15))*uPondReflect,0.,.86));
+       #else
+         /* a pair of broken warm trails keeps the lower-cost water legible
+            without a second scene render on a phone. */
+         float trailL=exp(-((vPondWorld.x+7.6)*(vPondWorld.x+7.6))/(.48*.48))*smoothstep(-5.2,-1.,vPondWorld.z);
+         float trailR=exp(-((vPondWorld.x-7.4)*(vPondWorld.x-7.4))/(.55*.55))*smoothstep(-7.,-2.,vPondWorld.z);
+         float chop=pow(.5+.5*sin(vPondWorld.z*8.+sin(pondA)*2.-uPondTime*.7),5.);
+         outgoingLight+=vec3(.48,.24,.055)*(trailL+trailR)*chop*(1.-smoothstep(5.,14.,vPondWorld.z));
+       #endif
+       float pondCrest=pow(.5+.5*sin(pondA),12.)*(.5+.5*cos(pondB));
+       outgoingLight*=1.+pondCrest*uPondShimmer*.22;
+       #include <output_fragment>`);
+  };
+  mat.customProgramCacheKey=()=> 'continuous-pond-v1';
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(48,44),mat);
+  mesh.rotation.x=-Math.PI/2;mesh.position.set(0,.026,-4);
+  mesh.layers.set(1);mesh.renderOrder=4;scene.add(mesh);
+  WORLD.pond=mesh;WORLD.pondUniforms=uni;
+}
+
 function buildPuddles() {
   /* one merged mesh also fits the phone path, which skips planar mirrors. */
   buildStairGlints();
+  buildPond();
   if (!MIRROR.on) return;
   buildStairFilm();
   /* the landing pools, on the second plane */
@@ -6368,35 +6411,7 @@ function buildPuddles() {
   LAND.group.visible = false;
   scene.add(LAND.group);
 
-  PUDDLES.forEach((p, i) => {
-    const mat = new THREE.ShaderMaterial({
-      uniforms: {
-        tRefl:  { value: MIRROR.target.texture },
-        tMask:  { value: tx(texPuddleMask(91 + i * 7)) },
-        uTexMat:{ value: MIRROR.texMat },
-        uT:     WET_TIME,
-        uBias:  { value: p[4] },
-        uZoom:  { value: p[5] },
-        uCentre:{ value: new THREE.Vector2() },
-        uTint:  { value: new THREE.Color(0xb4c8dc) },
-        uOpacity: { value: TUNE.puddleOpacity },
-        uRipple:  { value: TUNE.puddleRipple },
-        uShimmer: { value: TUNE.puddleShimmer }
-      },
-      vertexShader: PUDDLE_VERT, fragmentShader: PUDDLE_FRAG,
-      transparent: true, depthWrite: false, side: THREE.DoubleSide
-    });
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(p[2], p[3]), mat);
-    m.rotation.x = -Math.PI / 2;
-    /* two centimetres of standing water: enough to win the depth test over
-       the paving without floating off it */
-    m.position.set(p[0], .02, p[1]);
-    m.renderOrder = 4;
-    m.layers.set(1);
-    scene.add(m);
-    PUD.mats.push(mat);
-    PUD.centres.push(new THREE.Vector3(p[0], .02, p[1]));
-  });
+
 }
 
 /* ================================================== 7 · post-processing */
@@ -6638,7 +6653,7 @@ function initTuning() {
         envMats.push({ m: mm, base: mm.envMapIntensity });
     });
   });
-  const pools = () => PUD.mats.concat(LAND.mats);
+  const pools = () => LAND.mats;
 
   buildTunePanel({
     lampBright:      () => {},                       /* read each frame */
@@ -6654,14 +6669,14 @@ function initTuning() {
     grainOverlay:    applyGrainOverlay,
     filmGrain:       v => { if (POST.comp) POST.comp.uniforms.uGrain.value = v; },
     courtRoughness:  v => { WORLD.floorMat.roughness = v; },
-    courtReflect:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uReflect.value = v; },
-    courtFresnel:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uFres.value = v; },
+    courtReflect:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uReflect.value = v; if (WORLD.pondUniforms) WORLD.pondUniforms.uPondReflect.value = v; },
+    courtFresnel:    v => { if (MIRROR.uniforms) MIRROR.uniforms.uFres.value = v; if (WORLD.pondUniforms) WORLD.pondUniforms.uPondFresnel.value = v; },
     glintDensity:    refreshGlint,
     glintSize:       refreshGlint,
     glintBright:     refreshGlint,
-    puddleOpacity:   v => pools().forEach(m => { m.uniforms.uOpacity.value = v; }),
-    puddleRipple:    v => pools().forEach(m => { m.uniforms.uRipple.value = v; }),
-    puddleShimmer:   v => pools().forEach(m => { m.uniforms.uShimmer.value = v; }),
+    puddleOpacity:   v => { pools().forEach(m => { m.uniforms.uOpacity.value = v; }); if (WORLD.pond) WORLD.pond.material.opacity = v; },
+    puddleRipple:    v => { pools().forEach(m => { m.uniforms.uRipple.value = v; }); if (WORLD.pondUniforms) WORLD.pondUniforms.uPondRipple.value = v; },
+    puddleShimmer:   v => { pools().forEach(m => { m.uniforms.uShimmer.value = v; }); if (WORLD.pondUniforms) WORLD.pondUniforms.uPondShimmer.value = v; },
     stairEdgeShine:  v => { if (WORLD.stairGlintMat) WORLD.stairGlintMat.opacity = v; },
     stairFilmOpacity: v => (WORLD.stairFilms || []).forEach(m => { m.opacity = v; }),
     stairFilmRough:  v => (WORLD.stairFilms || []).forEach(m => { m.roughness = v; }),

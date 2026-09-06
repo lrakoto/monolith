@@ -35,6 +35,43 @@ class InlineScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
 
+class PondTests(unittest.TestCase):
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_pond_builds_with_and_without_planar_reflections(self):
+        import json
+        build = re.search(r"function buildPond\(\) \{.*?\n\}", inline_script(), re.S).group(0)
+        harness = r"""
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const THREE = require('./assets/three.min.js');
+for (const reflected of [false, true]) {
+  const scene = new THREE.Scene(), WORLD = {}, WET_TIME = {value: 0};
+  const MIRROR = {on: reflected, texMat: new THREE.Matrix4(),
+    target: reflected ? {texture: new THREE.Texture()} : null};
+  const TUNE = {puddleOpacity: 1, puddleRipple: .85, puddleShimmer: .32,
+    courtReflect: 1.5, courtFresnel: 0};
+  vm.runInNewContext(BUILD + '\nbuildPond();', {THREE, scene, WORLD, WET_TIME, MIRROR, TUNE});
+  const pond = WORLD.pond, mat = pond.material;
+  assert.equal(scene.children.length, 1);
+  assert.equal(pond.layers.mask, 2);
+  assert(pond.position.y > 0 && pond.position.y < 7 / 40);
+  assert(Object.hasOwn(mat.defines, 'PHYSICAL'));
+  assert.equal(Boolean(mat.defines.POND_REFLECTION), reflected);
+  const shader = {uniforms: {}, vertexShader: THREE.ShaderLib.physical.vertexShader,
+    fragmentShader: THREE.ShaderLib.physical.fragmentShader};
+  mat.onBeforeCompile(shader);
+  assert.equal(shader.uniforms.uPondTime, WET_TIME);
+  assert.equal(shader.uniforms.uPondRipple, WORLD.pondUniforms.uPondRipple);
+  assert(shader.fragmentShader.includes('if(pondEdge>1.) discard;'));
+  assert(shader.fragmentShader.includes('outgoingLight=mix(outgoingLight,pondReflection'));
+  assert(!shader.fragmentShader.includes('pow((vPondWorld.x'));
+}
+"""
+        result = subprocess.run(["node", "-e", "const BUILD = " + json.dumps(build) + ";\n" + harness],
+                                cwd=INDEX.parent, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 class TuningPanelTests(unittest.TestCase):
     """TUNE, TUNE_SCHEMA and the handlers passed to buildTunePanel are three
     separate lists that have to agree on the same keys. Nothing at runtime says
