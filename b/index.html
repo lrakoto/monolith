@@ -149,6 +149,44 @@ function tx(canvasEl, o) {
    silhouette. It costs one draw call for a bush that would otherwise be a
    thousand leaves, and at this scale the eye cannot tell. */
 
+/* Every cutout sheet in this scene is a drawing on a plane, and a drawing
+   that runs to the edge of its canvas ends on a straight line wherever the
+   plane stops. On the small plants that is hidden by the next clump; on the
+   backdrop forest, which is sixty metres wide and has trunks running off all
+   four sides, it was a visible rectangle of slightly different tone sitting
+   across the middle of the picture. Feathering the alpha at the border lets
+   each sheet dissolve into what is behind it instead of being cut out of it.
+   Destination-out is safe on these: they are alpha cutouts, so alpha is what
+   the material actually reads. */
+function feather(c, opt) {
+  opt = opt || {};
+  const x = c.getContext('2d'), W = c.width, H = c.height;
+  const mx = (opt.x === undefined ? .14 : opt.x) * W;
+  const my = (opt.y === undefined ? .14 : opt.y) * H;
+  x.globalCompositeOperation = 'destination-out';
+  const band = (g, px, py, pw, ph) => { x.fillStyle = g; x.fillRect(px, py, pw, ph); };
+  let g = x.createLinearGradient(0, 0, mx, 0);
+  g.addColorStop(0, 'rgb(0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  band(g, 0, 0, mx, H);
+  g = x.createLinearGradient(W, 0, W - mx, 0);
+  g.addColorStop(0, 'rgb(0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  band(g, W - mx, 0, mx, H);
+  if (opt.top !== false) {
+    g = x.createLinearGradient(0, 0, 0, my);
+    g.addColorStop(0, 'rgb(0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    band(g, 0, 0, W, my);
+  }
+  /* the bottom edge is usually where the plant is rooted and the ground is
+     right there, so it gets none unless asked */
+  if (opt.bottom) {
+    g = x.createLinearGradient(0, H, 0, H - my);
+    g.addColorStop(0, 'rgb(0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    band(g, 0, H - my, W, my);
+  }
+  x.globalCompositeOperation = 'source-over';
+  return c;
+}
+
 /* a soft radial, for every glow in the scene */
 function texGlow(inner, outer) {
   const S = 128, c = cvs(S, S), x = c.getContext('2d');
@@ -172,6 +210,13 @@ function texLeafBush(seed, opt) {
   const c = cvs(W, H), x = c.getContext('2d');
   const rnd = mulberry32(seed);
   const stems = opt.stems || 9;
+  /* Leaf size, as a multiplier. The same generator draws the big-leaved plant
+     at the water's edge and the wiry small-leaved shrub that fills the top
+     corners of the reference — they are the same plant at a quarter scale with
+     three times the stems, and drawing them as one thing means the leaf shape,
+     the rim light and the midrib are all consistent between them, which is why
+     they read as two species in one garden rather than as two clip-art sets. */
+  const LS = opt.leaf || 1;
 
   const leaf = (px, py, len, ang, lit) => {
     x.save(); x.translate(px, py); x.rotate(ang);
@@ -220,7 +265,7 @@ function texLeafBush(seed, opt) {
       /* leaves in pairs, biggest at mid-height where the light gets in */
       if (i > 2) {
         const swell = Math.sin(Math.min(1, u * 1.15) * Math.PI);
-        const len = 26 + swell * 62 + rnd() * 16;
+        const len = (26 + swell * 62 + rnd() * 16) * LS;
         for (const side of [-1, 1]) {
           if (rnd() < .16) continue;
           leaf(px, py, len * (.78 + rnd() * .44),
@@ -481,6 +526,36 @@ function texInterior(seed) {
    field, because a clean line where moss starts is the tell that it was
    computed. Baking it into the colours costs one attribute and no material. */
 const rockNoise = noise3(4021);
+const grainNoise = noise3(7307);
+
+/* Bump, without a bump map. The obvious route — draw a height field, convert
+   it to a normal map, hang it on the material — needs uvs, and an icosahedron's
+   are spherical with a seam running down it: a boulder with a visible zip is
+   worse than a boulder with no texture. Triplanar sampling would fix that and
+   costs a custom shader on every rock.
+
+   The way out is that the displacement here is a *function*, not an image, so
+   its gradient can simply be evaluated. Two extra samples in the tangent plane
+   give the slope, and tilting the smooth ellipsoid normal by that slope is
+   what a normal map does anyway. It also means the normal can carry detail
+   finer than the mesh — the geometry gets two octaves, the normal gets four —
+   which is the entire point of bump mapping and comes free here. */
+function rockField(x, y, z, ox, oy, oz) {
+  return rockNoise(x * .55 + ox, y * .55 + oy, z * .55 + oz) * .5
+       + rockNoise(x * 1.9 + ox, y * 1.9 + oy, z * 1.9 + oz) * .18;
+}
+/* Amplitudes in metres, and bigger than they first were. At five centimetres
+   over a metre and a half the relief was real and completely invisible — a
+   boulder three metres across, lit by one weak key in fog, needs relief you
+   could put a hand into before it reads as stone rather than as clay. */
+function rockGrain(x, y, z, ox, oz) {
+  return grainNoise(x * 3.0 + ox, y * 3.0, z * 3.0 + oz) * .130
+       + grainNoise(x * 8.5 + ox, y * 8.5, z * 8.5 + oz) * .055
+       + grainNoise(x * 21.0 + ox, y * 21.0, z * 21.0 + oz) * .020;
+}
+const _t1 = new THREE.Vector3(), _t2 = new THREE.Vector3(), _up = new THREE.Vector3();
+const _pa = new THREE.Vector3(), _pb = new THREE.Vector3();
+
 function makeBoulder(r, seed, opt) {
   opt = opt || {};
   const g = new THREE.IcosahedronGeometry(r, LOW ? 2 : 4);
@@ -488,27 +563,45 @@ function makeBoulder(r, seed, opt) {
   const rnd = mulberry32(seed);
   const ox = rnd() * 40, oy = rnd() * 40, oz = rnd() * 40;
   const sx = opt.sx || 1, sy = opt.sy === undefined ? .78 : opt.sy, sz = opt.sz || 1;
+  const rough = opt.rough === undefined ? .30 : opt.rough;
   const v = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
-    const n = rockNoise(v.x * .55 + ox, v.y * .55 + oy, v.z * .55 + oz) * .5
-            + rockNoise(v.x * 1.9 + ox, v.y * 1.9 + oy, v.z * 1.9 + oz) * .18;
-    v.multiplyScalar(1 + n * (opt.rough === undefined ? .30 : opt.rough));
+    v.multiplyScalar(1 + rockField(v.x, v.y, v.z, ox, oy, oz) * rough);
     v.x *= sx; v.y *= sy; v.z *= sz;
     /* boulders sit in ground, they do not balance on it */
     if (v.y < -r * .34) v.y = -r * .34 - (v.y + r * .34) * .12;
     pos.setXYZ(i, v.x, v.y, v.z);
   }
-  /* Smooth, by hand. IcosahedronGeometry is non-indexed — no vertex is shared
-     between two triangles — so computeVertexNormals can only ever produce face
-     normals and the boulders come out as cut gems however fine you make them.
-     The ellipsoid normal is exact for the shape before displacement and close
-     enough after it, and it is smooth everywhere by construction. */
+
+  /* The normal: the ellipsoid's, tilted by the slope of a grain field that
+     the mesh itself is far too coarse to carry. Sampling it either side in the
+     tangent plane is a finite difference, and the step is deliberately about
+     one vertex wide — smaller and it picks up noise the eye cannot resolve at
+     any camera distance this scene allows. */
   const nor = new Float32Array(pos.count * 3);
   const nv = new THREE.Vector3();
+  /* The step is in world units and fixed, not a fraction of the boulder. Scaled
+     by r it straddled the grain's wavelength differently on every rock — wide
+     enough on the big ones to alias the finest octave into streaks, which came
+     back as smeared X-shaped highlights across the near stones. The grain is
+     defined in world units too, so one step suits every size, and with the
+     amplitudes read as metres the slope needs no gain on top: five centimetres
+     of relief over a metre and a half is the tilt it should be. */
+  const e = .06, k = (opt.bump === undefined ? 1 : opt.bump);
   for (let i = 0; i < pos.count; i++) {
-    nv.fromBufferAttribute(pos, i);
-    nv.set(nv.x / (sx * sx), nv.y / (sy * sy), nv.z / (sz * sz)).normalize();
+    v.fromBufferAttribute(pos, i);
+    nv.set(v.x / (sx * sx), v.y / (sy * sy), v.z / (sz * sz)).normalize();
+    _up.set(0, 1, 0);
+    if (Math.abs(nv.y) > .92) _up.set(1, 0, 0);
+    _t1.crossVectors(nv, _up).normalize();
+    _t2.crossVectors(nv, _t1).normalize();
+    const d0 = rockGrain(v.x, v.y, v.z, ox, oz);
+    _pa.copy(v).addScaledVector(_t1, e);
+    _pb.copy(v).addScaledVector(_t2, e);
+    const g1 = (rockGrain(_pa.x, _pa.y, _pa.z, ox, oz) - d0) / e;
+    const g2 = (rockGrain(_pb.x, _pb.y, _pb.z, ox, oz) - d0) / e;
+    nv.addScaledVector(_t1, -g1 * k).addScaledVector(_t2, -g2 * k).normalize();
     nor[i * 3] = nv.x; nor[i * 3 + 1] = nv.y; nor[i * 3 + 2] = nv.z;
   }
   g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
@@ -522,15 +615,21 @@ function makeBoulder(r, seed, opt) {
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
     const up = nrm.getY(i);
-    /* the rock's own tone first: a slow gradient up the boulder so it has a
-       lit side without needing a light that would also blow out the moss */
     /* the bias was .42 with the lit terms on top of it, which put nearly every
        vertex at the light end of the ramp and made the ramp pointless */
     c.copy(lo).lerp(hi, clamp((v.y / (r * .9)) * .42 + .16 + up * .22, 0, 1));
+    /* the grain, as tone as well as as shape — stone is mottled, and a bump
+       with no colour variation under it reads as a wrinkled sheet */
+    c.multiplyScalar(1 + rockGrain(v.x, v.y, v.z, ox, oz) * 1.6);
     const nz = rockNoise(v.x * .9 + ox * 2, v.y * .9, v.z * .9 + oz * 2) * .5 + .5;
     /* flatness times noise, with a soft edge: this is the whole moss rule */
+    /* Half what it was. The tint used to be the only moss in the scene and had
+       to carry it alone, which made the boulders green rather than mossy. The
+       cushions do that job now and this is back to being what it should always
+       have been — a stain under and around them, so the geometry has something
+       to sit in instead of stopping on bare stone. */
     const m = clamp((up - .05) * 1.6, 0, 1) * clamp((nz - .30) * 2.8, 0, 1) * wet;
-    if (m > 0) c.lerp(mo.clone().lerp(mh, nz), Math.pow(m, .62));
+    if (m > 0) c.lerp(mo.clone().lerp(mh, nz), Math.pow(m, .62) * .52);
     /* Vertex colours are read as linear and the output is sRGB-encoded, so a
        swatch written straight in comes back a long way lighter than it was
        picked — 0x2f3d45 rendering as a pale sage is not the light being wrong,
@@ -542,6 +641,81 @@ function makeBoulder(r, seed, opt) {
   g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return g;
 }
+
+/* ------------------------------------------------------------ moss cushions
+   The reference's moss is not a tint on a rock, it is an object sitting on
+   one: a bright chartreuse cushion with a soft edge, mounded up so it catches
+   light on top and goes dark underneath. Painting that into the boulder's
+   vertex colours — which is what this scene did until now — can only ever give
+   a green rock, because a tint has no silhouette and the silhouette is most of
+   what says "moss".
+
+   So it gets geometry. A squashed sphere, displaced hard at high frequency so
+   the outline is lumpy rather than round, lit from above by its own vertex
+   colours as well as by the scene. Small, and in clusters: one big cushion is
+   a green boulder, five overlapping small ones is moss. */
+const mossNoise = noise3(1717);
+function makeMossCushion(seed, r) {
+  const g = new THREE.IcosahedronGeometry(r, LOW ? 2 : 3);
+  const pos = g.attributes.position;
+  const rnd = mulberry32(seed);
+  const ox = rnd() * 30, oz = rnd() * 30;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const n = mossNoise(v.x * 2.6 + ox, v.y * 2.6, v.z * 2.6 + oz) * .30
+            + mossNoise(v.x * 6.4 + ox, v.y * 6.4, v.z * 6.4 + oz) * .16;
+    v.multiplyScalar(1 + n);
+    v.y *= .46;                          /* a cushion, not a ball */
+    if (v.y < -r * .18) v.y = -r * .18;  /* flat where it meets the stone */
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  /* Same trap as the boulders, same way out. IcosahedronGeometry shares no
+     vertices, so computeVertexNormals can only give facets — and a faceted
+     moss cushion reads as a heap of green crystals, which is a worse failure
+     than the flat tint it replaced. The ellipsoid normal tilted by the slope
+     of the same noise that shaped it is smooth *and* lumpy, which is what a
+     cushion of moss actually is. */
+  const nor = new Float32Array(pos.count * 3);
+  const nv = new THREE.Vector3();
+  const mossField = (x, y, z) => mossNoise(x * 2.6 + ox, y * 2.6, z * 2.6 + oz) * .30
+                               + mossNoise(x * 6.4 + ox, y * 6.4, z * 6.4 + oz) * .16;
+  const e = r * .06;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    nv.set(v.x, v.y / (.46 * .46), v.z).normalize();
+    _up.set(0, 1, 0);
+    if (Math.abs(nv.y) > .92) _up.set(1, 0, 0);
+    _t1.crossVectors(nv, _up).normalize();
+    _t2.crossVectors(nv, _t1).normalize();
+    const d0 = mossField(v.x, v.y, v.z);
+    _pa.copy(v).addScaledVector(_t1, e);
+    _pb.copy(v).addScaledVector(_t2, e);
+    nv.addScaledVector(_t1, -(mossField(_pa.x, _pa.y, _pa.z) - d0) / e * r * .8)
+      .addScaledVector(_t2, -(mossField(_pb.x, _pb.y, _pb.z) - d0) / e * r * .8)
+      .normalize();
+    nor[i * 3] = nv.x; nor[i * 3 + 1] = nv.y; nor[i * 3 + 2] = nv.z;
+  }
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+
+  const col = new Float32Array(pos.count * 3);
+  const nrm = g.attributes.normal;
+  const deep = new THREE.Color(0x1d4a22), lit = new THREE.Color(0xa8d95c);
+  const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const up = clamp(nrm.getY(i) * .6 + (v.y / (r * .5)) * .5 + .35, 0, 1);
+    c.copy(deep).lerp(lit, Math.pow(up, .8));
+    /* speckle, because moss at this distance is thousands of separate shoots
+       and a smooth gradient over it reads as painted foam */
+    c.multiplyScalar(.82 + (mossNoise(v.x * 14, v.y * 14, v.z * 14) * .5 + .5) * .40);
+    c.convertSRGBToLinear();
+    col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
+
 const ROCK_MAT = () => new THREE.MeshStandardMaterial({
   vertexColors: true, roughness: .74, metalness: .04, flatShading: false,
   envMapIntensity: .9
@@ -991,12 +1165,44 @@ function buildTerrain() {
   pebbles.instanceMatrix.needsUpdate = true;
   scene.add(pebbles);
 
-  /* the step the stream falls over */
+  /* the low stone step the water runs over, right of centre and opposite the
+     house so the two do not share an axis */
   const ledge = new THREE.Mesh(makeBoulder(3.2, 9500, { sy: .34, sx: 2.1, rough: .16, moss: .5 }), mat);
-  /* right of centre, opposite the house. The fall on the axis split the
-     picture in half and gave the eye nowhere to travel. */
   ledge.position.set(2.0, .34, -4.4);
   scene.add(ledge);
+
+  /* Cushions, in clusters, on the tops the moss tint already picked out. Three
+     shapes shared between them, with the variation carried by scale and
+     rotation — a cushion has no features to repeat, so that is enough. They
+     sit slightly *into* the rock rather than on it, because moss grows out of
+     a surface and a cushion balanced on top reads as a hat. */
+  const mossMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .96,
+    metalness: 0, envMapIntensity: .35 });
+  const cushions = [makeMossCushion(2201, 1), makeMossCushion(2202, 1), makeMossCushion(2203, 1)];
+  const clumps = [
+    /* on the shelf */
+    [-7.2, 3.0, -13.0, 2.3], [-9.4, 5.6, -16.0, 2.6], [ 6.6, 3.3, -12.4, 2.0],
+    [ 9.8, 6.0, -16.5, 2.7], [-5.6, 6.6, -18.5, 2.8], [ 5.4, 7.0, -19.5, 2.5],
+    [-3.4, 2.0, -10.6, 1.7], [ 3.2, 1.4, -9.4, 1.4],
+    /* and on the near stones, where the camera can actually see the texture */
+    [-6.4, 1.4, -0.4, 1.5], [ 6.8, 1.3, -1.2, 1.6],
+    [-8.2, 1.9, -4.2, 1.9], [ 8.4, 2.0, -4.8, 1.8],
+    [ 2.0, 1.32, -4.4, 1.6]
+  ];
+  clumps.forEach(([cx, cy, cz, spread], ci) => {
+    const n = 4 + (rnd() * 4 | 0);
+    for (let i = 0; i < n; i++) {
+      const m = new THREE.Mesh(cushions[(ci + i) % 3], mossMat);
+      const sz = spread * (.20 + Math.pow(rnd(), 1.6) * .34);
+      const a = rnd() * TAU, rad = Math.pow(rnd(), .6) * spread * .8;
+      m.position.set(cx + Math.cos(a) * rad, cy - sz * .30 + rnd() * .12,
+                     cz + Math.sin(a) * rad * .8);
+      m.scale.set(sz * (.9 + rnd() * .5), sz * (.7 + rnd() * .5), sz * (.9 + rnd() * .5));
+      m.rotation.y = rnd() * TAU;
+      m.rotation.z = (rnd() - .5) * .3;
+      scene.add(m);
+    }
+  });
 }
 
 function buildWater() {
@@ -1025,28 +1231,13 @@ function buildWater() {
   WORLD.water = mat;
   WORLD.waterMesh = m;
 
-  /* The fall. Three short planes stacked down the ledge with a scrolling
-     alpha, which at this size is more convincing than particles would be —
-     falling water at two metres is a sheet with structure in it, not drops. */
-  const fallTex = tx(texFall(), { wrap: THREE.RepeatWrapping, repeat: [1, 1] });
-  WORLD.fall = [];
-  /* z is out at the ledge's *face*, not its centre — the first pass put these
-     inside the boulder and the stream fell through solid rock */
-  /* Small, and dim. Additive white over the full width of the ledge was a lit
-     screen standing in the pond — the brightest thing in a frame whose only
-     light is supposed to be the house. A fall two metres from the camera is a
-     narrow bright seam and a lot of dark water. */
-  [[1.25, .58, -.5, .55, .42], [2.15, .54, -.7, .70, .34], [3.15, .48, -.3, .42, .26]].forEach(([x, y, z, w, o]) => {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.05),
-      new THREE.MeshBasicMaterial({ map: fallTex.clone(), transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, fog: true, opacity: o }));
-    f.material.map.wrapS = f.material.map.wrapT = THREE.RepeatWrapping;
-    f.material.map.needsUpdate = true;
-    f.position.set(x, y, z);
-    scene.add(f); WORLD.fall.push(f.material.map);
-  });
+  /* No fall. It was three scrolling planes over the ledge and it was the
+     loudest thing in a picture whose whole premise is that the house is the
+     only bright thing in it — and at this camera height the stream reads well
+     enough as a step in the stone with water running level over it. Removed
+     rather than dimmed: a feature that has to be turned down to tolerable is
+     a feature the composition did not want.
 
-  /* pads, in two rafts on the near right the way the reference has them */
   /* One raft, bottom right, close enough to the lens to have detail in it.
      Three even patches read as pond dressing; a raft gathered against one
      bank reads as pads, because that is what pads do. */
@@ -1066,25 +1257,8 @@ function buildWater() {
   });
 }
 
-/* the falling sheet: vertical streaks, brightest where the water is thinnest */
-function texFall() {
-  const W = 128, H = 256, c = cvs(W, H), x = c.getContext('2d');
-  const rnd = mulberry32(7711);
-  x.clearRect(0, 0, W, H);
-  for (let i = 0; i < 90; i++) {
-    const px = rnd() * W, w = 1 + rnd() * 5;
-    const g = x.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, 'rgba(210,238,244,0)');
-    g.addColorStop(.22, 'rgba(210,238,244,' + (.10 + rnd() * .26).toFixed(2) + ')');
-    g.addColorStop(.8, 'rgba(180,220,232,' + (.05 + rnd() * .16).toFixed(2) + ')');
-    g.addColorStop(1, 'rgba(180,220,232,0)');
-    x.fillStyle = g;
-    x.fillRect(px, 0, w, H);
-  }
-  return c;
-}
-
 function cutout(canvasEl, tint, alphaTest) {
+  feather(canvasEl, { x: .07, y: .09 });
   return new THREE.MeshBasicMaterial({
     map: tx(canvasEl, { aniso: 16 }), transparent: true,
     alphaTest: alphaTest === undefined ? .04 : alphaTest,
@@ -1103,6 +1277,8 @@ function buildPlanting() {
      and it reads as a place that has plants in it. */
   const bushes = [texLeafBush(2101, { stems: 9 }), texLeafBush(2202, { stems: 7 }),
                   texLeafBush(2303, { stems: 11 })].map(c => cutout(c, 0x9fc79a));
+  const wiry   = [texLeafBush(2404, { stems: 22, leaf: .30 }),
+                  texLeafBush(2505, { stems: 26, leaf: .26 })].map(c => cutout(c, 0xa8cf9c));
   const ferns  = [texFern(4101, { fronds: 8 }), texFern(4202, { fronds: 6 })]
                   .map(c => cutout(c, 0x8fbf92));
   const blades = [texBlades(3101, { blades: 52 }), texBlades(3202, { blades: 38 })]
@@ -1145,12 +1321,30 @@ function buildPlanting() {
     const sz = 1.8 + rnd() * 1.9;
     put(ferns, 4.8 + t * 6.4 + rnd() * 1.6, .1 + t * 1.9, .6 - t * 10.0, sz, sz * .82, k++);
   }
-  /* the middle distance, behind the ledge, so the fall comes out of planting
-     rather than off a bare rock */
+  /* the middle distance, behind the ledge */
   for (let i = 0; i < 10; i++) {
     const sz = 1.5 + rnd() * 1.8;
     put(i % 3 ? bushes : ferns, (rnd() - .5) * 15, .5 + rnd() * 1.5,
         -7.0 - rnd() * 5.5, sz, sz * .86, k++);
+  }
+  /* The wiry small-leaved shrub, high and wide — it is the thing filling the
+     top corners of the reference and it wants to be up among the rocks rather
+     than down at the water, which is also the one part of the frame that had
+     nothing in it but stone. */
+  for (let i = 0; i < 14; i++) {
+    const sx = rnd() < .5 ? -1 : 1;
+    const t = rnd();
+    const sz = 2.4 + rnd() * 3.4;
+    put(wiry, sx * (7.0 + t * 8.0) + (rnd() - .5) * 2.4,
+        1.6 + t * 4.2 + rnd() * 1.2, -6.0 - t * 12.0, sz, sz * .92, k++);
+  }
+  /* and a few small ones tucked against the near stones, where the cushions
+     are, so the moss has something growing out of it */
+  for (let i = 0; i < 9; i++) {
+    const sx = rnd() < .5 ? -1 : 1;
+    const sz = 1.0 + rnd() * 1.1;
+    put(wiry, sx * (4.6 + rnd() * 4.5), .5 + rnd() * 1.1, -1.0 - rnd() * 6.0,
+        sz, sz * .92, k++);
   }
   /* the waterline. Blades read as reeds because of where they are, not what
      they are; the stalks are the vertical among them. */
@@ -1173,7 +1367,8 @@ function buildPlanting() {
 function buildBackdrop() {
   /* the forest, as three sheets at three depths. Nearer ones are lighter, not
      darker, because they have more air behind them and less in front */
-  const fTex = [texForest(1201), texForest(1302), texForest(1403)];
+  const fTex = [texForest(1201), texForest(1302), texForest(1403)]
+    .map(c => feather(c, { x: .16, y: .22, bottom: true }));
   [[0, 12, -46, 96, 52, 0x0b1a20],
    [-16, 10, -34, 62, 38, 0x0d2028],
    [ 20, 10, -32, 58, 36, 0x0d2028]].forEach((r, i) => {
@@ -1306,8 +1501,6 @@ function frame(now) {
   clock += REDUCE ? 0 : dt;
   T.value = clock;
 
-  /* the fall scrolls; nothing else about it moves */
-  if (WORLD.fall) WORLD.fall.forEach((m, i) => { m.offset.y = -clock * (1.5 + i * .35); });
   /* halos face the lens */
   WORLD.glows.forEach(h => h.quaternion.copy(camera.quaternion));
 
