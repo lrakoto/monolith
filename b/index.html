@@ -278,6 +278,112 @@ function texBlades(seed, opt) {
   return c;
 }
 
+/* A fern. The bush and the blades are both simple shapes — a lobe and a
+   taper — and a bank made of nothing else reads as one plant at four sizes
+   however many clumps you place. A frond is the third silhouette: an arc with
+   structure hanging off it, which is a thing neither of the others can do. */
+function texFern(seed, opt) {
+  opt = opt || {};
+  const W = opt.w || 768, H = opt.h || 640;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const fronds = opt.fronds || 8;
+  const pinna = (len, wide, lit) => {
+    const g = x.createLinearGradient(0, 0, len, 0);
+    g.addColorStop(0, 'rgb(' + Math.round(22 + lit * 26) + ',' + Math.round(58 + lit * 54) + ',' + Math.round(32 + lit * 28) + ')');
+    g.addColorStop(1, 'rgb(' + Math.round(64 + lit * 94) + ',' + Math.round(126 + lit * 104) + ',' + Math.round(58 + lit * 56) + ')');
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.quadraticCurveTo(len * .44, -wide, len, -wide * .18);
+    x.quadraticCurveTo(len * .50, wide * .54, 0, 0);
+    x.fill();
+  };
+  for (let f = 0; f < fronds; f++) {
+    const bx = (f + .5) / fronds * W + (rnd() - .5) * (W / fronds) * 1.5;
+    const by = H * (1.02 - rnd() * .05);
+    const reach = H * (.44 + rnd() * .46);
+    const lean = (rnd() - .5) * 1.3 + (bx / W - .5) * 1.0;
+    const arc = .38 + rnd() * .55;
+    const steps = 24;
+    let px = bx, py = by, prevx = bx, prevy = by;
+    x.strokeStyle = 'rgba(38,64,38,.94)'; x.lineCap = 'round';
+    for (let i = 1; i <= steps; i++) {
+      const u = i / steps;
+      const ang = -Math.PI / 2 + lean * u + arc * u * u;
+      px += Math.cos(ang) * (reach / steps);
+      py += Math.sin(ang) * (reach / steps);
+      x.lineWidth = (1 - u) * 3.2 + .7;
+      x.beginPath(); x.moveTo(prevx, prevy); x.lineTo(px, py); x.stroke();
+      /* pinnae swell to the middle of the frond and shrink at both ends,
+         which is the difference between a fern and a feather */
+      const swell = Math.sin(Math.min(1, u * 1.12) * Math.PI);
+      const len = swell * (reach * .22) + 3;
+      if (len > 4) {
+        for (const side of [-1, 1]) {
+          x.save(); x.translate(px, py);
+          x.rotate(ang + side * (1.00 + rnd() * .30) + (rnd() - .5) * .18);
+          pinna(len, len * .40, rnd());
+          x.restore();
+        }
+      }
+      prevx = px; prevy = py;
+    }
+  }
+  return c;
+}
+
+/* Stalks — the vertical, jointed kind that grows with its feet in water.
+   Nothing else here is a straight line, which is the entire reason it is
+   worth drawing: it gives the waterline an edge that the arcs and lobes
+   cannot, and a few of them among the reeds is what stops the bank reading
+   as one soft mass. */
+function texStalks(seed, opt) {
+  opt = opt || {};
+  const W = opt.w || 512, H = opt.h || 768;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const n = opt.stalks || 16;
+  for (let i = 0; i < n; i++) {
+    const bx = rnd() * W, by = H * (1.02 - rnd() * .03);
+    const h = H * (.40 + rnd() * .55);
+    const lean = (rnd() - .5) * W * .12;
+    const wdt = 2.2 + rnd() * 3.6;
+    const lit = rnd();
+    const hi = 'rgb(' + Math.round(70 + lit * 96) + ',' + Math.round(134 + lit * 100) + ',' + Math.round(64 + lit * 52) + ')';
+    const lo = 'rgb(' + Math.round(24 + lit * 26) + ',' + Math.round(60 + lit * 44) + ',' + Math.round(30 + lit * 22) + ')';
+    const g = x.createLinearGradient(bx - wdt, 0, bx + wdt, 0);
+    g.addColorStop(0, lo); g.addColorStop(.55, hi); g.addColorStop(1, lo);
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(bx - wdt, by);
+    x.lineTo(bx + lean - wdt * .55, by - h);
+    x.lineTo(bx + lean + wdt * .55, by - h);
+    x.lineTo(bx + wdt, by);
+    x.closePath(); x.fill();
+    /* the joints, and the little whorl of needles at each one */
+    const joints = 3 + (rnd() * 4 | 0);
+    for (let j = 1; j <= joints; j++) {
+      const t = j / (joints + 1);
+      const jy = by - h * t, jx = bx + lean * t;
+      x.strokeStyle = 'rgba(18,44,24,.75)';
+      x.lineWidth = 1.2;
+      x.beginPath(); x.moveTo(jx - wdt, jy); x.lineTo(jx + wdt, jy); x.stroke();
+      if (rnd() < .7) {
+        x.strokeStyle = hi; x.lineWidth = 1.1;
+        for (let k = 0; k < 5; k++) {
+          const a = -Math.PI / 2 + (k / 4 - .5) * 2.1;
+          const nl = 6 + rnd() * 15;
+          x.beginPath(); x.moveTo(jx, jy);
+          x.lineTo(jx + Math.cos(a) * nl, jy + Math.sin(a) * nl * .7);
+          x.stroke();
+        }
+      }
+    }
+  }
+  return c;
+}
+
 /* Lily pads, seen from close and nearly flat on. The wedge notch is the whole
    silhouette — a disc without one is a coin — and the pale rim is what the
    lanterns catch across the water. */
@@ -683,8 +789,8 @@ function initGL() {
   scene.fog = new THREE.FogExp2(PAL.fog, .034);
 
   camera = new THREE.PerspectiveCamera(42, vpW() / vpH(), .1, 220);
-  camera.position.set(0, 1.65, 11.5);
-  camera.lookAt(0, 3.4, -8);
+  camera.position.set(1.4, 2.05, 12.8);
+  camera.lookAt(-2.0, 3.0, -9.5);
 }
 
 function buildLights() {
@@ -783,8 +889,15 @@ function buildHouse() {
   const pier = new THREE.Mesh(new THREE.BoxGeometry(Wd * .5, 6.5, Dp * .55), dark);
   pier.position.set(.6, -3.6, -.6); g.add(pier);
 
-  g.position.set(1.6, 6.4, -15.5);
-  g.rotation.y = -.22;
+  /* Off the centreline, and turned. Dead centre and square to the lens, it
+     was a symbol of a house rather than a building someone put here — the
+     reference sits it left of centre and three-quarters on, so you read the
+     glazed face *and* the return, and the cantilever has a direction to
+     cantilever in. Everything else in the frame now leads to it: the stream
+     comes down on the right, the pads gather bottom-right, and the diagonal
+     between them is the composition. */
+  g.position.set(-6.0, 6.5, -16.4);
+  g.rotation.y = .40;
   scene.add(g);
 
   /* the light the room throws. One source, warm, short range: the reference
@@ -793,14 +906,14 @@ function buildHouse() {
      a room light that reaches the far bank turns the whole garden warm and
      there goes the one-warm-source rule the picture is built on */
   const room = new THREE.PointLight(0xffab55, 3.4, 17, 2);
-  room.position.set(1.0, 8.4, -12.4);
+  room.position.set(-5.4, 8.4, -13.2);
   scene.add(room);
 
   /* and the glow of the whole face, seen through the rain */
   const halo = new THREE.Mesh(new THREE.PlaneGeometry(13, 10),
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,196,132,.42)', 'rgba(255,140,60,.16)')),
       transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .5 }));
-  halo.position.set(1.0, 8.2, -12.0);
+  halo.position.set(-5.4, 8.3, -12.8);
   scene.add(halo); WORLD.glows.push(halo);
   return g;
 }
@@ -832,8 +945,13 @@ function buildTerrain() {
   /* Wet stone is a dark stone with a bright reflection on it, not a light
      stone. Low roughness against a real environment is what does that; before
      there was an environment it just made them matte and slightly paler. */
-  const wetMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .17,
-    metalness: .08, envMapIntensity: 1.5 });
+  /* .17 gave every foreground stone one perfectly round highlight, which is
+     what a billiard ball looks like, not a wet rock. A real one is smooth at
+     the scale of the shape and rough at the scale of the highlight, and with
+     no bump map to say so the only lever is to spread the specular until it
+     stops being a disc. */
+  const wetMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .30,
+    metalness: .06, envMapIntensity: 1.25 });
   const near = [
     [-4.6, .10, 3.2, 1.5, 9011, .18], [ 4.9, .05, 2.6, 1.7, 9022, .12],
     [-2.4, -.05, 5.6, 1.1, 9033, .05], [ 2.6, -.10, 6.4, 1.3, 9044, .05],
@@ -875,7 +993,9 @@ function buildTerrain() {
 
   /* the step the stream falls over */
   const ledge = new THREE.Mesh(makeBoulder(3.2, 9500, { sy: .34, sx: 2.1, rough: .16, moss: .5 }), mat);
-  ledge.position.set(-.2, .34, -4.6);
+  /* right of centre, opposite the house. The fall on the axis split the
+     picture in half and gave the eye nowhere to travel. */
+  ledge.position.set(2.0, .34, -4.4);
   scene.add(ledge);
 }
 
@@ -887,8 +1007,8 @@ function buildWater() {
       uDeep:    { value: new THREE.Color(0x081b22) },
       uShallow: { value: new THREE.Color(0x16404a) },
       uWarm:    { value: new THREE.Color(0xff9a3c) },
-      uLampA:   { value: new THREE.Vector3(-3.6, 1.6, -3.0) },
-      uLampB:   { value: new THREE.Vector3(3.9, 1.6, -4.6) },
+      uLampA:   { value: new THREE.Vector3(-4.4, 2.2, -2.2) },
+      uLampB:   { value: new THREE.Vector3(2.4, 3.1, -8.2) },
       uFog:     { value: new THREE.Color(PAL.fog) },
       uFogD:    { value: .034 },
       tRefl:    { value: MIRROR.target ? MIRROR.target.texture : null },
@@ -916,7 +1036,7 @@ function buildWater() {
      screen standing in the pond — the brightest thing in a frame whose only
      light is supposed to be the house. A fall two metres from the camera is a
      narrow bright seam and a lot of dark water. */
-  [[-.75, .58, -.7, .55, .42], [.15, .54, -.9, .70, .34], [1.15, .48, -.5, .42, .26]].forEach(([x, y, z, w, o]) => {
+  [[1.25, .58, -.5, .55, .42], [2.15, .54, -.7, .70, .34], [3.15, .48, -.3, .42, .26]].forEach(([x, y, z, w, o]) => {
     const f = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.05),
       new THREE.MeshBasicMaterial({ map: fallTex.clone(), transparent: true, depthWrite: false,
         blending: THREE.AdditiveBlending, fog: true, opacity: o }));
@@ -927,9 +1047,12 @@ function buildWater() {
   });
 
   /* pads, in two rafts on the near right the way the reference has them */
+  /* One raft, bottom right, close enough to the lens to have detail in it.
+     Three even patches read as pond dressing; a raft gathered against one
+     bank reads as pads, because that is what pads do. */
   const padSpec = [
-    [ 3.6, 4.2, 7.2, 5.0, 6101], [ 6.2, -0.6, 5.6, 4.2, 6202],
-    [-4.4, 6.0, 5.0, 3.6, 6303]
+    [ 3.8, 7.2, 8.4, 5.6, 6101], [ 6.4, 3.6, 6.4, 4.6, 6202],
+    [ 0.8, 8.6, 5.2, 3.8, 6303], [-4.2, 8.0, 4.0, 3.0, 6404]
   ];
   padSpec.forEach(([x, z, w, l, sd]) => {
     const t = texLilyPads(sd, { w: 640, h: Math.round(640 * l / w), pads: 8, r: .085 });
@@ -972,13 +1095,20 @@ function cutout(canvasEl, tint, alphaTest) {
 
 function buildPlanting() {
   const rnd = mulberry32(5150);
-  /* three bush sheets and two blade sheets, shared across every clump. Five
-     canvases for the whole garden; the variation comes from scale, mirroring
-     and what each one is standing in front of. */
+  /* Four families, not one shape at four sizes. Which one goes where is the
+     part that matters: ferns want the damp shade at the foot of the rocks,
+     stalks want their feet actually in the water, blades want the shoreline,
+     and the broadleaf bush wants the open bank where the light gets in. Put
+     them anywhere and the bank reads as a texture; put them where they grow
+     and it reads as a place that has plants in it. */
   const bushes = [texLeafBush(2101, { stems: 9 }), texLeafBush(2202, { stems: 7 }),
                   texLeafBush(2303, { stems: 11 })].map(c => cutout(c, 0x9fc79a));
+  const ferns  = [texFern(4101, { fronds: 8 }), texFern(4202, { fronds: 6 })]
+                  .map(c => cutout(c, 0x8fbf92));
   const blades = [texBlades(3101, { blades: 52 }), texBlades(3202, { blades: 38 })]
                   .map(c => cutout(c, 0x8fbc8a));
+  const stalks = [texStalks(5101, { stalks: 16 }), texStalks(5202, { stalks: 12 })]
+                  .map(c => cutout(c, 0x93c185));
 
   const put = (mats, x, y, z, w, h, i) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 4, 4), mats[i % mats.length]);
@@ -989,31 +1119,54 @@ function buildPlanting() {
     return m;
   };
 
-  /* the two banks framing the shot, which is the reference's whole composition:
-     dense at the edges, open in the middle where the water and the house are */
   let k = 0;
-  for (let i = 0; i < 16; i++) {
-    const t = i / 15;
-    const s = 2.0 + rnd() * 2.6;
-    put(bushes, -6.4 - t * 7.5 - rnd() * 1.6, .2 + t * 2.4, 2.6 - t * 13.0, s, s * .86, k++);
+  /* The left bank is the heavy one, and it is mostly rock — the reference
+     stacks its boulders on that side and lets the planting fill in around
+     them, which is why the two sides do not mirror. */
+  for (let i = 0; i < 13; i++) {
+    const t = i / 12;
+    const sz = 2.1 + rnd() * 2.7;
+    put(bushes, -7.2 - t * 7.0 - rnd() * 1.5, .2 + t * 2.6, 3.0 - t * 13.5, sz, sz * .86, k++);
   }
-  for (let i = 0; i < 16; i++) {
-    const t = i / 15;
-    const s = 2.0 + rnd() * 2.6;
-    put(bushes, 6.6 + t * 7.5 + rnd() * 1.6, .2 + t * 2.4, 1.8 - t * 13.0, s, s * .86, k++);
+  for (let i = 0; i < 8; i++) {
+    const t = i / 7;
+    const sz = 1.7 + rnd() * 1.7;
+    put(ferns, -5.4 - t * 6.0 - rnd() * 1.8, .1 + t * 2.0, 1.2 - t * 10.5, sz, sz * .82, k++);
   }
-  /* the middle distance, behind the ledge, so the fall has something to come
-     out of rather than appearing off a bare rock */
+  /* the right bank carries more of the green, and it is the side the stream
+     comes down, so it gets the wet-footed things */
+  for (let i = 0; i < 15; i++) {
+    const t = i / 14;
+    const sz = 2.0 + rnd() * 2.8;
+    put(bushes, 6.2 + t * 8.0 + rnd() * 1.8, .2 + t * 2.4, 2.2 - t * 13.5, sz, sz * .86, k++);
+  }
   for (let i = 0; i < 9; i++) {
-    const s = 1.5 + rnd() * 1.8;
-    put(bushes, (rnd() - .5) * 13, .5 + rnd() * 1.4, -6.5 - rnd() * 5, s, s * .86, k++);
+    const t = i / 8;
+    const sz = 1.8 + rnd() * 1.9;
+    put(ferns, 4.8 + t * 6.4 + rnd() * 1.6, .1 + t * 1.9, .6 - t * 10.0, sz, sz * .82, k++);
   }
-  /* blades at the waterline only. They read as reeds because of where they
-     are, not because of what they are. */
-  for (let i = 0; i < 18; i++) {
+  /* the middle distance, behind the ledge, so the fall comes out of planting
+     rather than off a bare rock */
+  for (let i = 0; i < 10; i++) {
+    const sz = 1.5 + rnd() * 1.8;
+    put(i % 3 ? bushes : ferns, (rnd() - .5) * 15, .5 + rnd() * 1.5,
+        -7.0 - rnd() * 5.5, sz, sz * .86, k++);
+  }
+  /* the waterline. Blades read as reeds because of where they are, not what
+     they are; the stalks are the vertical among them. */
+  /* Both of these are edge planting, and both had grown across the middle —
+     twenty reeds and eleven stalks at |x| from 2.6 out was a hedge standing
+     between the lens and the water. Held out past four metres, they frame the
+     pond instead of fencing it. */
+  for (let i = 0; i < 16; i++) {
     const sx = rnd() < .5 ? -1 : 1;
-    const s = 1.1 + rnd() * 1.5;
-    put(blades, sx * (3.2 + rnd() * 5.5), -.05, 4.5 - rnd() * 9, s, s * 1.25, k++);
+    const sz = 1.0 + rnd() * 1.3;
+    put(blades, sx * (4.4 + rnd() * 5.6), -.05, 4.6 - rnd() * 9.5, sz, sz * 1.25, k++);
+  }
+  for (let i = 0; i < 8; i++) {
+    const sx = rnd() < .38 ? -1 : 1;
+    const sz = .9 + rnd() * 1.1;
+    put(stalks, sx * (5.4 + rnd() * 5.0), -.10, 3.4 - rnd() * 8.0, sz, sz * 1.5, k++);
   }
 }
 
@@ -1164,12 +1317,17 @@ function frame(now) {
   CAM.mx += (CAM.tmx - CAM.mx) * Math.min(1, dt * 2.2);
   CAM.my += (CAM.tmy - CAM.my) * Math.min(1, dt * 2.2);
   const t = clock;
+  /* Height and aim both came back after the recompose. Tipped up to put the
+     house in the top third, the pond fell off the bottom of the frame — and
+     the pond is where the reflections, the pads and half the light are. The
+     water wants the lower forty per cent, which means looking *along* it
+     rather than over it. */
   camera.position.set(
-    0 + Math.sin(t * .13) * .55 + CAM.mx * 1.15,
-    1.65 + Math.sin(t * .09 + 1.3) * .16 + CAM.my * .55,
-    11.5 + Math.sin(t * .07 + 2.1) * .35
+    1.4 + Math.sin(t * .13) * .55 + CAM.mx * 1.15,
+    2.05 + Math.sin(t * .09 + 1.3) * .16 + CAM.my * .55,
+    12.8 + Math.sin(t * .07 + 2.1) * .35
   );
-  camera.lookAt(0.3 - CAM.mx * .5, 3.9 - CAM.my * .35, -9);
+  camera.lookAt(-1.9 - CAM.mx * .5, 3.1 - CAM.my * .35, -9.5);
   camera.updateMatrixWorld(true);
 
   renderMirror();
@@ -1189,8 +1347,8 @@ function boot() {
   buildBackdrop();
   buildTerrain();
   buildHouse();
-  addLantern(-3.6, .55, -3.0, 1.0);
-  addLantern(3.9, .35, -4.6, .82);
+  addLantern(-4.4, .50, -2.2, 1.0);
+  addLantern(2.4, 1.65, -8.2, .86);
   buildWater();
   buildPlanting();
   buildWeather();
