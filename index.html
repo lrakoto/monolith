@@ -2938,12 +2938,28 @@ function buildMonolith() {
   const vineZ = MONO.d / 2 + .06;              /* just clear of the face, no z-fighting */
   [[-1, 7011, 4.6], [1, 7027, 5.2]].forEach(([sx, seed, wide]) => {
     const vm = new THREE.Mesh(new THREE.PlaneGeometry(wide, 7.4, 10, 14),
-      cutoutMaterial(texVineCutout(seed, { runners: 13 }), .028, 0x66765c, .95));
+      cutoutMaterial(texVineCutout(seed, { runners: 17 }), .030, 0x88a173, 1.25));
     vm.position.set(sx * (MONO.w / 2 - wide / 2 - .35), 3.5, vineZ);
     vm.scale.x = sx;                           /* mirrored, so the pair is not one plate twice */
     vm.renderOrder = 3;
     g.add(vm);
     (WORLD.vines = WORLD.vines || []).push(vm);
+  });
+  /* and a skirt across the whole foot of the wall. The two tall plates root
+     at the edges, which is right for something climbing, but it left the
+     middle of the base as bare board — and the base is the part the rig sees
+     from the flight, straight on, for the whole experience chapter. Wide and
+     short, drawn a centimetre proud of the tall plates so the two masses
+     overlap rather than abut, with the leaves scaled down to keep them the
+     same real size on a canvas that maps twice the pixels to the metre. */
+  [[-1, 7103], [1, 7119]].forEach(([sx, seed]) => {
+    const vm = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 3.4, 12, 8),
+      cutoutMaterial(texVineCutout(seed, { w: 792, h: 408, runners: 22, leaf: .58 }), .030, 0x88a173, 1.25));
+    vm.position.set(sx * 3.3, 1.5, vineZ + .04);
+    vm.scale.x = sx;
+    vm.renderOrder = 4;
+    g.add(vm);
+    WORLD.vines.push(vm);
   });
 
   g.position.set(0, PODIUM, TEMPLE_Z);
@@ -3268,6 +3284,74 @@ function injectLampGlow(sh, o) {
    most of it, the bough a little less, and the rocks almost none — stone does
    not transmit, and a boulder with a lit edge reads as a mistake where a blade
    of grass reads as backlit. */
+/* ------------------------------------------------------------- ferns
+   Grass was the wrong plant. The scene wants a wet garden — ferns, leafy
+   sprays, moss on the stone — and a blade of grass is a line where a frond is
+   a shape. This draws the shape: a rachis arcing up and over, with pinnae in
+   pairs along it that grow toward the middle of the frond and taper at both
+   ends, which is what makes a fern read as a fern and not as a feather.
+
+   Green, and meant to be lit. The dry palette this scene was built on is a
+   grey-green that dies in shadow; these are warmer and lighter so the bollards
+   have something to catch, the way the lanterns do in a wet garden. */
+function texFernCutout(seed, opt) {
+  opt = opt || {};
+  const W = opt.w || 768, H = opt.h || 768;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const fronds = opt.fronds || 9;
+  const hue = opt.hue || 0;
+
+  /* one leaflet: a pointed lobe, lighter on the side the light comes from */
+  const pinna = (len, wide, shade) => {
+    const g = x.createLinearGradient(0, 0, len, 0);
+    g.addColorStop(0, 'rgba(' + (34 + shade * 30 + hue) + ',' + (58 + shade * 52) + ',' + (30 + shade * 26) + ',1)');
+    g.addColorStop(1, 'rgba(' + (66 + shade * 62 + hue) + ',' + (104 + shade * 74) + ',' + (52 + shade * 40) + ',1)');
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.quadraticCurveTo(len * .42, -wide, len, -wide * .16);
+    x.quadraticCurveTo(len * .48,  wide * .52, 0, 0);
+    x.fill();
+  };
+
+  for (let f = 0; f < fronds; f++) {
+    const t0 = (f + .5) / fronds;
+    const bx = t0 * W + (rnd() - .5) * (W / fronds) * 1.5;
+    const by = H * (1.02 - (opt.root || .04) * rnd());
+    /* how far it reaches and how hard it arcs over — the tall ones bend most */
+    const reach = H * (.42 + rnd() * .46);
+    const lean  = (rnd() - .5) * 1.35 + (bx / W - .5) * .9;   /* splay outward */
+    const arc   = .35 + rnd() * .55;
+    const steps = 26;
+    let px = bx, py = by, prevx = bx, prevy = by;
+    x.strokeStyle = 'rgba(46,62,36,.92)';
+    x.lineCap = 'round';
+    for (let i = 1; i <= steps; i++) {
+      const u = i / steps;                                    /* 0 base … 1 tip */
+      const ang = -Math.PI / 2 + lean * u + arc * u * u;
+      px += Math.cos(ang) * (reach / steps);
+      py += Math.sin(ang) * (reach / steps);
+      x.lineWidth = (1 - u) * 3.4 + .7;
+      x.beginPath(); x.moveTo(prevx, prevy); x.lineTo(px, py); x.stroke();
+      /* pinnae swell toward the middle of the frond and shrink at both ends */
+      const swell = Math.sin(Math.min(1, u * 1.12) * Math.PI);
+      const len = swell * (reach * .20) + 3;
+      if (len > 4) {
+        for (const side of [-1, 1]) {
+          x.save();
+          x.translate(px, py);
+          x.rotate(ang + side * (1.02 + rnd() * .30) + (rnd() - .5) * .18);
+          pinna(len, len * .40, rnd());
+          x.restore();
+        }
+      }
+      prevx = px; prevy = py;
+    }
+  }
+  return c;
+}
+
 /* ------------------------------------------------------- climbing vines
    The slab's front is the largest unbroken surface in the scene and the only
    one with nothing happening on it — board-formed concrete, twelve metres
@@ -3290,12 +3374,15 @@ function texVineCutout(seed, opt) {
   const c = cvs(W, H), x = c.getContext('2d');
   const rnd = mulberry32(seed);
   const runners = opt.runners || 13;
+  /* leaf size is in canvas pixels, so a plate that maps more pixels to the
+     metre needs this turned down or its leaves come out dinner-plate sized */
+  const LS = opt.leaf || 1;
 
   /* one leaf: a rounded lozenge with a midrib, lit from the upper left so it
      sits with everything else in the scene */
   const leaf = (px, py, len, ang, shade) => {
     x.save(); x.translate(px, py); x.rotate(ang);
-    const w = len * .62;
+    const w = len * .80;
     const g = x.createLinearGradient(0, -w * .5, len * .5, w * .5);
     g.addColorStop(0, 'rgba(' + (58 + shade * 46) + ',' + (78 + shade * 54) + ',' + (46 + shade * 30) + ',1)');
     g.addColorStop(1, 'rgba(' + (16 + shade * 20) + ',' + (26 + shade * 26) + ',' + (15 + shade * 14) + ',1)');
@@ -3334,14 +3421,19 @@ function texVineCutout(seed, opt) {
       x.lineWidth = (1 - pts[i][2]) * 5.2 + 1.2;
       x.beginPath(); x.moveTo(pts[i - 1][0], pts[i - 1][1]); x.lineTo(pts[i][0], pts[i][1]); x.stroke();
     }
-    /* leaves in alternating pairs, largest and densest at the root */
-    for (let i = 2; i < pts.length; i += 2) {
+    /* Leaves in alternating pairs, largest and densest at the root. Every
+       node carries one near the ground and roughly every third one near the
+       tip: spacing them evenly up the stem gave a runner with the leaf count
+       of a houseplant, which at slab scale read as a bare cord with specks on
+       it. The falloff is what makes it a climber — a mass at the foot of the
+       wall thinning into single leaves as it runs out of reach. */
+    for (let i = 2; i < pts.length; i++) {
       const [lx, ly, t] = pts[i];
-      if (rnd() < .09) continue;                       /* a few gaps, or it reads as a pattern */
-      const len = (1 - t) * 50 + 14 + rnd() * 10;
+      if (rnd() > 1.02 - t * .72) continue;
+      const len = ((1 - t) * 70 + 24 + rnd() * 15) * LS;
       const ang = side * (0.55 + rnd() * 0.7) + (rnd() - .5) * .35;
       leaf(lx, ly, len, ang, rnd());
-      if (rnd() < .55) leaf(lx, ly, len * (.72 + rnd() * .3), -ang * (.8 + rnd() * .4), rnd());
+      if (rnd() < .72) leaf(lx, ly, len * (.72 + rnd() * .3), -ang * (.8 + rnd() * .4), rnd());
       side = -side;
     }
   }
@@ -3459,18 +3551,26 @@ function buildStairPlanting() {
   const cheekTop = z => (stepAt(z) + 1) * (PODIUM / STEPS) + .45;
   const cheekX   = z => (STAIR_W + (STEPS - stepAt(z)) * .052) / 2 + .45;
 
-  /* Low body, long blades. The generator fills its silhouette and then draws
-     blades over it, which is right for a bank two metres from the lens — you
-     are meant to read a mass. At tuft scale the fill is all you read, and the
-     first pass put black mounds up both rails. Dropping peak leaves almost no
-     body and lets the blades carry the shape, so the silhouette is ragged and
-     the lamps get between the stems. */
+  /* Ferns, not grass. The first pass planted the flight with the same dry
+     blades the foreground banks are made of, and a blade is a line where a
+     frond is a shape — at this distance a line reads as nothing, which is why
+     they came out first as black mounds and then as scrub. The foreground
+     banks keep their grass; they are two metres from the lens and read as a
+     mass, which is what grass is good at. Everything on the flight is a fern.
+
+     Warmer and lighter than the dry palette, so the bollards have something to
+     catch. A grey-green plant beside a lamp is a silhouette; a green one is
+     lit, and being lit is most of what makes a garden read as wet. */
   const plates = [
-    texGrassCutout(811, { w: 512, h: 512, crest: .48, peak: .30, wide: .34, blades: 1500, len: 52, warm: .80, crest2: .30, crest3: .32 }),
-    texGrassCutout(822, { w: 512, h: 512, crest: .40, peak: .26, wide: .38, blades: 1300, len: 46, warm: .95, crest2: .36, crest3: .26 }),
-    texGrassCutout(833, { w: 512, h: 512, crest: .56, peak: .34, wide: .30, blades: 1700, len: 57, warm: .72, crest2: .26, crest3: .38 })
+    texFernCutout(811, { fronds: 9,  root: .05 }),
+    texFernCutout(822, { fronds: 7,  root: .04, hue: 8 }),
+    texFernCutout(833, { fronds: 11, root: .06 })
   ];
-  const mats = plates.map((c, i) => cutoutMaterial(c, .075 + i * .012, 0x6d7a6a, 1.15));
+  /* Deep enough to sit in a night. The first pass at this colour was almost
+     daylit — a green that bright reads as a plant photographed at noon and
+     pasted in. Held down here and lifted by the bollards instead, which is the
+     same trick the reference is doing: dark foliage, lit edges. */
+  const mats = plates.map((c, i) => cutoutMaterial(c, .085 + i * .014, 0x74895f, 1.7));
   const rnd = mulberry32(4242);
   WORLD.planting = [];
 
@@ -3494,6 +3594,15 @@ function buildStairPlanting() {
       put(sx * (xo + .16 + rnd() * .30), y - .16, z + (rnd() - .5) * .8, w, w * 1.05, k++);
     });
   }
+
+  /* No lily pads on the pools, though the reference is full of them and they
+     were built and placed here first. Every waypoint in this rig sits between
+     one and eleven metres off the ground and looks *up*: the pools project
+     into the bottom half of the frame at a grazing angle, where a pad raft
+     two metres across covers about ten pixels of height, and for the first
+     third of the page the foreground banks are in front of them anyway.
+     Anything laid flat on this court is invisible by construction — the
+     planting that reads is the planting that stands up. */
 
   /* the landing, between the head of the flight and the foot of the slab */
   for (let n = 0; n < 16; n++) {
