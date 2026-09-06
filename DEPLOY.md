@@ -63,7 +63,7 @@ not something to paste into a chat or a file.
 
 | Secret | Value |
 |---|---|
-| `FTP_SERVER` | the FTP host, e.g. `ftp.threeohfivestudios.com` — hostname only, no `ftp://` |
+| `FTP_SERVER` | `p3plzcpnl506867.prod.phx3.secureserver.net` — see below, this one is not obvious |
 | `FTP_USERNAME` | the FTP account's user |
 | `FTP_PASSWORD` | its password |
 | `CF_ZONE_ID` | *optional* — Cloudflare zone id, to purge the cache after deploy |
@@ -71,6 +71,18 @@ not something to paste into a chat or a file.
 
 Without the two Cloudflare secrets the purge step skips and the deploy still
 succeeds; the cache just ages out on its own.
+
+**`FTP_SERVER` must be the server's own hostname, not the domain.** Both
+`threeohfivestudios.com` and `ftp.threeohfivestudios.com` resolve to Cloudflare
+(`104.21.x` / `172.67.x`), and Cloudflare proxies HTTP and HTTPS only — port 21
+is not carried, so an FTP client aimed there hangs until it times out. The
+error is `connect ETIMEDOUT <cloudflare ip>:21` and it looks like a credentials
+problem, which it is not. `ftp.pixelmix.co` does not resolve at all.
+
+The address that works is the cPanel host itself, which is in the URL when you
+open cPanel: `p3plzcpnl506867.prod.phx3.secureserver.net` → `107.180.115.245`,
+port 21 open. Prefer the hostname over the IP; GoDaddy moves accounts between
+servers and the hostname follows.
 
 **The setting to check before the first run is `server-dir`**, because it is
 relative to wherever the FTP account lands, and that differs per account on
