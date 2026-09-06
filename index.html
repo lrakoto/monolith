@@ -2871,6 +2871,27 @@ function buildMonolith() {
     wc.position.set(s * 11.4, 4.77, 1.4); wc.castShadow = true; g.add(wc);
   });
 
+  /* --- the climb on the face -------------------------------------------
+     Added to the group, so they lean with the slab and need no maths of their
+     own to stay on it. Two plates rather than one across: a single sheet
+     twelve metres wide would repeat visibly, and vines root where there is
+     something to root against — the edges — rather than evenly along a wall.
+
+     They stop below the cut. MONO.slotY is 8.4 above the podium floor and the
+     tallest runner reaches about 7, which leaves the slot its own darkness to
+     sit in. A vine crossing the light would read as damage rather than growth,
+     and the cut is the one thing on this face that must stay clean. */
+  const vineZ = MONO.d / 2 + .06;              /* just clear of the face, no z-fighting */
+  [[-1, 7011, 4.6], [1, 7027, 5.2]].forEach(([sx, seed, wide]) => {
+    const vm = new THREE.Mesh(new THREE.PlaneGeometry(wide, 7.4, 10, 14),
+      cutoutMaterial(texVineCutout(seed, { runners: 13 }), .028, 0x66765c, .95));
+    vm.position.set(sx * (MONO.w / 2 - wide / 2 - .35), 3.5, vineZ);
+    vm.scale.x = sx;                           /* mirrored, so the pair is not one plate twice */
+    vm.renderOrder = 3;
+    g.add(vm);
+    (WORLD.vines = WORLD.vines || []).push(vm);
+  });
+
   g.position.set(0, PODIUM, TEMPLE_Z);
   g.rotation.x = MONO.lean;
   scene.add(g); WORLD.monolith = g; WORLD.temple = g;
@@ -3193,6 +3214,86 @@ function injectLampGlow(sh, o) {
    most of it, the bough a little less, and the rocks almost none — stone does
    not transmit, and a boulder with a lit edge reads as a mistake where a blade
    of grass reads as backlit. */
+/* ------------------------------------------------------- climbing vines
+   The slab's front is the largest unbroken surface in the scene and the only
+   one with nothing happening on it — board-formed concrete, twelve metres
+   across, holding one cut of light. Vines break that plane without competing
+   with the slot: they grow from the bottom, thin out as they rise, and stop
+   well below the cut.
+
+   Drawn upward rather than scattered. Each runner walks up the canvas with a
+   wandering x, and the leaves hang off it in alternating pairs whose size
+   falls away toward the tip, because a real climber has its oldest and largest
+   growth at the bottom. The alpha is the plant: everything not drawn stays
+   transparent, and the plate is cut out by the same alphaTest the grass uses. */
+function texVineCutout(seed, opt) {
+  opt = opt || {};
+  /* The canvas has to carry the plate's own proportion. A square texture on a
+     plate half as wide as it is tall stretches every leaf by a factor of 1.6
+     on the vertical, and a stretched leaf is a twig — the first pass read as
+     dead sticks on the wall for exactly that reason and nothing else. */
+  const W = opt.w || 640, H = opt.h || 1024;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const runners = opt.runners || 13;
+
+  /* one leaf: a rounded lozenge with a midrib, lit from the upper left so it
+     sits with everything else in the scene */
+  const leaf = (px, py, len, ang, shade) => {
+    x.save(); x.translate(px, py); x.rotate(ang);
+    const w = len * .62;
+    const g = x.createLinearGradient(0, -w * .5, len * .5, w * .5);
+    g.addColorStop(0, 'rgba(' + (58 + shade * 46) + ',' + (78 + shade * 54) + ',' + (46 + shade * 30) + ',1)');
+    g.addColorStop(1, 'rgba(' + (16 + shade * 20) + ',' + (26 + shade * 26) + ',' + (15 + shade * 14) + ',1)');
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.quadraticCurveTo(len * .34, -w * .58, len, 0);
+    x.quadraticCurveTo(len * .34,  w * .58, 0, 0);
+    x.fill();
+    x.strokeStyle = 'rgba(12,20,12,.55)'; x.lineWidth = Math.max(.6, len * .045);
+    x.beginPath(); x.moveTo(len * .06, 0); x.lineTo(len * .86, 0); x.stroke();
+    x.restore();
+  };
+
+  for (let r = 0; r < runners; r++) {
+    /* where it roots, and how far up it gets — none of them reach the top */
+    let px = (r + .5) / runners * W + (rnd() - .5) * (W / runners) * 1.6;
+    /* uneven heights, and a third of them stay low — a wall of runners that
+       all reach the same line reads as a hedge, not as something climbing */
+    const top = H * (rnd() < .34 ? (.52 + rnd() * .26) : (.13 + rnd() * .30));
+    const drift = (rnd() - .5) * 1.9;
+    const seg = 7;
+    let py = H, side = rnd() < .5 ? 1 : -1;
+    x.strokeStyle = 'rgba(30,42,26,.95)';
+    x.lineJoin = x.lineCap = 'round';
+    const pts = [];
+    while (py > top) {
+      const t = 1 - (py - top) / (H - top);            /* 0 at root, 1 at tip */
+      px += Math.sin(py * .012 + r * 2.1) * 2.4 + drift;
+      px = clamp(px, -W * .04, W * 1.04);
+      py -= seg;
+      pts.push([px, py, t]);
+    }
+    /* the stem tapers as it climbs */
+    for (let i = 1; i < pts.length; i++) {
+      x.lineWidth = (1 - pts[i][2]) * 5.2 + 1.2;
+      x.beginPath(); x.moveTo(pts[i - 1][0], pts[i - 1][1]); x.lineTo(pts[i][0], pts[i][1]); x.stroke();
+    }
+    /* leaves in alternating pairs, largest and densest at the root */
+    for (let i = 2; i < pts.length; i += 2) {
+      const [lx, ly, t] = pts[i];
+      if (rnd() < .09) continue;                       /* a few gaps, or it reads as a pattern */
+      const len = (1 - t) * 50 + 14 + rnd() * 10;
+      const ang = side * (0.55 + rnd() * 0.7) + (rnd() - .5) * .35;
+      leaf(lx, ly, len, ang, rnd());
+      if (rnd() < .55) leaf(lx, ly, len * (.72 + rnd() * .3), -ang * (.8 + rnd() * .4), rnd());
+      side = -side;
+    }
+  }
+  return c;
+}
+
 function cutoutMaterial(canvasEl, sway, tint, glow) {
   const mat = new THREE.MeshBasicMaterial({
     map: tx(canvasEl, { aniso: 16 }), transparent: true, depthWrite: true,
