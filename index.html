@@ -3352,6 +3352,70 @@ function texFernCutout(seed, opt) {
   return c;
 }
 
+/* --------------------------------------------------------------- moss
+   The step nosings and the rails, which is the one piece of this scene the
+   camera is genuinely close to — the experience chapter climbs the flight a
+   tread at a time and never gets further than a couple of metres from one.
+   Detail there is worth more than detail anywhere else on the page.
+
+   Four mats to one canvas, stacked, because every patch shares a texture and
+   a material so the whole lot can merge into a single draw call. Without the
+   bands, eighty patches would be eighty copies of one silhouette, and the
+   flight would read as tiled. Each patch takes one band and half of them take
+   it mirrored, which is eight arrangements for the price of one upload.
+
+   Drawn as a mat rather than as plants: a noisy skyline over a filled base,
+   stippled along the top so the edge is fuzzy instead of cut, and tapering to
+   nothing at both ends so a patch dissolves into the stone instead of ending.
+   Moss is the thing that has no silhouette, and getting that wrong is what
+   makes it read as paint. */
+const MOSS_BANDS = 4;
+function texMossCutout(seed) {
+  const W = 1024, B = 128, c = cvs(W, B * MOSS_BANDS), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  for (let b = 0; b < MOSS_BANDS; b++) {
+    const y0 = b * B, base = B * (.26 + rnd() * .14);
+    /* Three periods that do not divide into each other, so the skyline has no
+       repeat inside one band either — but weighted toward the *fast* ones.
+       The first pass put the amplitude on the slow term and every patch came
+       out as a little range of hills: moss has no hills, it has a fuzz. */
+    const f1 = 6.5 + rnd() * 3.0, f2 = 15.0 + rnd() * 5.0, f3 = 31.0 + rnd() * 9.0;
+    const ph = [rnd() * TAU, rnd() * TAU, rnd() * TAU];
+    const hgt = u => {
+      const n = .52 + .11 * Math.sin(u * TAU * f1 + ph[0])
+                    + .15 * Math.sin(u * TAU * f2 + ph[1])
+                    + .17 * Math.sin(u * TAU * f3 + ph[2]);
+      /* nothing at either end: a patch has to be able to stop */
+      return (base + n * B * .62) * Math.pow(Math.sin(Math.PI * u), .42);
+    };
+    const g = x.createLinearGradient(0, y0 + B, 0, y0);
+    g.addColorStop(0, 'rgba(22,34,20,1)');
+    g.addColorStop(.55, 'rgba(44,64,36,1)');
+    g.addColorStop(1, 'rgba(74,98,54,1)');
+    x.fillStyle = g;
+    x.beginPath(); x.moveTo(0, y0 + B);
+    for (let i = 0; i <= W; i += 4) x.lineTo(i, y0 + B - hgt(i / W));
+    x.lineTo(W, y0 + B); x.closePath(); x.fill();
+    /* the fuzz. Dots straddling the skyline, half of them above it and half
+       inside, which is what turns a filled shape into something growing */
+    for (let n = 0; n < 4200; n++) {
+      const u = rnd(), h = hgt(u);
+      if (h < 2) continue;
+      const r = 1.4 + rnd() * 4.2;
+      const dy = (rnd() - .5) * 34;
+      const lit = rnd();
+      x.fillStyle = 'rgba(' + Math.round(48 + lit * 74) + ','
+                            + Math.round(72 + lit * 78) + ','
+                            + Math.round(38 + lit * 44) + ','
+                            + (.35 + rnd() * .5).toFixed(2) + ')';
+      x.beginPath();
+      x.ellipse(u * W, y0 + B - h + dy, r, r * (.6 + rnd() * .5), rnd() * TAU, 0, TAU);
+      x.fill();
+    }
+  }
+  return c;
+}
+
 /* ------------------------------------------------------- climbing vines
    The slab's front is the largest unbroken surface in the scene and the only
    one with nothing happening on it — board-formed concrete, twelve metres
@@ -3594,6 +3658,63 @@ function buildStairPlanting() {
       put(sx * (xo + .16 + rnd() * .30), y - .16, z + (rnd() - .5) * .8, w, w * 1.05, k++);
     });
   }
+
+  /* Moss on the flight. One mesh: every patch is the same plane on the same
+     texture, so they are merged and the whole staircase costs one draw call
+     rather than eighty. Sway is zero — moss does not move, and the shader's
+     motion term reads uv.y, which no longer runs 0 to 1 once a patch has been
+     remapped into its band.
+
+     Two places, both chosen because they face the lens. The riser is the only
+     vertical face on a step and the only part of it the rig ever sees; the
+     inner face of the rail is what the climb looks along. The tread tops get
+     none: they are horizontal, the camera is below them for the whole chapter,
+     and moss laid on one would be the lily pads again.
+
+     Heaviest at the foot and thinning as it climbs, which is where the water
+     is and also gives the chapter somewhere to go. */
+  const mossGeos = [];
+  const mossUV = (g, band, flip) => {
+    const uv = g.attributes.uv.array;
+    for (let i = 0; i < uv.length; i += 2) {
+      if (flip) uv[i] = 1 - uv[i];
+      uv[i + 1] = uv[i + 1] / MOSS_BANDS + (MOSS_BANDS - 1 - band) / MOSS_BANDS;
+    }
+  };
+  const moss = (w, h, x, y, z, ry) => {
+    const g = new THREE.PlaneGeometry(w, h);
+    mossUV(g, Math.floor(rnd() * MOSS_BANDS), rnd() < .5);
+    if (ry) g.rotateY(ry);
+    g.translate(x, y, z);
+    mossGeos.push(g);
+  };
+  for (let i = 0; i < STEPS; i++) {
+    const y = (i + 1) * (PODIUM / STEPS), z = STAIR_Z0 - (i + .5) * STAIR_RUN;
+    const w = STAIR_W + (STEPS - i) * .052;
+    const wet = 1 - i / STEPS;                   /* the foot of the flight is the wet end */
+    /* the riser, a hair proud of its face so it never z-fights the stone, and
+       standing a little taller than the riser is deep so it tufts over the
+       nosing instead of stopping flat against it */
+    [-1, 1].forEach(sx => {
+      if (rnd() > .34 + wet * .44) return;
+      const pw = .8 + rnd() * 1.6;
+      moss(pw, .26, sx * (w / 2 - pw / 2 - rnd() * .3), y - .195 + .13, z + .295 + .012);
+    });
+    if (rnd() < .12 + wet * .18) {               /* and occasionally out into the walked middle */
+      const pw = .5 + rnd() * .9;
+      moss(pw, .22, (rnd() - .5) * w * .5, y - .195 + .11, z + .295 + .012);
+    }
+    /* the inner face of the rail, where the ferns above it are spilling from */
+    [-1, 1].forEach(sx => {
+      if (rnd() > .30 + wet * .40) return;
+      moss(STAIR_RUN * 1.7, .42 + rnd() * .22, sx * (w / 2 - .012), y + .06,
+           z + (rnd() - .5) * .2, -sx * Math.PI / 2);   /* facing in, toward the climb */
+    });
+  }
+  const mossMesh = new THREE.Mesh(mergeGeos(mossGeos),
+    cutoutMaterial(texMossCutout(5150), 0, 0x62805a, 1.45));
+  mossMesh.renderOrder = 11;                     /* under the ferns, over the stone */
+  scene.add(mossMesh); WORLD.planting.push(mossMesh);
 
   /* No lily pads on the pools, though the reference is full of them and they
      were built and placed here first. Every waypoint in this rig sits between
