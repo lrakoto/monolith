@@ -3385,6 +3385,70 @@ function buildForeground() {
   });
 }
 
+/* ------------------------------------------------- planting on the flight
+   Grass along the cheeks and across the top landing. The flight had lamps
+   standing on its rails and bare stone everywhere else, which reads as new
+   construction — the rest of the scene is weathered, wet and overgrown at the
+   foot, and the climb was the one part of it nothing had reached yet.
+
+   Every tuft solves its own height and offset from the same three functions
+   the bollards use, so the planting follows the rails up rather than floating
+   beside them, and none of it needs a hand-placed y. The flight narrows as it
+   rises and the grass narrows with it.
+
+   Three tuft plates shared across every clump rather than one generated per
+   position: the blades are thousands of strokes apiece and forty canvases
+   would cost more than the whole rest of the scene. Mirroring and a spread of
+   scales is what keeps the repeat from reading. */
+function buildStairPlanting() {
+  const stepAt   = z => Math.max(0, (STAIR_Z0 - z) / STAIR_RUN - .5);
+  const cheekTop = z => (stepAt(z) + 1) * (PODIUM / STEPS) + .45;
+  const cheekX   = z => (STAIR_W + (STEPS - stepAt(z)) * .052) / 2 + .45;
+
+  /* Low body, long blades. The generator fills its silhouette and then draws
+     blades over it, which is right for a bank two metres from the lens — you
+     are meant to read a mass. At tuft scale the fill is all you read, and the
+     first pass put black mounds up both rails. Dropping peak leaves almost no
+     body and lets the blades carry the shape, so the silhouette is ragged and
+     the lamps get between the stems. */
+  const plates = [
+    texGrassCutout(811, { w: 512, h: 512, crest: .48, peak: .30, wide: .34, blades: 1500, len: 52, warm: .80, crest2: .30, crest3: .32 }),
+    texGrassCutout(822, { w: 512, h: 512, crest: .40, peak: .26, wide: .38, blades: 1300, len: 46, warm: .95, crest2: .36, crest3: .26 }),
+    texGrassCutout(833, { w: 512, h: 512, crest: .56, peak: .34, wide: .30, blades: 1700, len: 57, warm: .72, crest2: .26, crest3: .38 })
+  ];
+  const mats = plates.map((c, i) => cutoutMaterial(c, .075 + i * .012, 0x6d7a6a, 1.15));
+  const rnd = mulberry32(4242);
+  WORLD.planting = [];
+
+  const put = (x, y, z, w, h, i) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 6, 6), mats[i % mats.length]);
+    m.position.set(x, y + h * .42, z);
+    m.scale.x = rnd() < .5 ? -1 : 1;             /* mirrored, so the plate does not repeat */
+    m.renderOrder = 12;
+    m.frustumCulled = false;
+    scene.add(m); WORLD.planting.push(m);
+  };
+
+  /* up both rails. The step is uneven on purpose — evenly spaced clumps read
+     as a planting scheme rather than as something that seeded itself. */
+  let k = 0;
+  for (let z = -11.6; z > -32.5; z -= 1.5 + rnd() * 1.3) {
+    const y = cheekTop(z), xo = cheekX(z);
+    [-1, 1].forEach(sx => {
+      if (rnd() < .14) return;                   /* gaps, so neither side matches the other */
+      const w = 1.2 + rnd() * 1.1;
+      put(sx * (xo + .16 + rnd() * .30), y - .16, z + (rnd() - .5) * .8, w, w * 1.05, k++);
+    });
+  }
+
+  /* the landing, between the head of the flight and the foot of the slab */
+  for (let n = 0; n < 16; n++) {
+    const sx = n % 2 ? 1 : -1;
+    const w = 1.5 + rnd() * 1.6;
+    put(sx * (3.4 + rnd() * 5.2), PODIUM - .14, -33.8 - rnd() * 7.2, w, w * .95, k++);
+  }
+}
+
 /* --------------------------------------------------- the giant wordmark */
 const WORD_Z = 3.0;
 /* The 305 standing across the hero. Off for now — the hero reads as the scene
@@ -6649,6 +6713,7 @@ const JOBS = [
       buildLantern(-cheekX(z), z, sc, cheekTop(z));
     });
   }],
+  ['Planting the flight', () => buildStairPlanting()],
   ['Setting the stones', () => {
     buildStele(71, 12.6, -13.0, 1.05); buildStele(72, -11.8, -9.4, .95);
     buildStele(73, 9.2, -19.0, .82);   buildStele(74, -14.5, -17.5, 1.0);
