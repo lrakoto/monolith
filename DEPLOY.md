@@ -28,6 +28,37 @@ changes, and it is one 336KB file.
 
 **Purge the Cloudflare cache afterwards** or the old file lingers.
 
+Then confirm it landed:
+
+```sh
+python3 check-live.py
+```
+
+That fetches the live page and compares it to `index.html`. A byte compare
+would always fail — the page is rewritten in flight, so the script strips what
+the infrastructure adds before comparing:
+
+| Injected by | What |
+|---|---|
+| Cloudflare | rewrites `mailto:` to `/cdn-cgi/l/email-protection#…` + a decoder script |
+| Cloudflare | Web Analytics beacon before `</body>` |
+| GoDaddy | `tccl.min.js` traffic monitor before `</html>` |
+
+Worth knowing that the first one means **the contact mailto needs JavaScript**
+to resolve. Cloudflare → Scrape Shield → Email Address Obfuscation turns it off
+if you would rather have the plain link.
+
+It is not in CI on purpose: CI must not fail because a host had a bad minute,
+and a check that goes red for reasons outside the code gets ignored.
+
+### If updates get frequent
+
+The gap worth closing is that a push updates GitHub, not the site. A GitHub
+Action can FTP to this cPanel account on every push to main, which makes push
+and deploy the same act. It needs FTP credentials in the repo's Secrets — a
+decision to make deliberately, since anyone with write access to the repo can
+then reach the host.
+
 Never upload `serve.py`, `test_*.py`, `AGENTS.md`, `CLAUDE.md` or `.github/`.
 `serve.py` has an endpoint that writes to `index.html`; it is a local dev tool
 and has no business on a public host.
