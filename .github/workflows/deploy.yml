@@ -1,0 +1,66 @@
+# Push to main is the deploy. Before this existed the repo and the host were
+# two separate things and the failure was quiet — edit, commit, believe you had
+# shipped, and last week's page stayed live.
+#
+# ONE SETTING MATTERS MORE THAN THE REST: server-dir. It must be the portfolio
+# folder. Pointed a level up it would sync the repo over the WordPress root and
+# take the site down. It is written out in full below rather than assembled
+# from parts, so it can be read and checked at a glance.
+name: deploy
+
+on:
+  push:
+    branches: [main]          # only main — a branch push must never publish
+  workflow_dispatch:          # and a manual re-run, for when a deploy is lost
+
+concurrency:                  # never let two deploys interleave over FTP
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The suite is fast and the page has no other guard. A broken index.html
+      # is silent until the preloader hangs, so it must not reach the host.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test before publishing
+        run: python3 -B -m unittest discover -p 'test_*.py' -v
+
+      - name: Upload to threeohfivestudios.com/portfolio
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps                     # explicit FTPS; see README if the host refuses
+          server-dir: /public_html/threeohfivestudios.com/portfolio/
+          # Everything that is not the website. serve.py above all: it has an
+          # endpoint that writes to index.html and must never reach a public host.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/*.py
+            **/*.md
+            **/__pycache__/**
+            **/.DS_Store
+
+      # Cloudflare sits in front, so a fresh file on disk is not a fresh file
+      # to visitors. Skipped rather than failed when the secrets are absent —
+      # the deploy still succeeded, the cache just has to age out.
+      - name: Purge Cloudflare
+        if: ${{ secrets.CF_ZONE_ID != '' && secrets.CF_API_TOKEN != '' }}
+        run: |
+          curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"prefixes":["threeohfivestudios.com/portfolio/"]}' | tee /dev/stderr | grep -q '"success":true'

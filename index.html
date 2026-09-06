@@ -220,10 +220,24 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .nav-link:hover .alt{ transform:none; }
 .nav-link.on{ color:var(--bone); }
 .nav-link.on::after{ content:''; position:absolute; left:0; bottom:0; width:100%; height:1px; background:var(--brand); }
+/* The résumé is an action rather than a destination, so it is the one thing
+   in the bar with an outline round it. Kept small and quiet — it should read
+   as available, not as the loudest thing up there, and the chapter links have
+   to stay the primary way through the page. */
+.nav-cv{
+  display:inline-flex; align-items:center; gap:8px; flex:0 0 auto;
+  margin-left:clamp(18px,2.4vw,38px); padding:8px 15px;
+  border:1px solid var(--line); border-radius:100px;
+  font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--bone-dim); transition:color .35s var(--ease), border-color .35s var(--ease);
+}
+.nav-cv:hover{ color:var(--bone); border-color:var(--bone-dim); }
+.nav-cv svg{ display:block; flex:0 0 auto; }
+
 /* The one piece of chrome that is a mark rather than a word. It sits after
    the links and keeps their optical weight — same muted bone, same lift to
    full bone on hover — so it reads as one more item in the set. */
-.nav-icon{ display:flex; align-items:center; margin-left:clamp(16px,2.2vw,34px);
+.nav-icon{ display:flex; align-items:center; margin-left:clamp(12px,1.6vw,22px);
   color:var(--bone-dim); transition:color .3s var(--ease); flex:0 0 auto; }
 .nav-icon:hover{ color:var(--bone); }
 .nav-icon svg{ display:block; }
@@ -1179,10 +1193,17 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   <nav class="nav-links" id="navlinks">
     <a class="nav-link" href="#top" data-cursor><span>Top</span><span class="alt">01</span></a>
     <a class="nav-link" href="#pathways" data-cursor><span>Work</span><span class="alt">02</span></a>
-    <a class="nav-link" href="#lessons" data-cursor><span>Services</span><span class="alt">03</span></a>
+    <a class="nav-link" href="#lessons" data-cursor><span>What I do</span><span class="alt">03</span></a>
     <a class="nav-link" href="#experience" data-cursor><span>Experience</span><span class="alt">04</span></a>
     <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">05</span></a>
   </nav>
+  <a class="nav-cv" href="/wp-content/uploads/2026/03/Lova_Resume_2026.pdf" download data-cursor>
+    <svg viewBox="0 0 14 14" fill="none" width="12" height="12" aria-hidden="true" focusable="false">
+      <path d="M7 2v8M3.6 6.6 7 10l3.4-3.4M2.5 12h9" stroke="currentColor" stroke-width="1.3"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Résumé</span>
+  </a>
   <a class="nav-icon" href="https://www.linkedin.com/in/lovarakoto/" target="_blank" rel="noopener"
      aria-label="LinkedIn profile" title="LinkedIn" data-cursor>
     <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
@@ -1306,7 +1327,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 <!-- ============================================================ chapter III -->
 <section class="sec" id="lessons" data-cam="3">
   <div class="sec-head" data-rv="fade">
-    <span class="k"><b>03</b> — Services</span><span class="rule"></span><span class="k">04</span>
+    <span class="k"><b>03</b> — What I do</span><span class="rule"></span><span class="k">04</span>
   </div>
   <div class="cur-head">
     <h2 class="display h-sec" data-rv="up">Success is built on vision, strategy, and collaboration.</h2>
@@ -1426,11 +1447,11 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <div><h4>Sections</h4><ul>
       <li><a href="#gate" data-cursor>Welcome</a></li>
       <li><a href="#pathways" data-cursor>Recent work</a></li>
-      <li><a href="#lessons" data-cursor>Services</a></li>
+      <li><a href="#lessons" data-cursor>What I do</a></li>
       <li><a href="#experience" data-cursor>Experience</a></li>
       <li><a href="#eternity" data-cursor>Contact</a></li>
     </ul></div>
-    <div><h4>Services</h4><ul>
+    <div><h4>What I do</h4><ul>
       <li><a href="#lessons" data-cursor>Web development</a></li>
       <li><a href="#lessons" data-cursor>Visual &amp; UI/UX</a></li>
       <li><a href="#lessons" data-cursor>A/B testing</a></li>

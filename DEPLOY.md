@@ -51,13 +51,37 @@ if you would rather have the plain link.
 It is not in CI on purpose: CI must not fail because a host had a bad minute,
 and a check that goes red for reasons outside the code gets ignored.
 
-### If updates get frequent
+## Automatic deploy
 
-The gap worth closing is that a push updates GitHub, not the site. A GitHub
-Action can FTP to this cPanel account on every push to main, which makes push
-and deploy the same act. It needs FTP credentials in the repo's Secrets — a
-decision to make deliberately, since anyone with write access to the repo can
-then reach the host.
+`.github/workflows/deploy.yml` publishes on every push to `main`: it runs the
+test suite first, then FTPs the site into
+`/public_html/threeohfivestudios.com/portfolio/`.
+
+It needs four repository secrets — **Settings → Secrets and variables →
+Actions → New repository secret**. Nobody but you should add these; they are
+not something to paste into a chat or a file.
+
+| Secret | Value |
+|---|---|
+| `FTP_SERVER` | the FTP host, e.g. `ftp.threeohfivestudios.com` — hostname only, no `ftp://` |
+| `FTP_USERNAME` | the FTP account's user |
+| `FTP_PASSWORD` | its password |
+| `CF_ZONE_ID` | *optional* — Cloudflare zone id, to purge the cache after deploy |
+| `CF_API_TOKEN` | *optional* — a Cloudflare token with **Zone → Cache Purge** only |
+
+Without the two Cloudflare secrets the purge step skips and the deploy still
+succeeds; the cache just ages out on its own.
+
+**The setting to check before the first run is `server-dir`.** It is written
+out in full in the workflow. One level up and it would sync the repo over the
+WordPress root and take the site down. The first deploy is worth watching in
+the Actions tab rather than assuming.
+
+The workflow excludes `*.py`, `*.md`, `.github/` and `.git*` — `serve.py` most
+of all, which has an endpoint that writes to `index.html`.
+
+Note what this changes about access: anyone who can push to `main` can now
+reach the host. That is the trade a push-to-deploy makes.
 
 Never upload `serve.py`, `test_*.py`, `AGENTS.md`, `CLAUDE.md` or `.github/`.
 `serve.py` has an endpoint that writes to `index.html`; it is a local dev tool
