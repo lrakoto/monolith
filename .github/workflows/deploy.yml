@@ -6,6 +6,13 @@
 # folder. Pointed a level up it would sync the repo over the WordPress root and
 # take the site down. It is written out in full below rather than assembled
 # from parts, so it can be read and checked at a glance.
+#
+# It is relative to wherever the FTP account lands, which is not the same for
+# every account on this host. The one in use is scoped to
+# /home/cb7kn7l8ecwu/public_html, so public_html is already the root it sees
+# and must not appear in the path. The main cPanel account lands a level higher
+# at /home/cb7kn7l8ecwu and would need /public_html/... instead — so if the
+# credentials ever change, this line has to be checked against them.
 name: deploy
 
 on:
@@ -41,7 +48,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps                     # explicit FTPS; see README if the host refuses
-          server-dir: /public_html/threeohfivestudios.com/portfolio/
+          server-dir: /threeohfivestudios.com/portfolio/
           # Everything that is not the website. serve.py above all: it has an
           # endpoint that writes to index.html and must never reach a public host.
           exclude: |

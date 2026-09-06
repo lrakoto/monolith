@@ -72,10 +72,22 @@ not something to paste into a chat or a file.
 Without the two Cloudflare secrets the purge step skips and the deploy still
 succeeds; the cache just ages out on its own.
 
-**The setting to check before the first run is `server-dir`.** It is written
-out in full in the workflow. One level up and it would sync the repo over the
-WordPress root and take the site down. The first deploy is worth watching in
-the Actions tab rather than assuming.
+**The setting to check before the first run is `server-dir`**, because it is
+relative to wherever the FTP account lands, and that differs per account on
+this host:
+
+| FTP account | Lands at | `server-dir` must be |
+|---|---|---|
+| `hermes@pixelmix.co` *(in use)* | `/home/cb7kn7l8ecwu/public_html` | `/threeohfivestudios.com/portfolio/` |
+| `cb7kn7l8ecwu` (main cPanel) | `/home/cb7kn7l8ecwu` | `/public_html/threeohfivestudios.com/portfolio/` |
+
+The account in use is scoped inside `public_html`, so `public_html` must **not**
+appear in the path — with it, the deploy resolves to `public_html/public_html/…`
+and fails. If the credentials ever change, check this line against them.
+
+One level too high in the other direction would sync the repo over the
+WordPress root. The first deploy is worth watching in the Actions tab rather
+than assuming.
 
 The workflow excludes `*.py`, `*.md`, `.github/` and `.git*` — `serve.py` most
 of all, which has an endpoint that writes to `index.html`.
