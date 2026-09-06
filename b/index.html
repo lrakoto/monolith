@@ -229,6 +229,23 @@ function texLeafBush(seed, opt) {
       }
       prevx = px; prevy = py;
     }
+    /* A few pale buds at the tips. The reference has them and they are doing
+       more than their size suggests: they are the only thing in the greenery
+       that is not green, so the eye reads the bank as a planting rather than
+       as one shrub repeated. Sparse on purpose — every stem carrying them
+       would be a flowerbed. */
+    if (rnd() < .55) {
+      for (let b = 0, n = 1 + (rnd() * 3 | 0); b < n; b++) {
+        const bxp = px + (rnd() - .5) * 40, byp = py + (rnd() - .5) * 46;
+        const rr = 2.6 + rnd() * 3.4;
+        const gg = x.createRadialGradient(bxp - rr * .3, byp - rr * .3, .5, bxp, byp, rr);
+        gg.addColorStop(0, 'rgba(246,244,206,.95)');
+        gg.addColorStop(.6, 'rgba(206,214,140,.62)');
+        gg.addColorStop(1, 'rgba(150,170,96,0)');
+        x.fillStyle = gg;
+        x.beginPath(); x.arc(bxp, byp, rr, 0, TAU); x.fill();
+      }
+    }
   }
   return c;
 }
@@ -420,7 +437,8 @@ function makeBoulder(r, seed, opt) {
   return g;
 }
 const ROCK_MAT = () => new THREE.MeshStandardMaterial({
-  vertexColors: true, roughness: .93, metalness: .02, flatShading: false
+  vertexColors: true, roughness: .74, metalness: .04, flatShading: false,
+  envMapIntensity: .9
 });
 
 /* ============================================================= 3 · water
@@ -441,11 +459,15 @@ const ROCK_MAT = () => new THREE.MeshStandardMaterial({
    in the sky, not in the plants. One uniform and two lines is cheaper than
    wiring the chunk system in for a single material. */
 const WATER_VERT = `
-  varying vec2 vUv; varying vec3 vW; varying float vDepth;
+  uniform mat4 uTexMat;
+  varying vec2 vUv; varying vec3 vW; varying float vDepth; varying vec4 vRefl;
   void main(){
     vUv = uv;
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vW = wp.xyz;
+    /* where this point lands in the reflection pass, carried through as a
+       projective coordinate so the divide happens per fragment */
+    vRefl = uTexMat * wp;
     vec4 mv = viewMatrix * wp;
     vDepth = -mv.z;
     gl_Position = projectionMatrix * mv;
@@ -455,7 +477,8 @@ const WATER_FRAG = `
   uniform float uT; uniform vec3 uDeep; uniform vec3 uShallow;
   uniform vec3 uWarm; uniform vec3 uLampA; uniform vec3 uLampB;
   uniform vec3 uFog; uniform float uFogD;
-  varying vec2 vUv; varying vec3 vW; varying float vDepth;
+  uniform sampler2D tRefl; uniform float uRefl;
+  varying vec2 vUv; varying vec3 vW; varying float vDepth; varying vec4 vRefl;
 
   float wave(vec2 p, float t){
     return sin(p.x * 1.7 + t * .9) * .5
@@ -476,11 +499,58 @@ const WATER_FRAG = `
     float chop = 0.55 + 0.45 * sin(p.z * 5.5 - t * 3.1 + across * 2.0);
     return lat * along * chop;
   }
+  /* Rain on the surface. Three rings alive at once, each one a circle that
+     grows and fades on its own clock — more than three and it reads as a
+     pattern, fewer and the pond looks like it is under cover. */
+  float rings(vec3 p, float t){
+    float a = 0.0;
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float cyc = t * 0.62 + fi * 0.37;
+      float id  = floor(cyc);
+      float age = fract(cyc);
+      float h1 = fract(sin(id * 12.9898 + fi * 78.233) * 43758.5453);
+      float h2 = fract(sin(id * 39.3468 + fi * 11.135) * 24634.6345);
+      vec2 c = vec2(mix(-10.0, 10.0, h1), mix(-9.0, 8.0, h2));
+      float r = age * 2.9;
+      a += smoothstep(0.13, 0.0, abs(length(p.xz - c) - r)) * (1.0 - age) * (1.0 - age);
+    }
+    return a;
+  }
+  /* The glint. Two high frequencies beaten against each other and clipped hard
+     at the top, which leaves a sparse scatter of single-pixel highlights that
+     move — the thing wet surfaces do that no amount of specular on a smooth
+     normal will give you, because a real one is a normal that is *not* smooth. */
+  float glint(vec3 p, float t){
+    float g = sin(p.x * 21.0 + t * 2.3) * sin(p.z * 17.0 - t * 1.9)
+            * sin((p.x + p.z) * 9.0 + t * 1.1);
+    /* Clipped hard. At 0.90 the whole pond twinkled evenly and read as snow
+       falling on it — a glint is rare by definition, and an even scatter of
+       them is a texture. */
+    return smoothstep(0.972, 1.0, g);
+  }
   void main(){
     float t = uT;
     float d = smoothstep(0.0, 26.0, -vW.z + 12.0);
     vec3 col = mix(uShallow, uDeep, d);
     float w = wave(vW.xz * 1.0, t);
+    float rg = rings(vW, t);
+
+    /* The reflection. Offset by the ripple slope and by the rings, which is
+       what makes it read as a reflection *in water* rather than as a second
+       picture printed on the pond — a mirror that does not wobble looks like
+       glass, and glass in a garden looks like a mistake. */
+    vec2 ruv = vRefl.xy / max(vRefl.w, 0.0001);
+    ruv += vec2(w * 0.010, w * 0.006) + vec2(rg * 0.016, rg * 0.010);
+    vec3 refl = texture2D(tRefl, clamp(ruv, vec2(0.002), vec2(0.998))).rgb;
+
+    /* Fresnel. Water reflects almost nothing looked at straight down and
+       almost everything at a grazing angle, and this camera is nearly at the
+       surface — which is the whole reason the pool can carry the house. */
+    vec3 vd = normalize(cameraPosition - vW);
+    float fres = pow(1.0 - clamp(vd.y, 0.0, 1.0), 3.2);
+    col = mix(col, refl, clamp(fres * uRefl, 0.0, 0.88));
+
     /* the sky, broken up: cold light lying on the ripple faces */
     col += vec3(0.06, 0.13, 0.15) * smoothstep(0.15, 0.95, w) * (1.0 - d * 0.5);
     col += uWarm * smear(vW, uLampA, t) * 0.85;
@@ -488,10 +558,112 @@ const WATER_FRAG = `
     /* a thin bright line where the ripple crests catch, near the camera only */
     float crest = smoothstep(0.86, 1.0, w) * (1.0 - d);
     col += vec3(0.20, 0.30, 0.28) * crest;
+    col += vec3(0.42, 0.62, 0.60) * rg * (1.0 - d * 0.7);
+    /* and only near a lamp. Water does not sparkle in the dark; the glint is
+       a specular hit off a ripple face, so it needs something to be specular
+       *of*, and the two lanterns are the only candidates in the frame. */
+    float lit = max(exp(-length(vW.xz - uLampA.xz) * 0.17),
+                    exp(-length(vW.xz - uLampB.xz) * 0.17));
+    col += vec3(1.00, 0.94, 0.80) * glint(vW, t) * (1.0 - d) * lit * 2.4;
+
     float f = 1.0 - exp(-vDepth * vDepth * uFogD * uFogD);
     col = mix(col, uFog, clamp(f, 0.0, 1.0));
     gl_FragColor = vec4(col, 1.0);
   }`;
+
+/* ========================================================== 3b · the mirror
+   A planar reflection, for one plane only: the pond, which is flat and level
+   at y = 0. That restriction is what keeps this to thirty lines instead of
+   three hundred — the general case has to build the plane from the mesh every
+   frame and skew the projection to clip at it; a fixed horizontal plane can
+   just negate y.
+
+   The camera below the water is the camera above it with its height, its
+   look-at height and its up vector all flipped. Flipping `up` rather than
+   scaling the matrix is what keeps the frame right-handed, so triangles still
+   wind the way the renderer expects and nothing has to be told to draw its
+   back faces.
+
+   Everything under the surface is clipped away, because the shelf, the piers
+   and the sunk half of every boulder are all down there and a reflection that
+   shows them is a window, not a mirror. */
+const MIRROR = { on: false };
+function initMirror() {
+  const s = LOW ? .5 : .75;
+  MIRROR.target = new THREE.WebGLRenderTarget(
+    Math.max(2, Math.floor(vpW() * s)), Math.max(2, Math.floor(vpH() * s)),
+    { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat, encoding: THREE.sRGBEncoding });
+  MIRROR.cam = new THREE.PerspectiveCamera();
+  MIRROR.scale = s;
+  /* keep everything at or above the waterline; the plane's own two centimetres
+     of slop stop the shoreline stones from strobing in and out at the edge */
+  MIRROR.clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), .02);
+  MIRROR.texMat = new THREE.Matrix4();
+  MIRROR.on = true;
+}
+const _look = new THREE.Vector3(), _fwd = new THREE.Vector3();
+function renderMirror() {
+  if (!MIRROR.on || !WORLD.waterMesh) return;
+  const c = MIRROR.cam;
+  c.copy(camera);
+  c.position.set(camera.position.x, -camera.position.y, camera.position.z);
+  camera.getWorldDirection(_fwd);
+  _look.copy(camera.position).add(_fwd);
+  c.up.set(0, -1, 0);
+  c.lookAt(_look.x, -_look.y, _look.z);
+  c.updateMatrixWorld(true);
+  c.updateProjectionMatrix();
+
+  /* world position -> reflection texture coordinate, as one matrix so the
+     shader does a single transform and one divide */
+  MIRROR.texMat.set(.5, 0, 0, .5,  0, .5, 0, .5,  0, 0, .5, .5,  0, 0, 0, 1);
+  MIRROR.texMat.multiply(c.projectionMatrix);
+  MIRROR.texMat.multiply(c.matrixWorldInverse);
+
+  WORLD.waterMesh.visible = false;
+  renderer.clippingPlanes = [MIRROR.clip];
+  const old = renderer.getRenderTarget();
+  renderer.setRenderTarget(MIRROR.target);
+  renderer.clear();
+  renderer.render(scene, c);
+  renderer.setRenderTarget(old);
+  renderer.clippingPlanes = [];
+  WORLD.waterMesh.visible = true;
+}
+
+/* ==================================================== 3c · the environment
+   There is no sky here to reflect and no cube to load, so one is drawn: a
+   vertical gradient with a warm patch where the house is, run through the
+   PMREM generator into a prefiltered environment. It is the cheapest
+   specularity in the scene — every standard material picks it up from
+   scene.environment with no per-material work — and it is what turns the wet
+   stones from matte lumps into things with a sheen that moves as the camera
+   drifts. */
+function buildEnvironment() {
+  const W = 512, H = 256, c = cvs(W, H), x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0a1a22');
+  g.addColorStop(.42, '#16343d');
+  g.addColorStop(.55, '#20505c');
+  g.addColorStop(.72, '#0d222a');
+  g.addColorStop(1, '#050d11');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  /* the house, as the one warm thing anything can reflect */
+  const warm = x.createRadialGradient(W * .5, H * .40, 4, W * .5, H * .40, W * .19);
+  warm.addColorStop(0, 'rgba(255,186,110,.95)');
+  warm.addColorStop(.45, 'rgba(196,116,52,.28)');
+  warm.addColorStop(1, 'rgba(196,116,52,0)');
+  x.fillStyle = warm; x.fillRect(0, 0, W, H);
+  const t = new THREE.CanvasTexture(c);
+  t.mapping = THREE.EquirectangularReflectionMapping;
+  t.encoding = THREE.sRGBEncoding;
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+  scene.environment = pmrem.fromEquirectangular(t).texture;
+  pmrem.dispose();
+  t.dispose();
+}
 
 /* =========================================================== 4 · the scene */
 function initGL() {
@@ -657,7 +829,11 @@ function buildTerrain() {
   /* the near stones, in and beside the water. Almost no moss on these — they
      are wet, and a wet stone reads by being dark and shiny, not by being
      green. */
-  const wetMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .28, metalness: .06 });
+  /* Wet stone is a dark stone with a bright reflection on it, not a light
+     stone. Low roughness against a real environment is what does that; before
+     there was an environment it just made them matte and slightly paler. */
+  const wetMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .17,
+    metalness: .08, envMapIntensity: 1.5 });
   const near = [
     [-4.6, .10, 3.2, 1.5, 9011, .18], [ 4.9, .05, 2.6, 1.7, 9022, .12],
     [-2.4, -.05, 5.6, 1.1, 9033, .05], [ 2.6, -.10, 6.4, 1.3, 9044, .05],
@@ -671,6 +847,31 @@ function buildTerrain() {
     m.rotation.y = (sd % 13) * .27;
     scene.add(m);
   });
+
+  /* Pebbles along the waterline, as one instanced mesh. Forty of them at a
+     draw call each would be forty draw calls for something nobody looks
+     directly at; instanced, the whole shore costs one. They share a geometry,
+     so the variation has to come from scale and rotation — which for a pebble
+     is enough, because a pebble has no features to repeat. */
+  const pebGeo = makeBoulder(1, 9600, { sy: .44, rough: .34, moss: .12 });
+  const pebbles = new THREE.InstancedMesh(pebGeo, wetMat, 46);
+  const mtx = new THREE.Matrix4(), qt = new THREE.Quaternion();
+  const eu = new THREE.Euler(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
+  for (let i = 0; i < 46; i++) {
+    const side = rnd() < .5 ? -1 : 1;
+    const t = rnd();
+    const sz = .16 + Math.pow(rnd(), 2) * .5;
+    ps.set(side * (2.2 + t * 9.5) + (rnd() - .5) * 1.6,
+           -sz * .30 + rnd() * .06,
+           6.5 - rnd() * 11);
+    eu.set(rnd() * .6 - .3, rnd() * TAU, rnd() * .6 - .3);
+    qt.setFromEuler(eu);
+    sc.set(sz * (.8 + rnd() * .6), sz, sz * (.8 + rnd() * .6));
+    mtx.compose(ps, qt, sc);
+    pebbles.setMatrixAt(i, mtx);
+  }
+  pebbles.instanceMatrix.needsUpdate = true;
+  scene.add(pebbles);
 
   /* the step the stream falls over */
   const ledge = new THREE.Mesh(makeBoulder(3.2, 9500, { sy: .34, sx: 2.1, rough: .16, moss: .5 }), mat);
@@ -689,7 +890,10 @@ function buildWater() {
       uLampA:   { value: new THREE.Vector3(-3.6, 1.6, -3.0) },
       uLampB:   { value: new THREE.Vector3(3.9, 1.6, -4.6) },
       uFog:     { value: new THREE.Color(PAL.fog) },
-      uFogD:    { value: .034 }
+      uFogD:    { value: .034 },
+      tRefl:    { value: MIRROR.target ? MIRROR.target.texture : null },
+      uRefl:    { value: MIRROR.on ? 1.15 : 0 },
+      uTexMat:  { value: MIRROR.texMat || new THREE.Matrix4() }
     },
     vertexShader: WATER_VERT, fragmentShader: WATER_FRAG
   });
@@ -699,6 +903,7 @@ function buildWater() {
   m.renderOrder = 1;
   scene.add(m);
   WORLD.water = mat;
+  WORLD.waterMesh = m;
 
   /* The fall. Three short planes stacked down the ledge with a scrolling
      alpha, which at this size is more convincing than particles would be —
@@ -937,6 +1142,8 @@ function resize() {
     if (o.isPoints && o.material.uniforms && o.material.uniforms.uSize)
       o.material.uniforms.uSize.value = H * renderer.getPixelRatio() * .5;
   });
+  if (MIRROR.on) MIRROR.target.setSize(Math.max(2, Math.floor(W * MIRROR.scale)),
+                                       Math.max(2, Math.floor(H * MIRROR.scale)));
 }
 
 function frame(now) {
@@ -963,7 +1170,9 @@ function frame(now) {
     11.5 + Math.sin(t * .07 + 2.1) * .35
   );
   camera.lookAt(0.3 - CAM.mx * .5, 3.9 - CAM.my * .35, -9);
+  camera.updateMatrixWorld(true);
 
+  renderMirror();
   renderer.render(scene, camera);
 }
 
@@ -975,6 +1184,8 @@ function boot() {
     return;
   }
   buildLights();
+  buildEnvironment();
+  initMirror();
   buildBackdrop();
   buildTerrain();
   buildHouse();
