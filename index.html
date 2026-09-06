@@ -2043,13 +2043,45 @@ function buildEnvironment() {
 
 /* the night sky itself: black at altitude, going to the fog colour at the
    horizon so the backdrop and the depth cue meet without a seam */
+/* The sky was a five-stop gradient, a wash of noise and four hundred stars of
+   one kind. It read as a backdrop rather than as air, which is what made the
+   moon look pasted on to it — the fault was never really the moon.
+
+   Three things changed. It is drawn at four times the resolution, because a
+   512px sheet stretched across the whole dome bands visibly in the darks where
+   almost all of this image lives. The stars have magnitude now: a great many
+   faint ones, a few bright, and the bright ones carry a small halo the way a
+   real one does through atmosphere — an even scatter of identical dots is the
+   thing that reads as a texture rather than as a sky. And a galactic band runs
+   across it, faint enough to be atmosphere rather than a feature.
+
+   The moon itself is left alone deliberately. The comment on buildMoon records
+   that a detailed one was tried and taken out: turned cold it stopped being a
+   graphic and became an unconvincing photograph. Giving it craters again would
+   be re-making a decision somebody already made and wrote down. */
 function texSky() {
-  const W = 512, H = 512, c = cvs(W, H), x = c.getContext('2d');
+  const W = 2048, H = 2048, c = cvs(W, H), x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, 'rgb(6,10,15)');    g.addColorStop(.34, 'rgb(13,22,31)');
+  g.addColorStop(0, 'rgb(5,8,13)');     g.addColorStop(.34, 'rgb(13,22,31)');
   g.addColorStop(.66, 'rgb(17,26,34)'); g.addColorStop(.88, 'rgb(24,35,42)');
   g.addColorStop(1, 'rgb(14,22,28)');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+  /* the galactic band: a soft diagonal of dust, well under the noise floor of
+     anything else in the frame, there to stop the upper sky being flat */
+  x.save();
+  x.translate(W * .5, H * .30); x.rotate(-.42);
+  const mw = x.createLinearGradient(0, -H * .16, 0, H * .16);
+  mw.addColorStop(0, 'rgba(120,150,180,0)');
+  mw.addColorStop(.42, 'rgba(126,152,178,.055)');
+  mw.addColorStop(.54, 'rgba(140,164,188,.075)');
+  mw.addColorStop(1, 'rgba(120,150,180,0)');
+  x.fillStyle = mw; x.fillRect(-W, -H * .16, W * 2, H * .32);
+  x.globalCompositeOperation = 'destination-out';
+  x.globalAlpha = .55;
+  x.drawImage(fbmCanvas(512, 256, 991, 5, 4, 1.1), -W * .5, -H * .16, W * 1.5, H * .32);
+  x.restore();
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
   /* cloud, and a low warm bloom off the valley behind the ridge */
   x.globalAlpha = .34; x.globalCompositeOperation = 'overlay';
   x.drawImage(fbmCanvas(W, H, 313, 5, 3, .9), 0, 0);
@@ -2058,11 +2090,33 @@ function texSky() {
   wg.addColorStop(0, 'rgba(150,66,26,.30)'); wg.addColorStop(.5, 'rgba(96,44,22,.12)');
   wg.addColorStop(1, 'rgba(0,0,0,0)');
   x.fillStyle = wg; x.fillRect(0, 0, W, H);
-  /* a scatter of stars, faint enough to survive the bloom */
+  /* Stars with magnitude. rnd^3 is what does the work: it makes the great
+     majority faint and a handful bright, which is the distribution a real sky
+     has and the reason this reads as depth rather than as dots. The brightest
+     few get a halo, because that is what atmosphere does to a bright star and
+     it is the only cue at this scale that says the air has substance. */
   const rnd = mulberry32(881);
-  for (let i = 0; i < 420; i++) {
-    const sx = rnd() * W, sy = rnd() * H * .78, r = .5 + rnd() * rnd() * 1.7;
-    x.fillStyle = 'rgba(214,232,240,' + (.12 + rnd() * .42) * (1 - sy / H) + ')';
+  for (let i = 0; i < 2600; i++) {
+    const sx = rnd() * W, sy = rnd() * H * .82;
+    const mag = Math.pow(rnd(), 3);                    /* 0 faint … 1 brilliant */
+    const r = .5 + mag * 1.6;
+    const fade = 1 - sy / H;                           /* thinner toward the horizon haze */
+    const a = (.07 + mag * .78) * fade;
+    /* Only the genuinely brilliant get a halo, and a tight one. The first
+       pass gave it to the top quarter at five and a half radii, which at this
+       texture scale is wider than the old stars were — seven hundred soft
+       discs, and the sky read as falling snow rather than as stars. */
+    if (mag > .95) {
+      const hr = r * 2.4;
+      const h = x.createRadialGradient(sx, sy, 0, sx, sy, hr);
+      h.addColorStop(0, 'rgba(206,226,240,' + a * .30 + ')');
+      h.addColorStop(1, 'rgba(206,226,240,0)');
+      x.fillStyle = h;
+      x.beginPath(); x.arc(sx, sy, hr, 0, TAU); x.fill();
+    }
+    /* the coldest are bluest, the brightest nearly white */
+    const tint = mag > .55 ? '228,238,246' : (rnd() < .22 ? '186,206,236' : '206,224,236');
+    x.fillStyle = 'rgba(' + tint + ',' + a + ')';
     x.beginPath(); x.arc(sx, sy, r, 0, TAU); x.fill();
   }
   return c;
