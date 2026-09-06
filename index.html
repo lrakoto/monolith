@@ -2791,31 +2791,57 @@ function buildShell() {
     m.renderOrder = 1; scene.add(m);
   });
 
-  /* and trunks between the stands and the court, near enough to leave the top
-     of the frame. This is the part that puts the approach inside a forest
-     rather than in front of one: a treeline on the horizon reads as scenery,
-     a trunk with no top reads as a place. They stand outside the flanking
-     pillars and behind them in z, so they frame without ever crossing the
-     gate, the flight or the slab — checked against the same cone the stands
-     were placed on, which is why the near ones sit at twenty-five metres out
-     and the far ones at fifty. Paired seeds, never mirrored: two trunks that
-     are each other's reflection are the one thing the eye catches. */
-  [[-26, -23, 21, 7401], [ 29, -26, 24, 7419],
-   [-37, -37, 26, 7433], [ 39, -40, 23, 7447],
-   [-49, -54, 29, 7459], [ 47, -51, 27, 7477]].forEach(([px, pz, h, seed]) => {
-    const w = h * .17;
-    const t = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 2, 8),
-      /* Dark, because fog is doing the lifting. These sit between twenty-five
-         and fifty-five metres out where the fog term is strong, and at the
-         tint the first pass used they came back paler than the buildings
-         standing in front of them — a tree cannot be brighter than the wall
-         it is behind. Held down here, the fog still separates near from far
-         and they stay the darkest thing in their own depth. */
-      cutoutMaterial(texTrunkCutout(seed, { w: 256, h: 1024 }), .012, 0x11171b, .25));
-    t.position.set(px, h * .5 - 1.2, pz);
-    t.renderOrder = 2;
-    t.frustumCulled = false;
-    scene.add(t);
+  /* And trunks, near enough to leave the top of the frame. This is the part
+     that puts the approach inside a forest rather than in front of one: a
+     treeline on the horizon reads as scenery, a trunk with no top reads as a
+     place.
+
+     Twenty-eight of them for the cost of four. One mesh per texture, with
+     every trunk's size and position baked into its geometry before the merge,
+     which is what makes the count free — as separate meshes this was one draw
+     call and one megabyte of canvas per tree, and the honest answer to "can we
+     have thirty" would have been no. Mirrored on the uv rather than by
+     scaling, so the winding survives the merge and one texture reads as two.
+
+     Dark, because fog is doing the lifting. They sit between twenty-five and
+     ninety metres out where the fog term is strong, and at the tint the first
+     pass used they came back paler than the buildings standing in front of
+     them — a tree cannot be brighter than the wall it is behind.
+
+     Two bands. The near ones frame the edges, outside the flanking pillars and
+     behind them in z, so they never cross the gate, the flight or the slab.
+     The far ones stand behind the hall and are the tall ones: forty metres
+     against a slab that tops out at twenty-six, which is what makes the
+     building look like something put down in a forest rather than the tallest
+     thing in the world. They are kept off the centreline for exactly that
+     reason — a trunk that clears the slab *and* stands behind it would take
+     the top of the frame away from the one thing the whole page climbs to. */
+  /* canvases, not textures — cutoutMaterial does its own upload */
+  const trunkTex = [7401, 7433, 7459, 7477].map(sd => texTrunkCutout(sd, { w: 256, h: 1024 }));
+  const trunkGeos = trunkTex.map(() => []);
+  /*  x     z     height  tex  mirrored  */
+  [[-26, -23, 24, 0, 0], [ 29, -26, 27, 1, 1], [-37, -37, 30, 2, 0],
+   [ 39, -40, 26, 3, 1], [-49, -54, 33, 0, 1], [ 47, -51, 31, 1, 0],
+   [-31, -30, 21, 2, 1], [ 34, -33, 23, 3, 0], [-57, -63, 35, 1, 1],
+   [ 55, -60, 34, 2, 0], [-44, -46, 28, 3, 1], [ 43, -45, 29, 0, 0],
+   /* behind the hall, and the tall ones */
+   [-26, -58, 38, 1, 0], [ 28, -61, 40, 2, 1], [-34, -68, 43, 3, 0],
+   [ 36, -71, 41, 0, 1], [-24, -76, 45, 2, 0], [ 27, -79, 42, 3, 1],
+   [-35, -73, 39, 0, 0], [ 37, -77, 44, 1, 1], [-24, -85, 46, 3, 0],
+   [ 26, -88, 43, 2, 1], [-45, -82, 41, 1, 0], [ 44, -84, 38, 0, 1],
+   [-62, -75, 36, 2, 1], [ 60, -73, 37, 3, 0], [-53, -91, 44, 0, 0],
+   [ 51, -93, 42, 1, 1]].forEach(([px, pz, h, ti, mir]) => {
+    const g = new THREE.PlaneGeometry(h * .17, h, 2, 8);
+    if (mir) { const uv = g.attributes.uv.array; for (let i = 0; i < uv.length; i += 2) uv[i] = 1 - uv[i]; }
+    g.translate(px, h * .5 - 1.2, pz);
+    trunkGeos[ti].push(g);
+  });
+  trunkGeos.forEach((list, i) => {
+    const m = new THREE.Mesh(mergeGeos(list),
+      cutoutMaterial(trunkTex[i], .012, 0x11171b, .25));
+    m.renderOrder = 2;
+    m.frustumCulled = false;
+    scene.add(m);
   });
 
   /* floor + podium */
@@ -3051,20 +3077,12 @@ function buildMonolith() {
     WORLD.vines.push(vm);
   });
 
-  /* And out of the cut, hanging. The rule up to now was that nothing crosses
-     the slot — a vine over the light reads as damage rather than as growth,
-     and the cut is the one clean thing on this face. This keeps the rule and
-     bends it: the clumps sit on the lower lip at the two ends and leave the
-     middle of the light alone, so the slot still draws as one unbroken line
-     and the growth is read against it rather than across it. Backlit by the
-     brightest thing in the frame is the best a silhouette ever gets, which is
-     why these are tinted darker than the climbers below them. */
-  hangGrowth(g, [
-    [-4.3, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 2.1, 2.5, 7211],
-    [-2.4, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 1.4, 1.7, 7223],
-    [ 2.6, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 1.7, 2.1, 7237],
-    [ 4.5, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 2.3, 2.7, 7251]
-  ], { runners: 8, leaf: .55, tint: 0x5f6d57, glow: 1.6 });
+  /* Nothing hangs off the cut. It was tried and taken out again: growth on
+     the lower lip is lit from behind by the only warm source in the scene, so
+     it reads as something reaching out of the light rather than as a plant
+     that got there on its own — ominous, which is not what this frame is for.
+     The original rule stands after all. The lintel keeps its trailers; the
+     difference is that the lintel is lit from beneath and the slot is not. */
 
   g.position.set(0, PODIUM, TEMPLE_Z);
   g.rotation.x = MONO.lean;
@@ -3477,6 +3495,22 @@ function texTrunkCutout(seed, opt) {
     x.stroke();
   }
   x.restore();
+  /* The top dissolves. A trunk whose whole height is inside the frame ends on
+     a flat cut, and six of those across a shot read as fence posts — the one
+     thing they must not be. Faded over the upper third, the ones that stay in
+     frame go into the fog the way a real tree does at this distance, and the
+     ones that run past the top of the screen are unaffected because that part
+     of them was never on it. Destination-out is safe here, unlike on the sky:
+     this canvas is an alpha cutout, so alpha is what the material actually
+     reads. */
+  x.globalCompositeOperation = 'destination-out';
+  const fade = x.createLinearGradient(0, 0, 0, H * .42);
+  fade.addColorStop(0, 'rgb(0,0,0)');
+  fade.addColorStop(.45, 'rgba(0,0,0,.55)');
+  fade.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = fade; x.fillRect(0, 0, W, H * .42);
+  x.globalCompositeOperation = 'source-over';
+
   /* No boughs. The first pass gave each trunk two or three, and on a plate
      four metres wide a branch that is supposed to run out of frame is instead
      a stub two metres long ending in mid-air — six of them across the frame
