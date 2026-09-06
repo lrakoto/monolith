@@ -4168,6 +4168,80 @@ function buildAtmosphere() {
   emb.frustumCulled = false; emb.renderOrder = 5;
   scene.add(emb); WORLD.embers = emb;
 
+  /* Fireflies. The embers rise off the lanterns and are the fire in the scene;
+     these are the opposite and have to read as alive rather than as more
+     sparks, so three things separate them. They hover instead of climbing —
+     three wander periods that do not divide into each other, so no mote ever
+     repeats a path. They are cooler and paler, a yellow-white against the
+     ember orange. And they blink: the brightness is a sine raised to the
+     fifth, which leaves most of them dark at any instant and a few lit, which
+     is what a field of them actually looks like and also what stops a hundred
+     and thirty additive sprites from turning the low half of the frame into
+     haze.
+
+     Held low and close to the planting — knee height to twice head height,
+     out to twenty metres either side and back as far as the head of the
+     flight — because a firefly forty metres out is one pixel that flickers,
+     which reads as a dead subpixel rather than as an insect. Everything moves
+     in the vertex shader off the clock the rest of the scene already runs on,
+     so the whole field is one draw call and nothing per frame on the CPU.
+
+     Left on layer 0, unlike the wisps and the rain: these are the one drifting
+     thing in the scene that is genuinely out in the world rather than near the
+     lens, so the puddles are welcome to reflect them. */
+  const FN = LOW ? 55 : 130;
+  const fpos = new Float32Array(FN * 3), fseed = new Float32Array(FN);
+  /* They follow the ground rather than sitting on one plane. The first pass
+     scattered them all at court level, and the page spends most of its length
+     climbing — from the fourth waypoint on, the court is behind and below the
+     rig and every firefly was out of frame. Solved off the same constants the
+     treads are built from, so each one hovers a metre or two above whatever
+     surface is under it: the court at the front, the flight through the middle,
+     the landing at the top. */
+  const flyGround = z => z >= STAIR_Z0 ? 0
+    : z <= STAIR_Z0 - STEPS * STAIR_RUN ? PODIUM
+    : (Math.max(0, (STAIR_Z0 - z) / STAIR_RUN - .5) + 1) * (PODIUM / STEPS);
+  for (let i = 0; i < FN; i++) {
+    /* forward of the gate as well as behind it. Started at the foot of the
+       flight, every one of them was ten to thirty-five metres out, which is a
+       speck that flickers — indistinguishable from a dead subpixel. The near
+       ones are what make the field read at all. */
+    const fz = -40 + rnd() * 50;
+    /* narrow where the flight is, wide out on the open court, so they gather
+       along the climb instead of spreading thin across ground nothing looks at */
+    const spread = fz < STAIR_Z0 ? 15 : 34;
+    fpos[i * 3]     = (rnd() - .5) * spread;
+    fpos[i * 3 + 1] = flyGround(fz) + .45 + Math.pow(rnd(), 1.5) * 3.4;
+    fpos[i * 3 + 2] = fz;
+    fseed[i] = rnd();
+  }
+  const fg = new THREE.BufferGeometry();
+  fg.setAttribute('position', new THREE.BufferAttribute(fpos, 3));
+  fg.setAttribute('aSeed', new THREE.BufferAttribute(fseed, 1));
+  const fly = new THREE.Points(fg, new THREE.ShaderMaterial({
+    uniforms: { uT: WORLD.uT, uTex: { value: tx(texGlow('rgba(255,246,196,1)', 'rgba(196,214,96,.30)')) },
+      uSize: { value: vpH() * .5 } },
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+    vertexShader:
+      'attribute float aSeed; uniform float uT; uniform float uSize; varying float vA;\n' +
+      'void main(){ vec3 p=position; float s=aSeed*63.0;\n' +
+      ' p.x += sin(uT*(0.17+aSeed*0.19) + s)*1.35;\n' +
+      ' p.y += sin(uT*(0.13+aSeed*0.14) + s*1.7)*0.60;\n' +
+      ' p.z += cos(uT*(0.15+aSeed*0.17) + s*2.3)*1.15;\n' +
+      ' vec4 mv = modelViewMatrix * vec4(p,1.0);\n' +
+      ' float b = sin(uT*(0.52+aSeed*0.80) + s*3.1)*0.5 + 0.5;\n' +
+      ' vA = pow(b, 3.4) * (0.55 + aSeed*0.45);\n' +
+      ' gl_PointSize = uSize*(0.013+aSeed*0.017)/max(-mv.z,0.6);\n' +
+      ' gl_Position = projectionMatrix * mv; }',
+    fragmentShader:
+      'uniform sampler2D uTex; varying float vA;\n' +
+      'void main(){ if (vA <= 0.004) discard;\n' +
+      ' vec4 t=texture2D(uTex, gl_PointCoord);\n' +
+      ' gl_FragColor = vec4(t.rgb*vec3(1.30,1.22,0.52), t.a*vA*0.85); }'
+  }));
+  fly.frustumCulled = false; fly.renderOrder = 5;
+  scene.add(fly); WORLD.flies = fly;
+
   /* rain in the slot of open sky */
   if (!LOW) {
     const D = 900, rp = new Float32Array(D * 2 * 3), rt = new Float32Array(D * 2), rs = new Float32Array(D * 2), rl = new Float32Array(D * 2);
@@ -7135,6 +7209,7 @@ function resize() {
   CARDS.forEach(C => { C.dirty = true; });
   if (WANT_SHADOW && WORLD.key) WORLD.key.shadow.needsUpdate = true;
   if (WORLD.embers) WORLD.embers.material.uniforms.uSize.value = h * renderer.getPixelRatio() * .5;
+  if (WORLD.flies) WORLD.flies.material.uniforms.uSize.value = h * renderer.getPixelRatio() * .5;
   if (WISP.mesh) WISP.mesh.material.uniforms.uPx.value = h * renderer.getPixelRatio();
   placeMoon();
   layoutWord();
