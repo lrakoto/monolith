@@ -49,14 +49,17 @@ jobs:
           '
           node --check /tmp/scene.js
 
-      # three.js is vendored at the repo root and shared with the portfolio;
-      # the folder gets its own copy so it is self-contained on the host.
+      # The whole assets tree, not just three.js. The study used to be one file
+      # plus the library; it is the portfolio's page now, so it wants the same
+      # fonts, brand icons and work logos the portfolio does. Copied rather than
+      # linked sideways to /portfolio/assets/ so the folder stays self-contained
+      # and can be deleted in one move.
       - name: Assemble the folder
         run: |
-          mkdir -p b/assets
-          cp assets/three.min.js b/assets/three.min.js
+          rm -rf b/assets
+          cp -R assets b/assets
           cp preview/htaccess b/.htaccess
-          ls -la b b/assets
+          du -sh b b/assets
 
       - name: Upload to threeohfivestudios.com/portfolio-b
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
