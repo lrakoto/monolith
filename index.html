@@ -2791,6 +2791,33 @@ function buildShell() {
     m.renderOrder = 1; scene.add(m);
   });
 
+  /* and trunks between the stands and the court, near enough to leave the top
+     of the frame. This is the part that puts the approach inside a forest
+     rather than in front of one: a treeline on the horizon reads as scenery,
+     a trunk with no top reads as a place. They stand outside the flanking
+     pillars and behind them in z, so they frame without ever crossing the
+     gate, the flight or the slab — checked against the same cone the stands
+     were placed on, which is why the near ones sit at twenty-five metres out
+     and the far ones at fifty. Paired seeds, never mirrored: two trunks that
+     are each other's reflection are the one thing the eye catches. */
+  [[-26, -23, 21, 7401], [ 29, -26, 24, 7419],
+   [-37, -37, 26, 7433], [ 39, -40, 23, 7447],
+   [-49, -54, 29, 7459], [ 47, -51, 27, 7477]].forEach(([px, pz, h, seed]) => {
+    const w = h * .17;
+    const t = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 2, 8),
+      /* Dark, because fog is doing the lifting. These sit between twenty-five
+         and fifty-five metres out where the fog term is strong, and at the
+         tint the first pass used they came back paler than the buildings
+         standing in front of them — a tree cannot be brighter than the wall
+         it is behind. Held down here, the fog still separates near from far
+         and they stay the darkest thing in their own depth. */
+      cutoutMaterial(texTrunkCutout(seed, { w: 256, h: 1024 }), .012, 0x11171b, .25));
+    t.position.set(px, h * .5 - 1.2, pz);
+    t.renderOrder = 2;
+    t.frustumCulled = false;
+    scene.add(t);
+  });
+
   /* floor + podium */
   const fT = texFloor();
   const floorMat = new THREE.MeshStandardMaterial({
@@ -3024,6 +3051,21 @@ function buildMonolith() {
     WORLD.vines.push(vm);
   });
 
+  /* And out of the cut, hanging. The rule up to now was that nothing crosses
+     the slot — a vine over the light reads as damage rather than as growth,
+     and the cut is the one clean thing on this face. This keeps the rule and
+     bends it: the clumps sit on the lower lip at the two ends and leave the
+     middle of the light alone, so the slot still draws as one unbroken line
+     and the growth is read against it rather than across it. Backlit by the
+     brightest thing in the frame is the best a silhouette ever gets, which is
+     why these are tinted darker than the climbers below them. */
+  hangGrowth(g, [
+    [-4.3, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 2.1, 2.5, 7211],
+    [-2.4, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 1.4, 1.7, 7223],
+    [ 2.6, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 1.7, 2.1, 7237],
+    [ 4.5, MONO.slotY - MONO.slotH / 2 + .12, vineZ, 2.3, 2.7, 7251]
+  ], { runners: 8, leaf: .55, tint: 0x5f6d57, glow: 1.6 });
+
   g.position.set(0, PODIUM, TEMPLE_Z);
   g.rotation.x = MONO.lean;
   scene.add(g); WORLD.monolith = g; WORLD.temple = g;
@@ -3145,6 +3187,19 @@ function buildTorii() {
   strip.position.set(0, H - 1.055, 0); g.add(strip);
   const lt = new THREE.PointLight(0xffd085, 1.5, 9, 2);
   lt.position.set(0, H - 1.5, 0); g.add(lt);
+
+  /* off the lintel, clear of the light strip. The strip runs to x ±2.96 and
+     is the whole point of the underside, so the clumps hang past its ends and
+     one thin strand falls just inside — enough that the light reads as
+     something growth is hanging in front of, not as a fixture on a clean
+     beam. */
+  hangGrowth(g, [
+    [-5.0, 7.50, .58, 1.9, 2.3, 7311],
+    [-3.5, 7.50, .58, 1.3, 1.6, 7323],
+    [ 3.6, 7.50, .58, 1.6, 2.0, 7337],
+    [ 5.1, 7.50, .58, 2.0, 2.5, 7351],
+    [ 1.1, 7.50, .58, 0.9, 1.2, 7363]
+  ], { runners: 7, leaf: .5, tint: 0x7c8a6d, glow: 1.5 });
 
   /* it stands at the foot of the flight, not over the court — small enough
      that the slab keeps the top of the frame to itself. Everything here is
@@ -3346,6 +3401,151 @@ function injectLampGlow(sh, o) {
    most of it, the bough a little less, and the rocks almost none — stone does
    not transmit, and a boulder with a lit edge reads as a mistake where a blade
    of grass reads as backlit. */
+/* --------------------------------------------------- hanging growth
+   The same climber, upside down. A trailer is a climber that ran out of wall:
+   heaviest where it roots, thinning as it falls, leaves largest at the top —
+   which is what texVineCutout already draws, read from the other end. Flipping
+   the mesh rather than the canvas is what makes it free, and it gets the sway
+   right for nothing as well: the shader swings on uv.y, the uv stays attached
+   to the vertices when the geometry flips, so the roots come out pinned at the
+   top and the loose ends swing at the bottom, which is the way a hanging plant
+   moves and the opposite of the way a standing one does.
+
+   Used on the two things in the scene that overhang: the lower lip of the cut,
+   and the torii lintel. Both are edges the eye already goes to — the cut
+   because it is the brightest thing in the frame, the lintel because you walk
+   under it — and growth on an edge like that is what says the building has
+   been standing here a while without anyone tidying it. */
+function hangGrowth(parent, list, opt) {
+  opt = opt || {};
+  list.forEach(([px, py, pz, w, h, seed]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 6, 10),
+      cutoutMaterial(texVineCutout(seed, {
+        w: 384, h: Math.round(384 * h / w),
+        runners: opt.runners || 9, leaf: opt.leaf || .6
+      }), opt.sway === undefined ? .055 : opt.sway,
+         opt.tint || 0x89967d, opt.glow === undefined ? 1.35 : opt.glow));
+    m.position.set(px, py - h / 2, pz);
+    m.scale.y = -1;
+    m.renderOrder = opt.order === undefined ? 5 : opt.order;
+    parent.add(m);
+  });
+}
+
+/* ------------------------------------------------------------ trunks
+   The far ridge and the side stands are silhouettes on the horizon, which
+   closes the valley but does not put anyone *in* a forest. What does that is
+   a trunk near enough to leave the top of the frame — the eye reads one
+   vertical that has no top as "there are trees between me and the sky", and
+   stops asking about the rest.
+
+   So these are drawn tall and cropped: bark as vertical striation rather than
+   texture, a taper, and two or three boughs that leave the canvas. No canopy
+   at all. A canopy would need leaves at a scale nothing else in this scene is
+   drawn at, and at thirty metres in a night fog the honest silhouette of a
+   conifer trunk is a dark column and the suggestion of branches. */
+function texTrunkCutout(seed, opt) {
+  opt = opt || {};
+  const W = opt.w || 256, H = opt.h || 1024;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const base = W * (.30 + rnd() * .16), lean = (rnd() - .5) * W * .16;
+  const cx = u => W * .5 + lean * u + Math.sin(u * 3.1 + seed % 7) * W * .035;
+  const halfw = u => base * .5 * (1 - u * .46);
+  /* the column */
+  x.beginPath();
+  for (let i = 0; i <= 40; i++) { const u = i / 40; x.lineTo(cx(u) - halfw(u), H - u * H); }
+  for (let i = 40; i >= 0; i--) { const u = i / 40; x.lineTo(cx(u) + halfw(u), H - u * H); }
+  x.closePath();
+  const g = x.createLinearGradient(W * .5 - base * .5, 0, W * .5 + base * .5, 0);
+  g.addColorStop(0, 'rgb(7,10,12)'); g.addColorStop(.62, 'rgb(19,24,26)');
+  g.addColorStop(1, 'rgb(6,8,10)');
+  x.fillStyle = g; x.fill();
+  /* bark: vertical striation only, because at this distance that is all bark
+     is — a texture here would read as a pattern painted on a post */
+  x.save(); x.clip();
+  for (let i = 0; i < 90; i++) {
+    const u0 = rnd(), len = .12 + rnd() * .5;
+    const off = (rnd() - .5) * base * .9;
+    x.strokeStyle = 'rgba(' + (rnd() < .5 ? '4,6,8,' : '46,54,54,') + (.10 + rnd() * .22).toFixed(2) + ')';
+    x.lineWidth = .8 + rnd() * 2.4;
+    x.beginPath();
+    for (let k = 0; k <= 8; k++) {
+      const u = Math.min(1, u0 + len * k / 8);
+      x.lineTo(cx(u) + off * (1 - u * .4), H - u * H);
+    }
+    x.stroke();
+  }
+  x.restore();
+  /* No boughs. The first pass gave each trunk two or three, and on a plate
+     four metres wide a branch that is supposed to run out of frame is instead
+     a stub two metres long ending in mid-air — six of them across the frame
+     and the forest read as a stand of utility poles. A branch here would have
+     to carry its own canopy to look like anything, at a leaf scale nothing
+     else in the scene is drawn at. The column alone is the honest silhouette
+     of a conifer at thirty metres in fog, and it is the part that does the
+     work anyway. */
+  return c;
+}
+
+/* --------------------------------------------------------- lily pads
+   Back, at the size they should have been. The first attempt put ten to
+   fourteen pads on a plate the width of the pool, which made each one about
+   forty centimetres across — and forty centimetres of flat green at twenty
+   metres, seen from a camera four metres up, is ten pixels. That was read as
+   "anything laid flat on this court is invisible", which was the wrong
+   conclusion from the right measurement: the problem was never the angle, it
+   was the scale. A pad a metre and a half across is four times that and holds
+   the bottom of the frame, which is exactly what it does in the reference.
+
+   Five or six to a plate, overlapping, with the near edge of the raft heavier
+   than the far one because pads gather against something. The canvas takes
+   the pool's own proportion so a round pad stays round. */
+function texLilyPads(seed, opt) {
+  opt = opt || {};
+  const W = opt.w || 512, H = opt.h || 512;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const n = opt.pads || 6;
+  const S = Math.min(W, H);
+  for (let i = 0; i < n; i++) {
+    const r = S * ((opt.r || .17) + rnd() * .07);
+    /* clustered low on the plate — the near edge of the pool */
+    const px = r * .7 + rnd() * (W - r * 1.4);
+    const py = H - r * .9 - Math.pow(rnd(), 1.7) * (H - r * 1.8);
+    const rot = rnd() * TAU, notch = .34 + rnd() * .34;
+    const lit = rnd();
+    x.save(); x.translate(px, py); x.rotate(rot);
+    const g = x.createRadialGradient(-r * .28, -r * .30, r * .08, 0, 0, r);
+    g.addColorStop(0, 'rgba(' + Math.round(96 + lit * 70) + ','
+                              + Math.round(150 + lit * 66) + ','
+                              + Math.round(74 + lit * 44) + ',1)');
+    g.addColorStop(.72, 'rgba(' + Math.round(56 + lit * 40) + ','
+                                + Math.round(98 + lit * 44) + ','
+                                + Math.round(46 + lit * 26) + ',1)');
+    g.addColorStop(1, 'rgba(30,58,30,1)');
+    x.fillStyle = g;
+    /* the wedge is the whole silhouette: a disc with a notch is a lily pad
+       and a disc without one is a coin */
+    x.beginPath(); x.moveTo(0, 0);
+    x.arc(0, 0, r, notch, TAU + notch - .48);
+    x.closePath(); x.fill();
+    /* veins out of the notch, and a rim, which is what the moon catches */
+    x.strokeStyle = 'rgba(24,46,26,.42)';
+    x.lineWidth = Math.max(1, r * .022);
+    for (let v = 0; v < 11; v++) {
+      const a = notch + .48 + (TAU - .96) * (v / 10);
+      x.beginPath(); x.moveTo(0, 0);
+      x.lineTo(Math.cos(a) * r * .94, Math.sin(a) * r * .94); x.stroke();
+    }
+    x.strokeStyle = 'rgba(178,214,164,' + (.16 + lit * .20).toFixed(2) + ')';
+    x.lineWidth = Math.max(1, r * .035);
+    x.beginPath(); x.arc(0, 0, r * .97, notch, TAU + notch - .48); x.stroke();
+    x.restore();
+  }
+  return c;
+}
+
 /* ------------------------------------------------------------- ferns
    Grass was the wrong plant. The scene wants a wet garden — ferns, leafy
    sprays, moss on the stone — and a blade of grass is a line where a frond is
@@ -3783,14 +3983,25 @@ function buildStairPlanting() {
   mossMesh.renderOrder = 11;                     /* under the ferns, over the stone */
   scene.add(mossMesh); WORLD.planting.push(mossMesh);
 
-  /* No lily pads on the pools, though the reference is full of them and they
-     were built and placed here first. Every waypoint in this rig sits between
-     one and eleven metres off the ground and looks *up*: the pools project
-     into the bottom half of the frame at a grazing angle, where a pad raft
-     two metres across covers about ten pixels of height, and for the first
-     third of the page the foreground banks are in front of them anyway.
-     Anything laid flat on this court is invisible by construction — the
-     planting that reads is the planting that stands up. */
+  /* Pads on the four pools that carry them, at a metre and a half across.
+     Layer 1 with the water, so they stay out of the mirror camera — a pad
+     floating *on* a pool has no business being reflected *in* it. Lifted
+     three centimetres, above the water's own two, and drawn after it. */
+  PUDDLES.forEach((pd, i) => {
+    if (i > 3) return;                            /* only the wide ones carry pads */
+    const [cx, cz, w, l] = pd;
+    const pw = w * .82, pl = l * .82;
+    const t = texLilyPads(9101 + i * 37, { w: 512, h: Math.round(512 * pl / pw),
+                                           pads: 5 + (i % 2), r: .16 });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, pl),
+      new THREE.MeshBasicMaterial({ map: tx(t, { aniso: 16 }), transparent: true,
+        alphaTest: .04, depthWrite: false, fog: true, color: 0x8fa682 }));
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(cx + (rnd() - .5) * w * .12, .05, cz + l * .06);
+    m.renderOrder = 11;
+    m.layers.set(1);
+    scene.add(m); WORLD.planting.push(m);
+  });
 
   /* the landing, between the head of the flight and the foot of the slab */
   for (let n = 0; n < 16; n++) {
