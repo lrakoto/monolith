@@ -2886,6 +2886,7 @@ function buildShell() {
        warned about. Half way is the most it takes. */
     normalScale: new THREE.Vector2(.26, .26), roughness: .44, metalness: .03, color: 0x49535a, envMapIntensity: 1.15
   });
+  applyForestLight(wallMat); applyForestLight(platMat);
   /* the podium the hall stands on */
   const plat = new THREE.Mesh(new THREE.BoxGeometry(42, PODIUM, 24), platMat);
   plat.position.set(0, PODIUM / 2, -45); plat.receiveShadow = true; plat.castShadow = true;
@@ -2954,6 +2955,7 @@ function buildMonolith() {
      lit but had no surface, and the light in the cut fell on nothing. */
   const face  = surface(concreteTex(), [2.4, 4.8], { color: 0x515860, roughness: .60, metalness: .04, normal: 1.35, env: 1.05 });
   const trim  = surface(concreteTex(), [1.1, 1.1], { color: 0x363d43, roughness: .34, metalness: .06, normal: 1.05, env: 1.35 });
+  applyForestLight(face); applyForestLight(trim);
   /* the arris strips are the one genuinely metal thing on the slab, and the
      only place a hard, tight highlight belongs */
   const steel = new THREE.MeshStandardMaterial({ color: 0x2a3034, roughness: .18, metalness: .82, envMapIntensity: 2.2 });
@@ -3308,44 +3310,86 @@ function buildStele(seed, x, z, scale) {
   return g;
 }
 
+/* light shared by the stone and the architecture ties the garden to the
+   building. Kept softer than the stream-house study because this scene also
+   has copy, a moving camera and a long climb to hold together. */
+function applyForestLight(mat) {
+  if(!WORLD.canopy) {
+    const c=cvs(256,256), x=c.getContext('2d'), rnd=mulberry32(8291);
+    x.fillStyle='#666';x.fillRect(0,0,256,256);x.filter='blur(2px)';
+    for(let i=0;i<180;i++) {
+      x.fillStyle=i%3?'#aaa':'#eee';
+      x.beginPath();x.ellipse(rnd()*256,rnd()*256,2+rnd()*8,1+rnd()*3,rnd()*TAU,0,TAU);x.fill();
+    }
+    WORLD.canopy=tx(c,{srgb:false,wrap:THREE.RepeatWrapping});
+  }
+  mat.onBeforeCompile=shader=>{
+    shader.uniforms.uCanopy={value:WORLD.canopy};
+    shader.vertexShader='varying vec3 vGardenWorld;\n'+shader.vertexShader;
+    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+      `#include <begin_vertex>
+       vec4 gardenP=vec4(transformed,1.);
+       #ifdef USE_INSTANCING
+         gardenP=instanceMatrix*gardenP;
+       #endif
+       vGardenWorld=(modelMatrix*gardenP).xyz;`);
+    shader.fragmentShader='varying vec3 vGardenWorld; uniform sampler2D uCanopy;\n'+shader.fragmentShader;
+    shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
+      `#include <color_fragment>
+       float canopy=texture2D(uCanopy,(vGardenWorld.xz+vGardenWorld.y*vec2(.35,.2))*.08).r;
+       diffuseColor.rgb*=mix(.82,1.42,canopy);`);
+  };
+  mat.customProgramCacheKey=()=> 'portfolio-forest-canopy-v1';
+  return mat;
+}
+
 function buildRocks() {
-  /* These were tuned wet like everything else, and then the foreground came
-     down and put them in open frame for the first time. At .17 roughness with
-     a strong environment they read as pale cut gems rather than stones — the
-     facets of the icosahedron they are built from caught the sky and none of
-     it was hidden any more. Wet, but only just, and the environment barely
-     touches them. */
-  const mat = new THREE.MeshStandardMaterial({ color: 0x0d1214, roughness: .46, metalness: .06, envMapIntensity: .55, flatShading: false });
-  const rnd = mulberry32(404), n = noise2D(88);
-  const spots = [[-6.2, -5.4, .95], [-7.4, -2.1, .7], [6.6, -7.2, .8], [8.0, -4.0, 1.05],
-                 [-9.0, -8.4, 1.15], [9.6, -9.2, .9], [3.4, -7.8, .55], [-3.2, -8.6, .6]];
-  spots.forEach((s, i) => {
-    const geo = new THREE.IcosahedronGeometry(s[2], 3);
-    const p = geo.attributes.position;
-    for (let v = 0; v < p.count; v++) {
-      const vx = p.getX(v), vy = p.getY(v), vz = p.getZ(v);
-      const d = 1 + .34 * fbm(n, vx * 1.6 + i * 7, vz * 1.6 + vy, 3, 2.2, .5);
-      p.setXYZ(v, vx * d, vy * d * .68, vz * d);
+  const rnd=mulberry32(404), n=noise2D(88);
+  const detail=lib('garden-rock',()=>texStone(917,{base:[62,77,82],moss:0,relief:1.0}));
+  const mat=applyForestLight(new THREE.MeshStandardMaterial({vertexColors:true,
+    normalMap:tx(detail.normal,{wrap:THREE.RepeatWrapping,repeat:[2,2],srgb:false}),
+    normalScale:new THREE.Vector2(.32,.32),roughness:.42,metalness:.04,envMapIntensity:.9}));
+  const spots=[[-6.6,-5.4,1.8],[-7.4,-2.1,1.2],[7.0,-7.2,1.6],[8.0,-4.0,2.2],
+    [-9.0,-8.4,2.5],[9.6,-9.2,1.8],[5.8,-8.0,.8],[-5.7,-9.0,.95],
+    [-8.4,-15,2.3],[8.7,-18,2.6],[-9.8,-23,2.5],[10.0,-28,2.8]];
+  const mossGeo=new THREE.IcosahedronGeometry(1,2);
+  const mp=mossGeo.attributes.position,mn=mossGeo.attributes.normal;
+  for(let i=0;i<mp.count;i++) {
+    const x=mp.getX(i),y=mp.getY(i),z=mp.getZ(i);
+    const d=1+.15*fbm(n,x*9+12,y*9+z*3,3,2,.5);
+    mp.setXYZ(i,x*d,y*d*.30,z*d);
+    const len=Math.hypot(x,y/.30,z)||1;mn.setXYZ(i,x/len,y/.30/len,z/len);
+  }
+  const moss=new THREE.InstancedMesh(mossGeo,new THREE.MeshStandardMaterial({
+    color:0x769d48,roughness:.96,envMapIntensity:.4}),spots.length*7);
+  const dummy=new THREE.Object3D(),color=new THREE.Color();let mi=0;
+  spots.forEach(([x,z,r],si)=>{
+    const geo=new THREE.IcosahedronGeometry(r,LOW?2:3),p=geo.attributes.position,nrm=geo.attributes.normal;
+    const col=new Float32Array(p.count*3),lo=new THREE.Color(0x243d43),hi=new THREE.Color(0x77979c);
+    for(let i=0;i<p.count;i++) {
+      const vx=p.getX(i),vy=p.getY(i),vz=p.getZ(i);
+      const d=1+.24*fbm(n,vx*1.6+si*7,vz*1.6+vy,3,2.2,.5);
+      p.setXYZ(i,vx*d,vy*d*.68,vz*d);
+      const len=Math.hypot(vx,vy/.68,vz)||1;
+      nrm.setXYZ(i,vx/len,vy/.68/len,vz/len);
+      const up=clamp(vy/r,0,1);
+      color.copy(lo).lerp(hi,.16+up*.66).multiplyScalar(.88+d*.12).convertSRGBToLinear();
+      col[i*3]=color.r;col[i*3+1]=color.g;col[i*3+2]=color.b;
     }
-    /* IcosahedronGeometry is non-indexed — every triangle owns its three
-       vertices — so computeVertexNormals gives each face one flat normal and
-       the stone reads as cut glass however far it is subdivided. Subdividing
-       harder only made smaller facets. These are displaced spheres, though,
-       and for a displaced sphere the smooth normal is very close to the
-       normalised position, which costs one pass and no merge step. */
-    const nrm = geo.attributes.normal;
-    for (let v = 0; v < p.count; v++) {
-      const vx = p.getX(v), vy = p.getY(v), vz = p.getZ(v);
-      const len = Math.hypot(vx, vy, vz) || 1;
-      nrm.setXYZ(v, vx / len, vy / len, vz / len);
+    geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+    const m=new THREE.Mesh(geo,mat);m.position.set(x,r*.23,z);
+    m.castShadow=true;m.receiveShadow=true;scene.add(m);
+    /* overlapping cushions sit into the upper shoulder; the bare wet face
+       below them is what makes the green read as growth rather than paint. */
+    for(let j=0;j<7;j++) {
+      const a=rnd()*TAU,rad=r*(.15+rnd()*.52),sz=r*(.16+rnd()*.18);
+      dummy.position.set(x+Math.cos(a)*rad,r*.23+r*.68*Math.sqrt(1-rad*rad/(r*r))-.10,z+Math.sin(a)*rad);
+      dummy.scale.set(sz,sz*(.65+rnd()*.4),sz*(.8+rnd()*.5));
+      dummy.rotation.set(0,rnd()*TAU,(rnd()-.5)*.2);dummy.updateMatrix();moss.setMatrixAt(mi,dummy.matrix);
+      moss.setColorAt(mi++,color.setHSL(.23+rnd()*.025,.35+rnd()*.12,.45+rnd()*.16));
     }
-    nrm.needsUpdate = true;
-    const m = new THREE.Mesh(geo, mat);
-    m.position.set(s[0], s[2] * .30, s[1]);
-    m.rotation.set(rnd(), rnd() * TAU, rnd() * .4);
-    m.castShadow = true; m.receiveShadow = true;
-    scene.add(m);
   });
+  moss.receiveShadow=true;scene.add(moss);
 }
 
 /* ------------------------------- the transparent-PNG foreground layers */
@@ -3808,12 +3852,12 @@ function cutoutMaterial(canvasEl, sway, tint, glow) {
   });
   mat.onBeforeCompile = sh => {
     sh.uniforms.uT = WORLD.uT;
-    sh.uniforms.uSway = { value: sway || .07 };
+    sh.uniforms.uSway = { value: REDUCE ? 0 : (sway === undefined ? .07 : sway) };
     sh.vertexShader = 'uniform float uT;\nuniform float uSway;\n' + sh.vertexShader.replace(
       '#include <begin_vertex>',
       '#include <begin_vertex>\n' +
       'float h = uv.y;\n' +
-      'float ph = position.x*0.30 + float(gl_InstanceID)*0.0;\n' +
+      'float ph = position.x*0.30;\n' +
       'transformed.x += sin(uT*0.85 + ph)*uSway*h*h;\n' +
       'transformed.y += cos(uT*0.62 + ph*1.7)*uSway*0.35*h*h;\n');
     /* These plates are drawn to the edge of their own canvas — the grass runs
@@ -3840,55 +3884,126 @@ function cutoutMaterial(canvasEl, sway, tint, glow) {
   return mat;
 }
 
+function texUnderstory(seed, opt) {
+  opt = opt || {};
+  const W = opt.w || 768, H = opt.h || 640;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const stems = opt.stems || 9;
+  /* Leaf size, as a multiplier. The same generator draws the big-leaved plant
+     at the water's edge and the wiry small-leaved shrub that fills the top
+     corners of the reference — they are the same plant at a quarter scale with
+     three times the stems, and drawing them as one thing means the leaf shape,
+     the rim light and the midrib are all consistent between them, which is why
+     they read as two species in one garden rather than as two clip-art sets. */
+  const LS = opt.leaf || 1;
+
+  const leaf = (px, py, len, ang, lit) => {
+    x.save(); x.translate(px, py); x.rotate(ang);
+    const w = len * .72;
+    const g = x.createLinearGradient(0, -w * .5, len, w * .4);
+    const a = Math.round(26 + lit * 40), b = Math.round(74 + lit * 96), d = Math.round(44 + lit * 44);
+    g.addColorStop(0, 'rgb(' + a + ',' + b + ',' + d + ')');
+    g.addColorStop(1, 'rgb(' + Math.round(a * .45) + ',' + Math.round(b * .5) + ',' + Math.round(d * .5) + ')');
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.quadraticCurveTo(len * .40, -w * .62, len, 0);
+    x.quadraticCurveTo(len * .40,  w * .62, 0, 0);
+    x.fill();
+    /* the rim. Only on the upper edge, and only on some of them — a bush where
+       every leaf is rim-lit reads as plastic */
+    if (lit > .42) {
+      x.strokeStyle = 'rgba(' + Math.round(150 + lit * 105) + ',' + Math.round(216 + lit * 39) + ',' + Math.round(140 + lit * 70) + ',' + (.30 + lit * .5).toFixed(2) + ')';
+      x.lineWidth = Math.max(1, len * .055);
+      x.beginPath();
+      x.moveTo(len * .06, -w * .04);
+      x.quadraticCurveTo(len * .40, -w * .58, len * .96, -w * .02);
+      x.stroke();
+    }
+    /* midrib */
+    x.strokeStyle = 'rgba(14,32,20,.42)'; x.lineWidth = Math.max(.7, len * .03);
+    x.beginPath(); x.moveTo(len * .06, 0); x.lineTo(len * .88, 0); x.stroke();
+    x.restore();
+  };
+
+  for (let s = 0; s < stems; s++) {
+    const bx = (s + .5) / stems * W + (rnd() - .5) * (W / stems) * 1.4;
+    const by = H * (1.02 - rnd() * .05);
+    const reach = H * (.40 + rnd() * .48);
+    const lean = (rnd() - .5) * 1.5 + (bx / W - .5) * 1.1;
+    const steps = 14;
+    let px = bx, py = by, prevx = bx, prevy = by;
+    x.strokeStyle = 'rgba(30,58,34,.9)'; x.lineCap = 'round';
+    for (let i = 1; i <= steps; i++) {
+      const u = i / steps;
+      const ang = -Math.PI / 2 + lean * u * u;
+      px += Math.cos(ang) * (reach / steps);
+      py += Math.sin(ang) * (reach / steps);
+      x.lineWidth = (1 - u) * 4.4 + .9;
+      x.beginPath(); x.moveTo(prevx, prevy); x.lineTo(px, py); x.stroke();
+      /* leaves in pairs, biggest at mid-height where the light gets in */
+      if (i > 2) {
+        const swell = Math.sin(Math.min(1, u * 1.15) * Math.PI);
+        const len = (26 + swell * 62 + rnd() * 16) * LS;
+        for (const side of [-1, 1]) {
+          if (rnd() < .16) continue;
+          leaf(px, py, len * (.78 + rnd() * .44),
+               ang + side * (.72 + rnd() * .55) + (rnd() - .5) * .3, rnd());
+        }
+      }
+      prevx = px; prevy = py;
+    }
+    /* A few pale buds at the tips. The reference has them and they are doing
+       more than their size suggests: they are the only thing in the greenery
+       that is not green, so the eye reads the bank as a planting rather than
+       as one shrub repeated. Sparse on purpose — every stem carrying them
+       would be a flowerbed. */
+    if (rnd() < .55) {
+      for (let b = 0, n = 1 + (rnd() * 3 | 0); b < n; b++) {
+        const bxp = px + (rnd() - .5) * 40, byp = py + (rnd() - .5) * 46;
+        const rr = 2.6 + rnd() * 3.4;
+        const gg = x.createRadialGradient(bxp - rr * .3, byp - rr * .3, .5, bxp, byp, rr);
+        gg.addColorStop(0, 'rgba(246,244,206,.95)');
+        gg.addColorStop(.6, 'rgba(206,214,140,.62)');
+        gg.addColorStop(1, 'rgba(150,170,96,0)');
+        x.fillStyle = gg;
+        x.beginPath(); x.arc(bxp, byp, rr, 0, TAU); x.fill();
+      }
+    }
+  }
+  return c;
+}
+
+
 function buildForeground() {
-  /* the plane widths are sized against the frustum at their own depth: a
-     26-unit sheet two metres from the lens only shows its middle tenth */
-  const layers = [
-    /* name        canvas                                                                     x     y     z     w     h   sway */
-    /* Every one of these was dropped by about a metre. They used to close
-       the bottom of the hero completely — a continuous bank of grass from the
-       lower edge of the frame up to the podium — and with the court behind it
-       there was no ground on screen at any waypoint on the page. That was
-       fine for a scene lit by paper lanterns and nothing else. It is not fine
-       for a wet one: the reflection, the puddles and most of the specular
-       work all live on a surface the composition had walled off. Lowering the
-       banks opens a strip of standing water either side of the flight and
-       keeps the grass reading as foreground. */
-    ['grassFar',  texGrassCutout(101, { crest: .30, peak: .46, wide: .42, blades: 11000, len: 34, warm: .70, crest2: .46, crest3: .40 }),
-                  -3.4,  1.85, -0.4, 24, 12, .040],
-    ['rockLeft',  texRockCutout(404, { blobs: [[.24, .78, .48, .38], [.58, .94, .46, .30], [.84, 1.06, .42, .28]] }),
-                  -7.2,  1.80,  1.8, 17, 11.3, .010],
-    /* The two near banks were raised again to close more of the bottom edge.
-       Only these two: grassFar stays low, because the metre they were all
-       dropped by is what opened the strip of standing water either side of
-       the flight, and lifting the far bank as well walls the court off again
-       and takes the reflection with it. */
-    ['grassMid',  texGrassCutout(202, { crest: .60, peak: .55, wide: .40, blades: 13000, len: 40, warm: .95, crest2: -.44, crest3: .34 }),
-                   3.9,  2.42,  3.6, 15,  8.8, .062],
-    ['grassNear', texGrassCutout(303, { crest: .42, peak: .62, wide: .48, blades: 16000, len: 50, warm: .85, crest2: .42, crest3: .44 }),
-                  -1.9,  2.38,  5.6, 12,  7.4, .092],
-    /* the bough hangs overhead and was never in the way — it stays put */
-    ['bough',     texBranchCutout(505, { dry: true }), 4.6, 2.95, 6.4, 13, 8.7, .045],
-    ['rockNear',  texRockCutout(606, { blobs: [[.18, .86, .54, .44], [.54, 1.02, .50, .36], [.86, .92, .40, .32]] }),
-                  -6.6,  0.85,  6.0, 9, 6, .008]
-  ];
-  /* the rocks keep their own tone; only the growing things get dried out */
-  const DRY = 0x59635c, STONE = 0x8f9698;
-  const tints = { grassFar: DRY, grassMid: DRY, grassNear: DRY, bough: 0x5d6360,
-                  rockLeft: STONE, rockNear: STONE };
-  /* stone does not transmit; the growing things do */
-  const glows = { grassFar: .55, grassMid: 1.0, grassNear: 1.15, bough: .5,
-                  rockLeft: .10, rockNear: .10 };
-  WORLD.fg = [];
-  layers.forEach(L => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(L[5], L[6], 12, 12), cutoutMaterial(L[1], L[7], tints[L[0]], glows[L[0]]));
-    m.position.set(L[2], L[3], L[4]);
-    m.renderOrder = 20 + WORLD.fg.length;
-    m.name = L[0];
-    m.frustumCulled = false;
-    scene.add(m);
-    WORLD.fg.push(m);
-  });
+  /* banks at the sides, with open water between them. The old continuous
+     grass sheets hid the pools; individual broadleaf sprays give the lens
+     something near without closing the approach. Each still fades when the
+     camera reaches it, using the existing chapter transition. */
+  WORLD.fg=[];
+  const leaves=[texUnderstory(2101,{stems:7,w:640,h:640}),
+                texUnderstory(2303,{stems:9,w:640,h:640})];
+  const ferns=[texFernCutout(4101,{fronds:8,w:640,h:640}),
+               texFernCutout(4202,{fronds:6,w:640,h:640})];
+  const put=(name,canvas,x,z,w,h,tint,sway)=>{
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h,6,6),cutoutMaterial(canvas,sway,tint,.85));
+    m.position.set(x,h*.43,z);m.name=name;m.renderOrder=20+WORLD.fg.length;
+    m.frustumCulled=false;scene.add(m);WORLD.fg.push(m);
+  };
+  put('fernBankLeft',ferns[0],-6.8,-1.8,8,4.2,0xa5b99c,.025);
+  put('fernBankRight',ferns[1],7.4,-3.0,7,4.0,0x9eb69a,.030);
+  put('leafBankLeft',leaves[0],-5.6,1.4,4.4,5.0,0xa5c3b0,.035);
+  put('leafBankRight',leaves[1],5.8,.2,4.7,5.4,0xadcbb7,.032);
+  put('leafNearLeft',leaves[1],-4.7,5.0,3.8,3.6,0x759d8d,.025);
+  put('fernNearRight',ferns[0],4.3,4.4,4.0,2.6,0x8baa91,.025);
+  put('rockNear',texRockCutout(606,{blobs:[[.18,.86,.54,.44],[.54,1.02,.50,.36],[.86,.92,.40,.32]]}),
+    -6.6,6.0,9,2.8,0x8f9698,0);
+  /* small-leaved saplings frame the higher part of the approach. They belong
+     beside the gate, where there is room for their silhouette to stay clear. */
+  const sapling=texUnderstory(2441,{stems:11,leaf:.45,w:640,h:768});
+  put('saplingLeft',sapling,-11.5,-13,6,10,0x789c89,.04);
+  put('saplingRight',sapling,12.4,-17,7,12,0x789c89,.04);
 }
 
 /* ------------------------------------------------- planting on the flight
@@ -3935,7 +4050,7 @@ function buildStairPlanting() {
      houseplants under a grow light rather than as wet foliage at night. Most
      of the way to a grey-green, and the bollards put the colour back where
      they touch it. */
-  const mats = plates.map((c, i) => cutoutMaterial(c, .085 + i * .014, 0x748068, 1.7));
+  const mats = plates.map((c, i) => cutoutMaterial(c, .035 + i * .006, 0x9eaf8c, 1.35));
   const rnd = mulberry32(4242);
   WORLD.planting = [];
 
@@ -4013,7 +4128,7 @@ function buildStairPlanting() {
     });
   }
   const mossMesh = new THREE.Mesh(mergeGeos(mossGeos),
-    cutoutMaterial(texMossCutout(5150), 0, 0x657661, 1.45));
+    cutoutMaterial(texMossCutout(5150), 0, 0x92a97a, 1.25));
   mossMesh.renderOrder = 11;                     /* under the ferns, over the stone */
   scene.add(mossMesh); WORLD.planting.push(mossMesh);
 
@@ -4024,14 +4139,14 @@ function buildStairPlanting() {
   PUDDLES.forEach((pd, i) => {
     if (i > 3) return;                            /* only the wide ones carry pads */
     const [cx, cz, w, l] = pd;
-    const pw = w * .82, pl = l * .82;
+    const pw = w * .60, pl = l * .62;
     const t = texLilyPads(9101 + i * 37, { w: 512, h: Math.round(512 * pl / pw),
-                                           pads: 5 + (i % 2), r: .16 });
+                                           pads: 7 + (i % 2), r: .10 });
     const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, pl),
       new THREE.MeshBasicMaterial({ map: tx(t, { aniso: 16 }), transparent: true,
         alphaTest: .04, depthWrite: false, fog: true, color: 0x8fa682 }));
     m.rotation.x = -Math.PI / 2;
-    m.position.set(cx + (rnd() - .5) * w * .12, .05, cz + l * .06);
+    m.position.set(cx + (cx < 0 ? -1 : 1) * w * .10, .05, cz + l * .06);
     m.renderOrder = 11;
     m.layers.set(1);
     scene.add(m); WORLD.planting.push(m);
@@ -5736,7 +5851,7 @@ function buildCardCloth() {
 }
 
 function buildLights() {
-  scene.add(new THREE.HemisphereLight(0x53838f, 0x060a08, .13));
+  scene.add(new THREE.HemisphereLight(0x689a9e, 0x0c1d17, .23));
 
   const key = new THREE.DirectionalLight(0xb6dbe4, 1.22);
   key.position.set(2.6, 21, 2.5);
