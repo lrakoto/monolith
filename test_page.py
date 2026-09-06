@@ -26,6 +26,15 @@ def inline_script():
 
 class InlineScriptTests(unittest.TestCase):
     @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_stream_house_script_parses(self):
+        scene = INDEX.parent / "b" / "index.html"
+        bodies = SCRIPT_RE.findall(scene.read_text(encoding="utf-8"))
+        self.assertTrue(bodies, "stream house has no inline script")
+        result = subprocess.run(["node", "--check"], input=bodies[-1],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
     def test_inline_script_parses(self):
         with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as staged:
             staged.write(inline_script())
