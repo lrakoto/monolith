@@ -4751,10 +4751,9 @@ const DESIGN_WORK = [
     images: ["tranomics.jpg"], vimeo: [],
     meta: { "Client": "Tranomics", "Role": "Design and build", "Media": "Web",
             "Tags": "Logistics, illustration, responsive" } },
-  { slug: "blackout", title: "Blackout Defense", thumb: "blackout.jpg",
-    images: ["blackout.jpg"], vimeo: [],
-    meta: { "Client": "Blackout Defense", "Role": "Design and build", "Media": "Web",
-            "Tags": "E-commerce, product, responsive" } },
+  /* Blackout Defense is held back: the comp still carries lorem ipsum in its
+     hero and PRODUCT NAME across the grid, and the archive showed it at full
+     size. Put the entry back when there is a build shot with real copy in it. */
   { slug: "godayone", title: "Go Day One", thumb: "godayone.jpg",
     images: ["godayone.jpg"], vimeo: [],
     meta: { "Client": "Go Day One", "Role": "Design and build", "Media": "Web",
@@ -5975,7 +5974,17 @@ function wireReveals() {
     const key = el.parentElement;
     const arr = groups.get(key) || []; arr.push(el); groups.set(key, arr);
   });
-  groups.forEach(arr => arr.forEach((el, i) => el.dataset.rvd = i * 85));
+  /* The stagger is a budget, not a step. Eighty-five milliseconds apiece is
+     right for four or five things and wrong for twenty: the design grid's last
+     card waited a second and a half, so scrolling past at any speed left the
+     reveal trailing visibly behind the scroll. The whole group now finishes
+     inside RV_RUN however many are in it — a long row tightens its step rather
+     than running on. */
+  const RV_RUN = 520;
+  groups.forEach(arr => {
+    const step = arr.length > 1 ? Math.min(85, RV_RUN / (arr.length - 1)) : 0;
+    arr.forEach((el, i) => el.dataset.rvd = Math.round(i * step));
+  });
   const io = new IntersectionObserver(es => {
     es.forEach(e => {
       if (!e.isIntersecting) return;
