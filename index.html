@@ -2867,7 +2867,8 @@ function buildShell() {
        flooded — it had the highlight but not the contrast under it. */
     roughness: TUNE.courtRoughness, metalness: .05, color: 0x414a50, envMapIntensity: 1.7
   });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), floorMat);
+  floorMat.onBeforeCompile = injectPondBed;
+  const floor = new THREE.Mesh(buildPondBasin(), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -18); floor.receiveShadow = true;
   scene.add(floor);
   WORLD.floor = floor; WORLD.floorMat = floorMat;
@@ -6042,6 +6043,7 @@ function initMirror() {
 
   const mat = WORLD.floorMat;
   mat.onBeforeCompile = sh => {
+    injectPondBed(sh);
     sh.uniforms.tRefl   = { value: MIRROR.target.texture };
     sh.uniforms.uTexMat = { value: MIRROR.texMat };
     sh.uniforms.uT      = WORLD.uT;
@@ -6308,9 +6310,56 @@ function buildStairGlints() {
 /* the lower court is one body of water. A standard material keeps the sky,
    lamp specular and depth colour on phones; desktop adds the existing mirror
    buffer. The surface stays below the first riser and out of its own mirror. */
+function buildPondBasin() {
+  /* depth is in the ground, not in a darker colour on the surface. A broad
+     slope keeps the rocks rooted at the edge and gives clear water something
+     below it to reveal as the camera moves. */
+  const geo=new THREE.PlaneGeometry(150,150,LOW?72:112,LOW?72:112);
+  const p=geo.attributes.position;
+  for(let i=0;i<p.count;i++) {
+    const x=p.getX(i),z=-p.getY(i)-18;
+    const edge=Math.hypot(x/21,(z+4)/18)+.028*Math.sin(x*.66+z*.31)+.018*Math.sin(z*1.1-x*.27);
+    const depth=1-smooth(.65,1.03,edge);
+    p.setZ(i,-1.55*depth);
+  }
+  geo.computeVertexNormals();return geo;
+}
+
+function injectPondBed(sh) {
+  if(!WORLD.pondBedTexture) {
+    const c=cvs(512,512),x=c.getContext('2d'),rnd=mulberry32(7192);
+    x.fillStyle='#273d3c';x.fillRect(0,0,512,512);
+    for(let i=0;i<650;i++) {
+      const px=rnd()*512,py=rnd()*512,r=5+rnd()*16,lit=rnd();
+      x.save();x.translate(px,py);x.rotate(rnd()*TAU);
+      const g=x.createRadialGradient(-r*.3,-r*.35,0,0,0,r);
+      g.addColorStop(0,'rgb('+Math.round(88+lit*58)+','+Math.round(108+lit*48)+','+Math.round(103+lit*42)+')');
+      g.addColorStop(.65,'#485e5b');g.addColorStop(1,'#293b39');x.fillStyle=g;
+      x.beginPath();x.ellipse(0,0,r,r*(.55+rnd()*.35),0,0,TAU);x.fill();x.restore();
+    }
+    WORLD.pondBedTexture=tx(c,{wrap:THREE.RepeatWrapping,srgb:false});
+  }
+  sh.uniforms.tPondBed={value:WORLD.pondBedTexture};
+  sh.vertexShader='varying vec3 vPondBedWorld;\n'+sh.vertexShader;
+  sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',
+    `#include <begin_vertex>
+     vPondBedWorld=(modelMatrix*vec4(transformed,1.)).xyz;`);
+  sh.fragmentShader='varying vec3 vPondBedWorld;uniform sampler2D tPondBed;\n'+sh.fragmentShader;
+  sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',
+    `#include <color_fragment>
+     float bedWeight=1.-smoothstep(-.24,-.035,vPondBedWorld.y);
+     vec3 bedStone=pow(texture2D(tPondBed,vPondBedWorld.xz*.12).rgb,vec3(2.2));
+     bedStone*=mix(vec3(.80,.95,.90),vec3(.35,.63,.64),clamp(-vPondBedWorld.y/1.6,0.,1.));
+     diffuseColor.rgb=mix(diffuseColor.rgb,bedStone,bedWeight);`);
+  sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_maps>',
+    `#include <normal_fragment_maps>
+     normal=normalize(mix(normal,geometryNormal,bedWeight));
+     roughnessFactor=mix(roughnessFactor,.84,bedWeight);`);
+}
+
 function buildPond() {
-  const mat=new THREE.MeshPhysicalMaterial({color:0x0d292c,roughness:.16,
-    metalness:.02,clearcoat:.8,clearcoatRoughness:.12,envMapIntensity:1.5,
+  const mat=new THREE.MeshPhysicalMaterial({color:0x08282d,roughness:.085,
+    metalness:.02,clearcoat:1,clearcoatRoughness:.065,envMapIntensity:2.0,
     transparent:true,opacity:TUNE.puddleOpacity,depthWrite:false});
   const uni={
     uPondTime:WET_TIME,
@@ -6348,12 +6397,15 @@ function buildPond() {
     sh.fragmentShader=sh.fragmentShader.replace('#include <output_fragment>',
       `vec3 pondView=normalize(cameraPosition-vPondWorld);
        float pondFres=pow(1.-clamp(pondView.y,0.,1.),2.8);
+       /* looking down reveals the stone bed; across the pond the surface
+          holds the sky and the lanterns instead. */
+       diffuseColor.a*=mix(.48,.96,clamp(pondFres*1.45,0.,1.));
        #ifdef POND_REFLECTION
          vec2 pondUV=vPondMirror.xy/max(vPondMirror.w,.0001);
-         pondUV+=pondN.xz*.07;
+         pondUV+=pondN.xz*.05;
          vec3 pondReflection=texture2D(tPondMirror,clamp(pondUV,.002,.998)).rgb;
-         outgoingLight=mix(outgoingLight,pondReflection*vec3(.74,.90,.94),
-           clamp((.18+pondFres*(.55+uPondFresnel*.15))*uPondReflect,0.,.86));
+         outgoingLight=mix(outgoingLight,pondReflection*vec3(.86,.97,1.0),
+           clamp((.25+pondFres*(.70+uPondFresnel*.15))*uPondReflect,0.,.95));
        #else
          /* a pair of broken warm trails keeps the lower-cost water legible
             without a second scene render on a phone. */
@@ -6366,7 +6418,7 @@ function buildPond() {
        outgoingLight*=1.+pondCrest*uPondShimmer*.22;
        #include <output_fragment>`);
   };
-  mat.customProgramCacheKey=()=> 'continuous-pond-v1';
+  mat.customProgramCacheKey=()=> 'continuous-pond-v2';
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(48,44),mat);
   mesh.rotation.x=-Math.PI/2;mesh.position.set(0,.026,-4);
   mesh.layers.set(1);mesh.renderOrder=4;scene.add(mesh);
