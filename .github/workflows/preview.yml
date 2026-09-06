@@ -44,6 +44,13 @@ jobs:
       - name: Test before publishing
         run: python3 -B -m unittest discover -p 'test_*.py' -v
 
+      # Only this workflow does this, which is the point: the live page shares
+      # index.html with the preview, so a meta noindex in the document would
+      # take /portfolio/ out of the index too. The header comes from outside
+      # the document instead, and only this folder gets the file.
+      - name: Keep the preview out of search results
+        run: cp preview/htaccess .htaccess
+
       - name: Upload to threeohfivestudios.com/portfolio-a
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -67,6 +74,7 @@ jobs:
             AGENTS.md
             CLAUDE.md
             DEPLOY.md
+            preview/**
 
       # Same skip-rather-than-fail shape as deploy.yml, and for the same
       # reason: the secrets context is not allowed in a step-level `if:` and

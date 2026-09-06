@@ -70,6 +70,7 @@ jobs:
             AGENTS.md
             CLAUDE.md
             DEPLOY.md
+            preview/**
 
       # Cloudflare sits in front, so a fresh file on disk is not a fresh file
       # to visitors. Skipped rather than failed when the secrets are absent —

@@ -1,0 +1,17 @@
+# Dropped into /portfolio-a/ as .htaccess by .github/workflows/preview.yml, and
+# by nothing else — deploy.yml never copies it, so the live page at /portfolio/
+# keeps its own indexing. This folder is a near-duplicate of that page, and two
+# indexable copies of the same portfolio means a search engine picks one of
+# them, with no say from us about which.
+#
+# X-Robots-Tag rather than a meta tag, because the page itself is one file
+# serving both folders and a meta noindex in it would take the live page down
+# with it. The header does the same job from outside the document, and it
+# covers the assets too.
+#
+# Guarded: this host has mod_headers, but an .htaccess naming a module that is
+# not loaded is a 500 on the whole directory, and a preview that 500s is worse
+# than one that gets indexed.
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
