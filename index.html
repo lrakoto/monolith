@@ -224,14 +224,23 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
    in the bar with an outline round it. Kept small and quiet — it should read
    as available, not as the loudest thing up there, and the chapter links have
    to stay the primary way through the page. */
+/* Same fill as the contact chapter's buttons: a pane of bone that rises from
+   below and takes the text to ink with it. The only differences are size and
+   that the icon strokes have to follow the colour, which they do because they
+   are set to currentColor rather than to a fixed bone. */
 .nav-cv{
+  position:relative; overflow:hidden; z-index:0;
   display:inline-flex; align-items:center; gap:8px; flex:0 0 auto;
-  margin-left:clamp(18px,2.4vw,38px); padding:8px 15px;
+  margin-left:clamp(18px,2.4vw,38px); padding:9px 16px;
   border:1px solid var(--line); border-radius:100px;
   font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase;
-  color:var(--bone-dim); transition:color .35s var(--ease), border-color .35s var(--ease);
+  color:var(--bone-dim); transition:color .45s var(--ease), border-color .45s;
 }
-.nav-cv:hover{ color:var(--bone); border-color:var(--bone-dim); }
+.nav-cv i{ position:absolute; inset:0; background:var(--bone); transform:translate3d(0,101%,0);
+  transition:transform .62s var(--ease-out); z-index:-1; }
+.nav-cv svg, .nav-cv span{ position:relative; z-index:1; }
+.nav-cv:hover{ color:#05070a; border-color:var(--bone); }
+.nav-cv:hover i{ transform:none; }
 .nav-cv svg{ display:block; flex:0 0 auto; }
 
 /* The one piece of chrome that is a mark rather than a word. It sits after
@@ -1175,7 +1184,11 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <div class="pre-mark-tx"><b>THREEOHFIVE<em>STUDIOS</em></b><i>LOS ANGELES</i></div>
     <div class="pre-bar"><i id="pre-fill"></i></div>
     <div class="pre-meta">
-      <span>Pouring the slab</span><b><span id="pre-pct">0</span>%</b>
+      <!-- The job names in JOBS are internal: they name what is being built so
+           a console error can say which step failed. This is the only loading
+           text a visitor reads, and it has one job — say that something is
+           happening — so it says that and nothing more. -->
+      <span>Loading</span><b><span id="pre-pct">0</span>%</b>
     </div>
   </div>
 </div>
@@ -1198,6 +1211,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">05</span></a>
   </nav>
   <a class="nav-cv" href="/wp-content/uploads/2026/03/Lova_Resume_2026.pdf" download data-cursor>
+    <i></i>
     <svg viewBox="0 0 14 14" fill="none" width="12" height="12" aria-hidden="true" focusable="false">
       <path d="M7 2v8M3.6 6.6 7 10l3.4-3.4M2.5 12h9" stroke="currentColor" stroke-width="1.3"
             stroke-linecap="round" stroke-linejoin="round"/>
@@ -1275,7 +1289,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     </div>
   </div>
   <div class="clients" data-rv="up">
-    <span class="clients-k">Worked with</span>
+    <span class="clients-k">Brands I've worked with</span>
     <ul>
       <li><img src="assets/work/logos/mattel.webp" alt="Mattel" width="300" height="135" loading="lazy" decoding="async"></li>
       <li><img src="assets/work/logos/newegg.webp" alt="Newegg" width="300" height="135" loading="lazy" decoding="async"></li>
@@ -1319,7 +1333,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     </a>
   </div>
   <div class="cards-arch-head" data-rv="fade">
-    <b>Archive</b><span class="rule"></span><i>In progress</i>
+    <b>Design</b><span class="rule"></span><i>Selected work</i>
   </div>
   <div class="cards-arch" id="cards-arch"></div>
 </section>
@@ -1458,7 +1472,6 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       <li><a href="#lessons" data-cursor>Strategy</a></li>
     </ul></div>
     <div><h4>Elsewhere</h4><ul>
-      <li><a href="https://threeohfivestudios.com/" target="_blank" rel="noopener" data-cursor>threeohfivestudios.com</a></li>
       <li><a href="https://www.linkedin.com/in/lovarakoto/" target="_blank" rel="noopener" data-cursor>LinkedIn</a></li>
       <li><a href="https://vimeo.com/threeohfivestudios" target="_blank" rel="noopener" data-cursor>Vimeo</a></li>
     </ul></div>
@@ -4699,6 +4712,18 @@ function wireWorkModal() {
    detail shots, the Vimeo cut where there is one, and a short table of facts.
    Two typos in the source table are corrected here rather than carried over. */
 const DESIGN_WORK = [
+  /* Brought over from the old design site, where it had a page of its own.
+     The copy is the original's, trimmed: it explained that the tagline drove
+     each layout and that the products were cut out, arranged and rendered by
+     hand rather than dropped into a template, which is the part worth keeping. */
+  { slug: "newegg", title: "Newegg Email Campaigns",
+    thumb: "newegg00.jpg",
+    images: ["newegg00.jpg", "newegg03.jpg", "newegg05.jpg", "newegg08.jpg",
+             "newegg10.jpg", "newegg11.jpg", "newegg13.jpg", "newegg14.jpg",
+             "newegg15.jpg", "newegg17.jpg", "newegg20.jpg", "newegg23.jpg"],
+    vimeo: [],
+    meta: { "Client": "Newegg Inc.", "Software": "Photoshop, Illustrator", "Media": "Email",
+            "Time": "2 years", "Tags": "Campaigns, retouching, layout, product rendering" } },
   { slug: "cards", title: "Flavor Cards",
     thumb: "thumb_cards2.jpg",
     images: ["cards.jpg"],
@@ -4745,17 +4770,17 @@ const DESIGN_WORK = [
     vimeo: [],
     meta: { "Client": "Starke Marketing", "Software": "Illustrator", "Media": "Print", "Time": "5 weeks", "Tags": "Branding", "Links": "" } },
   { slug: "sean", title: "Sean Website",
-    thumb: "thumb_sean.jpg",
+    thumb: "sean1.jpg",
     images: ["sean1.jpg", "sean2.png"],
     vimeo: [],
     meta: { "Client": "Sean Kennard", "Software": "Photoshop, Illustrator, Coda", "Media": "Digital, Mobile", "Time": "7 weeks", "Tags": "Web, layout, coding, themes", "Link": "" } },
   { slug: "spatel", title: "Spatel Website",
-    thumb: "thumb_spatel1.jpg",
+    thumb: "spatel1.jpg",
     images: ["spatel1.jpg", "spatel03.jpg", "spatel2.jpg"],
     vimeo: [],
     meta: { "Client": "Spatel Desserts", "Software": "Photoshop, Illustrator, Coda", "Media": "Digital, Mobile", "Time": "9 weeks", "Tags": "Web, layout, coding, themes", "Link": "" } },
   { slug: "cot", title: "COT Website",
-    thumb: "thumb_cot.jpg",
+    thumb: "cot1.jpg",
     images: ["cot1.jpg", "cot2.jpg"],
     vimeo: [],
     meta: { "Client": "IHP Inc", "Software": "Photoshop, Illustrator, Coda", "Media": "Digital, Mobile", "Time": "18 weeks", "Tags": "Web", "Link": "" } }
