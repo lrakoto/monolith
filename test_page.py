@@ -64,5 +64,53 @@ class TuningPanelTests(unittest.TestCase):
         self.assertEqual(len(runs), len(set(runs)), f"a group is split: {runs}")
 
 
+class BootTests(unittest.TestCase):
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_critical_failures_fall_back_regardless_of_job_position(self):
+        """Run the real boot function with both throws and rejected promises.
+        Optional assets may fail, but no scene jobs may run after setup fails."""
+        boot = re.search(r"function boot\(\) \{.*?\n\}", inline_script(), re.S).group(0)
+        harness = r"""
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const fs = require('node:fs');
+const page = fs.readFileSync('index.html', 'utf8');
+const jobs = page.match(/const JOBS = \[([\s\S]*?)\n\];/)[1];
+assert.match(jobs, /\['Pouring the ground',[^\n]+, true\]/);
+async function run(position, rejected, critical) {
+  let later = 0;
+  const outcome = await new Promise(resolve => {
+    const noop = () => {};
+    const context = {
+      document: {body: {classList: {add: noop}}}, TUNE: {grainOverlay: 0},
+      preFill: {style: {}}, prePct: {}, console: {error: noop},
+      setTimeout: fn => fn(), start: () => resolve('started'),
+      fallback: () => resolve('fallback')
+    };
+    for (const name of ['applyGrainOverlay', 'buildArchive', 'buildXpAnchors',
+      'wireWorkModal', 'wireCardSheen', 'wireReveals', 'wireNav',
+      'wireHeroExit', 'wireFocus', 'wireCursor']) context[name] = noop;
+    context.JOBS = Array.from({length: position}, () => ['asset', noop]);
+    context.JOBS.push(['setup', () => {
+      if (rejected) return Promise.reject(new Error('unavailable'));
+      throw new Error('unavailable');
+    }, critical], ['later', () => later++]);
+    vm.runInNewContext(BOOT + '\nboot();', context);
+  });
+  assert.equal(outcome, critical ? 'fallback' : 'started');
+  assert.equal(later, critical ? 0 : 1);
+}
+(async () => {
+  for (const position of [0, 2, 4])
+    for (const rejected of [false, true])
+      for (const critical of [false, true]) await run(position, rejected, critical);
+})().catch(err => { console.error(err); process.exitCode = 1; });
+"""
+        import json
+        result = subprocess.run(["node", "-e", "const BOOT = " + json.dumps(boot) + ";\n" + harness],
+                                cwd=INDEX.parent, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
