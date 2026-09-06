@@ -2043,13 +2043,66 @@ function buildEnvironment() {
 
 /* the night sky itself: black at altitude, going to the fog colour at the
    horizon so the backdrop and the depth cue meet without a seam */
+/* The sky was a five-stop gradient, a wash of noise and four hundred stars of
+   one kind. It read as a backdrop rather than as air, which is what made the
+   moon look pasted on to it — the fault was never really the moon.
+
+   Three things changed. It is drawn at four times the resolution, because a
+   512px sheet stretched across the whole dome bands visibly in the darks where
+   almost all of this image lives. The stars have magnitude now: a great many
+   faint ones, a few bright, and the bright ones carry a small halo the way a
+   real one does through atmosphere — an even scatter of identical dots is the
+   thing that reads as a texture rather than as a sky. And a galactic band runs
+   across it, faint enough to be atmosphere rather than a feature.
+
+   The moon itself is left alone deliberately. The comment on buildMoon records
+   that a detailed one was tried and taken out: turned cold it stopped being a
+   graphic and became an unconvincing photograph. Giving it craters again would
+   be re-making a decision somebody already made and wrote down. */
 function texSky() {
-  const W = 512, H = 512, c = cvs(W, H), x = c.getContext('2d');
+  const W = 2048, H = 2048, c = cvs(W, H), x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, 'rgb(6,10,15)');    g.addColorStop(.34, 'rgb(13,22,31)');
+  g.addColorStop(0, 'rgb(5,8,13)');     g.addColorStop(.34, 'rgb(13,22,31)');
   g.addColorStop(.66, 'rgb(17,26,34)'); g.addColorStop(.88, 'rgb(24,35,42)');
   g.addColorStop(1, 'rgb(14,22,28)');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+  /* The galactic band: a soft diagonal of dust, well under the noise floor of
+     anything else in the frame, there to stop the upper sky being flat.
+
+     Built on its own canvas and then composited, which is the whole trick.
+     It used to be painted straight onto the sky and eroded in place with a
+     destination-out — but destination-out writes to *alpha*, this texture is
+     rendered by an opaque material, and the upload divides the colour back
+     out by the alpha it just lowered. So the erosion never subtracted
+     anything; it multiplied. The "soft dust" arrived as a hard bright slab
+     with two straight edges and a corner sitting inside the frame, which was
+     the only straight line in the sky and the first thing anyone saw in it.
+     Composited from a scratch canvas the erase lands on the band's own alpha,
+     source-over does the blend, and the sky underneath stays opaque. */
+  const bandH = Math.round(H * .32), bandW = W * 2;
+  const bc = cvs(bandW, bandH), bx = bc.getContext('2d');
+  const mw = bx.createLinearGradient(0, 0, 0, bandH);
+  mw.addColorStop(0, 'rgba(120,150,180,0)');
+  mw.addColorStop(.42, 'rgba(126,152,178,.055)');
+  mw.addColorStop(.54, 'rgba(140,164,188,.075)');
+  mw.addColorStop(1, 'rgba(120,150,180,0)');
+  bx.fillStyle = mw; bx.fillRect(0, 0, bandW, bandH);
+  bx.globalCompositeOperation = 'destination-out';
+  bx.globalAlpha = .55;
+  bx.drawImage(fbmCanvas(512, 256, 991, 5, 4, 1.1), 0, 0, bandW, bandH);
+  /* and both ends taper away. The band is longer than the canvas is wide but
+     it is also rotated, so a square end lands inside the frame — it has to
+     leave the sky rather than stop in it. */
+  bx.globalAlpha = 1;
+  const ends = bx.createLinearGradient(0, 0, bandW, 0);
+  ends.addColorStop(0, 'rgb(0,0,0)');        ends.addColorStop(.26, 'rgba(0,0,0,0)');
+  ends.addColorStop(.74, 'rgba(0,0,0,0)');   ends.addColorStop(1, 'rgb(0,0,0)');
+  bx.fillStyle = ends; bx.fillRect(0, 0, bandW, bandH);
+  x.save();
+  x.translate(W * .5, H * .30); x.rotate(-.42);
+  x.drawImage(bc, -W, -bandH / 2);
+  x.restore();
   /* cloud, and a low warm bloom off the valley behind the ridge */
   x.globalAlpha = .34; x.globalCompositeOperation = 'overlay';
   x.drawImage(fbmCanvas(W, H, 313, 5, 3, .9), 0, 0);
@@ -2058,11 +2111,33 @@ function texSky() {
   wg.addColorStop(0, 'rgba(150,66,26,.30)'); wg.addColorStop(.5, 'rgba(96,44,22,.12)');
   wg.addColorStop(1, 'rgba(0,0,0,0)');
   x.fillStyle = wg; x.fillRect(0, 0, W, H);
-  /* a scatter of stars, faint enough to survive the bloom */
+  /* Stars with magnitude. rnd^3 is what does the work: it makes the great
+     majority faint and a handful bright, which is the distribution a real sky
+     has and the reason this reads as depth rather than as dots. The brightest
+     few get a halo, because that is what atmosphere does to a bright star and
+     it is the only cue at this scale that says the air has substance. */
   const rnd = mulberry32(881);
-  for (let i = 0; i < 420; i++) {
-    const sx = rnd() * W, sy = rnd() * H * .78, r = .5 + rnd() * rnd() * 1.7;
-    x.fillStyle = 'rgba(214,232,240,' + (.12 + rnd() * .42) * (1 - sy / H) + ')';
+  for (let i = 0; i < 2600; i++) {
+    const sx = rnd() * W, sy = rnd() * H * .82;
+    const mag = Math.pow(rnd(), 3);                    /* 0 faint … 1 brilliant */
+    const r = .5 + mag * 1.6;
+    const fade = 1 - sy / H;                           /* thinner toward the horizon haze */
+    const a = (.07 + mag * .78) * fade;
+    /* Only the genuinely brilliant get a halo, and a tight one. The first
+       pass gave it to the top quarter at five and a half radii, which at this
+       texture scale is wider than the old stars were — seven hundred soft
+       discs, and the sky read as falling snow rather than as stars. */
+    if (mag > .95) {
+      const hr = r * 2.4;
+      const h = x.createRadialGradient(sx, sy, 0, sx, sy, hr);
+      h.addColorStop(0, 'rgba(206,226,240,' + a * .30 + ')');
+      h.addColorStop(1, 'rgba(206,226,240,0)');
+      x.fillStyle = h;
+      x.beginPath(); x.arc(sx, sy, hr, 0, TAU); x.fill();
+    }
+    /* the coldest are bluest, the brightest nearly white */
+    const tint = mag > .55 ? '228,238,246' : (rnd() < .22 ? '186,206,236' : '206,224,236');
+    x.fillStyle = 'rgba(' + tint + ',' + a + ')';
     x.beginPath(); x.arc(sx, sy, r, 0, TAU); x.fill();
   }
   return c;
@@ -3406,6 +3481,80 @@ function buildAtmosphere() {
   }));
   emb.frustumCulled = false; emb.renderOrder = 5;
   scene.add(emb); WORLD.embers = emb;
+
+  /* Fireflies. The embers rise off the lanterns and are the fire in the scene;
+     these are the opposite and have to read as alive rather than as more
+     sparks, so three things separate them. They hover instead of climbing —
+     three wander periods that do not divide into each other, so no mote ever
+     repeats a path. They are cooler and paler, a yellow-white against the
+     ember orange. And they blink: the brightness is a sine raised to the
+     fifth, which leaves most of them dark at any instant and a few lit, which
+     is what a field of them actually looks like and also what stops a hundred
+     and thirty additive sprites from turning the low half of the frame into
+     haze.
+
+     Held low and close to the planting — knee height to twice head height,
+     out to twenty metres either side and back as far as the head of the
+     flight — because a firefly forty metres out is one pixel that flickers,
+     which reads as a dead subpixel rather than as an insect. Everything moves
+     in the vertex shader off the clock the rest of the scene already runs on,
+     so the whole field is one draw call and nothing per frame on the CPU.
+
+     Left on layer 0, unlike the wisps and the rain: these are the one drifting
+     thing in the scene that is genuinely out in the world rather than near the
+     lens, so the puddles are welcome to reflect them. */
+  const FN = LOW ? 55 : 130;
+  const fpos = new Float32Array(FN * 3), fseed = new Float32Array(FN);
+  /* They follow the ground rather than sitting on one plane. The first pass
+     scattered them all at court level, and the page spends most of its length
+     climbing — from the fourth waypoint on, the court is behind and below the
+     rig and every firefly was out of frame. Solved off the same constants the
+     treads are built from, so each one hovers a metre or two above whatever
+     surface is under it: the court at the front, the flight through the middle,
+     the landing at the top. */
+  const flyGround = z => z >= STAIR_Z0 ? 0
+    : z <= STAIR_Z0 - STEPS * STAIR_RUN ? PODIUM
+    : (Math.max(0, (STAIR_Z0 - z) / STAIR_RUN - .5) + 1) * (PODIUM / STEPS);
+  for (let i = 0; i < FN; i++) {
+    /* forward of the gate as well as behind it. Started at the foot of the
+       flight, every one of them was ten to thirty-five metres out, which is a
+       speck that flickers — indistinguishable from a dead subpixel. The near
+       ones are what make the field read at all. */
+    const fz = -40 + rnd() * 50;
+    /* narrow where the flight is, wide out on the open court, so they gather
+       along the climb instead of spreading thin across ground nothing looks at */
+    const spread = fz < STAIR_Z0 ? 15 : 34;
+    fpos[i * 3]     = (rnd() - .5) * spread;
+    fpos[i * 3 + 1] = flyGround(fz) + .45 + Math.pow(rnd(), 1.5) * 3.4;
+    fpos[i * 3 + 2] = fz;
+    fseed[i] = rnd();
+  }
+  const fg = new THREE.BufferGeometry();
+  fg.setAttribute('position', new THREE.BufferAttribute(fpos, 3));
+  fg.setAttribute('aSeed', new THREE.BufferAttribute(fseed, 1));
+  const fly = new THREE.Points(fg, new THREE.ShaderMaterial({
+    uniforms: { uT: WORLD.uT, uTex: { value: tx(texGlow('rgba(255,246,196,1)', 'rgba(196,214,96,.30)')) },
+      uSize: { value: vpH() * .5 } },
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+    vertexShader:
+      'attribute float aSeed; uniform float uT; uniform float uSize; varying float vA;\n' +
+      'void main(){ vec3 p=position; float s=aSeed*63.0;\n' +
+      ' p.x += sin(uT*(0.17+aSeed*0.19) + s)*1.35;\n' +
+      ' p.y += sin(uT*(0.13+aSeed*0.14) + s*1.7)*0.60;\n' +
+      ' p.z += cos(uT*(0.15+aSeed*0.17) + s*2.3)*1.15;\n' +
+      ' vec4 mv = modelViewMatrix * vec4(p,1.0);\n' +
+      ' float b = sin(uT*(0.52+aSeed*0.80) + s*3.1)*0.5 + 0.5;\n' +
+      ' vA = pow(b, 3.4) * (0.55 + aSeed*0.45);\n' +
+      ' gl_PointSize = uSize*(0.013+aSeed*0.017)/max(-mv.z,0.6);\n' +
+      ' gl_Position = projectionMatrix * mv; }',
+    fragmentShader:
+      'uniform sampler2D uTex; varying float vA;\n' +
+      'void main(){ if (vA <= 0.004) discard;\n' +
+      ' vec4 t=texture2D(uTex, gl_PointCoord);\n' +
+      ' gl_FragColor = vec4(t.rgb*vec3(1.30,1.22,0.52), t.a*vA*0.85); }'
+  }));
+  fly.frustumCulled = false; fly.renderOrder = 5;
+  scene.add(fly); WORLD.flies = fly;
 
   /* rain in the slot of open sky */
   if (!LOW) {
@@ -6374,6 +6523,7 @@ function resize() {
   CARDS.forEach(C => { C.dirty = true; });
   if (WANT_SHADOW && WORLD.key) WORLD.key.shadow.needsUpdate = true;
   if (WORLD.embers) WORLD.embers.material.uniforms.uSize.value = h * renderer.getPixelRatio() * .5;
+  if (WORLD.flies) WORLD.flies.material.uniforms.uSize.value = h * renderer.getPixelRatio() * .5;
   if (WISP.mesh) WISP.mesh.material.uniforms.uPx.value = h * renderer.getPixelRatio();
   placeMoon();
   layoutWord();
