@@ -1,0 +1,15 @@
+# Dropped into a preview folder as .htaccess by the preview workflows, and by
+# nothing else — deploy.yml never copies it, so the live page at /portfolio/
+# keeps its own indexing. A preview is a near-duplicate of, or a study for, the
+# live page, and two indexable copies means a search engine picks one of them
+# with no say from us about which.
+#
+# X-Robots-Tag rather than a meta tag alone, because the header covers the
+# assets too and cannot be missed by a crawler that does not run scripts.
+#
+# Guarded: this host has mod_headers, but an .htaccess naming a module that is
+# not loaded is a 500 on the whole directory, and a preview that 500s is worse
+# than one that gets indexed.
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>

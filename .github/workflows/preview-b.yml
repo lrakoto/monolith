@@ -1,0 +1,89 @@
+# The second scene — a study, recreating a reference image — published to
+# /portfolio-b/. It is its own page in its own folder and shares nothing with
+# the portfolio but three.js, which is copied in here rather than linked
+# sideways so the folder stands on its own and can be deleted in one go.
+#
+# THE SETTING THAT MATTERS IS server-dir, for the same reason it matters in
+# deploy.yml and preview.yml: it is relative to where the FTP account lands
+# (already inside public_html), and a level too high syncs over WordPress. It
+# says portfolio-b in full so it can be read at a glance.
+#
+# local-dir is the other half of that: this workflow uploads ./b/ and nothing
+# else, so it cannot reach /portfolio/ or /portfolio-a/ even if server-dir were
+# wrong in the other direction.
+name: preview-b
+
+on:
+  push:
+    branches:
+      - scene-b
+      - 'scene-b/**'
+  workflow_dispatch:
+
+# Shared with the other two. Three FTP sessions into one account is how a
+# half-uploaded file happens, and it is the same account whichever folder is
+# being written.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  preview-b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # The scene is one inline script and a syntax error in it is silent — the
+      # preloader just never lifts. Same gate the portfolio gets.
+      - name: Check the scene parses
+        run: |
+          node -e '
+            const fs = require("fs");
+            const src = fs.readFileSync("b/index.html", "utf8");
+            const inline = [...src.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)];
+            if (!inline.length) { console.error("no inline script in b/index.html"); process.exit(1); }
+            fs.writeFileSync("/tmp/scene.js", inline[inline.length - 1][1]);
+          '
+          node --check /tmp/scene.js
+
+      # three.js is vendored at the repo root and shared with the portfolio;
+      # the folder gets its own copy so it is self-contained on the host.
+      - name: Assemble the folder
+        run: |
+          mkdir -p b/assets
+          cp assets/three.min.js b/assets/three.min.js
+          cp preview/htaccess b/.htaccess
+          ls -la b b/assets
+
+      - name: Upload to threeohfivestudios.com/portfolio-b
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./b/
+          server-dir: /threeohfivestudios.com/portfolio-b/
+
+      # Same skip-rather-than-fail shape as the other two, and for the same
+      # reason: the secrets context is not allowed in a step-level `if:` and
+      # GitHub rejects the whole file for using it there.
+      - name: Purge Cloudflare
+        env:
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          if [ -z "$CF_ZONE_ID" ] || [ -z "$CF_API_TOKEN" ]; then
+            echo "No Cloudflare secrets set — skipping purge. The upload succeeded;"
+            echo "the cache will age out on its own, or purge it by hand."
+            exit 0
+          fi
+          curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"prefixes":["threeohfivestudios.com/portfolio-b/"]}' \
+            | tee /dev/stderr | grep -q '"success":true'
