@@ -1328,13 +1328,13 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       </div>
       <div class="card-meta"><span>Figma to Builder.io, at traffic</span><span>02 / 03</span></div>
     </a>
-    <a class="card" href="#top" data-work="scene" aria-label="Monolith — you are looking at it" data-rv="up" data-view="2" data-cursor>
+    <a class="card" href="https://threeohfivestudios.com/aero/" data-work="aero" target="_blank" rel="noopener" aria-label="AERO — open the live project" data-rv="up" data-view="2" data-cursor>
       <div class="card-fr" data-frame>
                 <span class="card-ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
         <i class="glow" style="--gx:48.0%; --gy:16.8%; --gr:20%; --gt:7.3s; --gt2:11.2s; --gc1:rgba(255,138,104,.52); --gc2:rgba(208,54,36,.24)"></i>
-        <div class="card-lab"><b>Monolith</b><span>WebGL</span></div>
+        <div class="card-lab"><b>AERO</b><span>Interactive exhibition</span></div>
       </div>
-      <div class="card-meta"><span>This page — procedural Three.js</span><span>03 / 03</span></div>
+      <div class="card-meta"><span>Five chapters, sixteen milestones</span><span>03 / 03</span></div>
     </a>
   </div>
   <div class="cards-arch-head" data-rv="fade">
@@ -5099,13 +5099,13 @@ function clothPlate(img, w, h) {
    fabric to move around.
 
    Over that, each card carries an abstraction of its own project — a search
-   and a grid of vehicles, a shopfront, the slab itself. Not screenshots: a
-   photograph would be the one bitmap on a page whose whole argument is that
-   it has none, and it would also be the wrong picture, because a flat crop
-   held on a moving cloth reads as a poster of a website rather than the thing
-   itself. These are drawn at low alpha so the pour still comes through them,
-   which is what keeps the drape legible: the marks travel with the mesh while
-   the concrete underneath does the shading. */
+   and a grid of vehicles, a shopfront, an aircraft over open water. Not
+   screenshots: a photograph would be the one bitmap on a page whose whole
+   argument is that it has none, and it would also be the wrong picture,
+   because a flat crop held on a moving cloth reads as a poster of a website
+   rather than the thing itself. These are drawn at low alpha so the pour
+   still comes through them, which is what keeps the drape legible: the marks
+   travel with the mesh while the concrete underneath does the shading. */
 
 /* Where a real capture of the work exists it is used instead of the drawing.
    The page generates everything else, and for a while it generated these too —
@@ -5121,7 +5121,7 @@ function clothPlate(img, w, h) {
    flat opaque crop gives it nothing to shade. */
 const WORK_SRC   = { autodex: 'assets/work/autodex.jpg',
                      shop:    'assets/work/gundry.webp',
-                     scene:   'assets/work/monolith.jpg' };
+                     aero:    'assets/work/aero.jpg' };
 const WORK_SHOTS = {};
 function loadWorkShots() {
   const keys = Object.keys(WORK_SRC);
@@ -5243,40 +5243,91 @@ function cardArtShop(x, W, H) {
   }
 }
 
-/* ---- 03 · Monolith — the scene itself, reduced to marks */
-function cardArtScene(x, W, H) {
+/* ---- 03 · AERO — the record reduced to marks: planform, spine, horizon */
+function cardArtAero(x, W, H) {
   const { P, w, h } = cardPanel(x, W, H);
-  const cx = P + w / 2, base = P + h - 34;
-  /* the flight, narrowing as it goes back */
-  for (let i = 0; i < 9; i++) {
-    const t = i / 9, sw = w * (.50 - t * .22), sy = base - i * 7;
-    x.fillStyle = CARD_INK + (.16 - t * .10).toFixed(3) + ')';
-    x.fillRect(cx - sw / 2, sy, sw, 2);
-  }
-  /* the slab, and the cut through it */
-  const mw = w * .17, mh = h * .52, mx = cx - mw / 2, my = base - 62 - mh;
-  const g = x.createLinearGradient(0, my, 0, my + mh);
-  g.addColorStop(0, 'rgba(223,231,224,.15)'); g.addColorStop(1, 'rgba(223,231,224,.05)');
-  x.fillStyle = g; x.fillRect(mx, my, mw, mh);
-  x.strokeStyle = CARD_INK + '.26)'; x.lineWidth = 1.2;
-  x.strokeRect(mx + .5, my + .5, mw - 1, mh - 1);
+  /* the water the record is read over. it sits low and takes the bottom
+     quarter, because on the site the ocean is under the type rather than
+     behind it and never competes with what is being read */
+  const hz = P + h * .72;
+  const sea = x.createLinearGradient(0, hz, 0, P + h);
+  sea.addColorStop(0, 'rgba(150,186,206,.12)');
+  sea.addColorStop(1, 'rgba(150,186,206,.015)');
+  x.fillStyle = sea; x.fillRect(P, hz, w, P + h - hz);
+  x.fillStyle = CARD_INK + '.18)'; x.fillRect(P + 14, hz, w - 28, 1);
 
-  const sy = my + mh * .42;
-  const bloom = x.createRadialGradient(cx, sy + 3, 1, cx, sy + 3, mw * 1.9);
-  bloom.addColorStop(0, CARD_CORAL + '.55)'); bloom.addColorStop(1, CARD_CORAL + '0)');
-  x.fillStyle = bloom; x.fillRect(mx - mw * 2, sy - mw, mw * 5, mw * 2.4);
-  x.fillStyle = 'rgba(255,206,186,.92)'; x.fillRect(mx + 3, sy, mw - 6, 6);
-
-  /* two bollards flanking the flight, and the horizon behind everything */
-  [-1, 1].forEach(sd => {
-    const bx = cx + sd * w * .27;
-    x.fillStyle = CARD_INK + '.13)'; x.fillRect(bx - 3, base - 40, 6, 40);
-    x.fillStyle = CARD_CORAL + '.75)'; x.fillRect(bx - 2, base - 33, 4, 9);
+  /* the planform, from above, the way the site draws its aircraft. one
+     silhouette says aircraft; three would say airshow. half the hull is
+     given and mirrored, because a swept shape drawn freehand on both sides
+     never comes out symmetrical and reads as a wobble at this size */
+  const cx = P + w * .60, cy = P + h * .19, L = w * .28;
+  const hull = [[0, 0], [-.09, -.040], [-.20, -.060], [-.34, -.070],
+                [-.40, -.085], [-.86, -.300], [-.94, -.300],
+                [-.90, -.105], [-1, -.105], [-1, -.035]];
+  x.beginPath();
+  hull.forEach((p, i) => {
+    const px = cx + L * p[0], py = cy + L * p[1];
+    if (i) x.lineTo(px, py); else x.moveTo(px, py);
   });
-  x.fillStyle = CARD_INK + '.09)'; x.fillRect(P + 14, base + 8, w - 28, 1);
+  for (let i = hull.length - 1; i >= 0; i--)
+    x.lineTo(cx + L * hull[i][0], cy - L * hull[i][1]);
+  x.closePath();
+  x.fillStyle = CARD_INK + '.05)'; x.fill();
+  x.strokeStyle = CARD_INK + '.42)'; x.lineWidth = 1.5; x.stroke();
+  /* the two nacelles. they are what make the shape read as an aircraft
+     rather than a paper dart */
+  x.strokeStyle = CARD_INK + '.22)'; x.lineWidth = 1.1;
+  [-1, 1].forEach(sd => {
+    x.beginPath();
+    x.moveTo(cx - L * .60, cy + sd * L * .155);
+    x.lineTo(cx - L * .92, cy + sd * L * .155);
+    x.stroke();
+  });
+
+  /* the track it came in on, dashed away to nothing behind the tail */
+  x.strokeStyle = CARD_INK + '.13)'; x.lineWidth = 1;
+  x.setLineDash([5, 7]);
+  x.beginPath();
+  x.moveTo(cx - L * 1.04, cy + L * .03);
+  x.lineTo(P + 16, cy - L * .16);
+  x.stroke();
+  x.setLineDash([]);
+
+  /* the dated spine, which is the site's one structural idea: every entry
+     hangs off a year. two cards is the fewest that still reads as a run */
+  const sx = P + 34, cardX = P + 48, mw = w * .62;
+  const rows = [{ y: 160 - 42 + P, open: true }, { y: 214 - 42 + P, open: false }];
+  x.fillStyle = CARD_INK + '.12)';
+  x.fillRect(sx, rows[0].y - 8, 1, (rows[1].y + 44) - (rows[0].y - 8) + 8);
+  rows.forEach(r => {
+    x.strokeStyle = CARD_INK + (r.open ? '.16)' : '.09)'); x.lineWidth = 1;
+    x.strokeRect(cardX + .5, r.y + .5, mw, 44);
+    if (r.open) {
+      x.fillStyle = 'rgba(223,231,224,.035)';
+      x.fillRect(cardX, r.y, mw, 44);
+    }
+    /* the year, the heaviest mark on the row because it is the heaviest
+       mark there, and the stop on the spine that carries it */
+    cardBar(x, cardX + 14, r.y + 12, 38, 7, r.open ? '.44' : '.22');
+    cardBar(x, cardX + 66, r.y + 13, mw * .46, 3, r.open ? '.22' : '.13');
+    cardBar(x, cardX + 66, r.y + 22, mw * .30, 3, r.open ? '.22' : '.13');
+    if (r.open) cardBar(x, cardX + 14, r.y + 32, 46, 2.5, '.30');
+    /* the one coral on the card is the entry being read */
+    x.fillStyle = r.open ? CARD_CORAL + '.90)' : CARD_INK + '.20)';
+    x.beginPath(); x.arc(sx + .5, r.y + 15, r.open ? 3.4 : 2.2, 0, TAU); x.fill();
+  });
+
+  /* the chapter rail down the right edge, five stops with the read one lit */
+  const rx = P + w - 24;
+  for (let i = 0; i < 5; i++) {
+    const ry = P + 40 + i * 20;
+    cardBar(x, rx - 22, ry, 16, 2, i === 2 ? '.34' : '.13');
+    x.fillStyle = CARD_INK + (i === 2 ? '.42)' : '.16)');
+    x.beginPath(); x.arc(rx + 2, ry + 1, i === 2 ? 2.8 : 2, 0, TAU); x.fill();
+  }
 }
 
-const CARD_ART = { autodex: cardArtAutodex, shop: cardArtShop, scene: cardArtScene };
+const CARD_ART = { autodex: cardArtAutodex, shop: cardArtShop, aero: cardArtAero };
 
 function texCardPlate(seed, gx, gy, kind) {
   const W = 640, H = 400, c = cvs(W, H), x = c.getContext('2d');
@@ -5348,11 +5399,13 @@ const WORK_INFO = {
              Source: 'Figma to production' },
     cta: 'View live site', plate: [9203, .32, .58, 'shop']
   },
-  scene: {
-    tag: 'WebGL', title: 'Monolith',
-    body: 'The page you are reading. A board-formed concrete slab at the head of a forty-step flight, rendered live in Three.js — every piece of geometry and every texture in the scene generated in JavaScript at load, with no model files and no image assets.',
-    facts: { Role: 'Design and build', Stack: 'Three.js, GLSL, Canvas 2D', Technique: 'Planar reflection, cloth simulation' },
-    cta: 'Back to the top', plate: [9307, .54, .30, 'scene']
+  aero: {
+    tag: 'Personal project — Interactive exhibition', title: 'AERO',
+    body: 'A century of Lockheed aviation read as one continuous record — five chapters from the 1912 origins through to the present, sixteen dated milestones that open into field notes and the sources behind them, and an ocean horizon held under the whole scroll. An independent educational project, not affiliated with Lockheed Martin.',
+    facts: { Role: 'Design and build', Stack: 'React, Framer Motion, SVG',
+             Contents: 'Five chapters, sixteen milestones',
+             Technique: 'Scroll-driven chapters, expandable field notes' },
+    cta: 'View live site', plate: [9307, .54, .30, 'aero']
   }
 };
 
@@ -5806,7 +5859,7 @@ function buildArchive() {
 }
 const DESIGN_DIR = 'assets/work/design/';
 
-const CARD_PLATES = [[9101, .70, .42, 'autodex'], [9203, .32, .58, 'shop'], [9307, .54, .30, 'scene']];
+const CARD_PLATES = [[9101, .70, .42, 'autodex'], [9203, .32, .58, 'shop'], [9307, .54, .30, 'aero']];
 
 function buildCardCloth() {
   /* The plate is the work. texCardPlate composites the actual capture of each
