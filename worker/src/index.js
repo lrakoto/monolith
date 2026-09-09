@@ -12,9 +12,11 @@
    fingerprint. The point is a guestbook, and a guestbook that recorded its
    visitors would be a different and worse thing.
 
-   The tip figure is not stored at all. It is read from Base on demand, so it
-   cannot drift from the truth, and anyone who doubts it can ask the chain the
-   same question this does. */
+   The tip figure is read from Base on demand rather than kept, so it cannot
+   drift from the truth, and anyone who doubts it can ask the chain the same
+   question this does. The one number stored is the balance the wallet already
+   held before any of this went up, so the footer can show what arrived since
+   instead of counting dust as a tip. */
 
 const WALLET   = '0x23178a649a868ff0b8280125982a0fb9e9016164';
 const USDC     = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; /* native USDC on Base, per Circle */
@@ -48,7 +50,14 @@ const json = (body, status = 200) =>
    rpc a call per visitor and costs no storage */
 let tipCache = { at: 0, value: null };
 
-async function tips() {
+/* raw units to a decimal string, without going through a float */
+function fmt(raw) {
+  const unit = 10n ** DECIMALS;
+  const frac = (raw % unit).toString().padStart(Number(DECIMALS), '0').replace(/0+$/, '');
+  return frac ? (raw / unit) + '.' + frac : String(raw / unit);
+}
+
+async function tips(env) {
   if (tipCache.value && Date.now() - tipCache.at < 60000) return tipCache.value;
 
   const body = JSON.stringify({
@@ -72,17 +81,36 @@ async function tips() {
                     + (j && j.error ? ' ' + JSON.stringify(j.error) : ''));
         continue;
       }
-      const raw  = BigInt(j.result);
-      const unit = 10n ** DECIMALS;
-      const frac = (raw % unit).toString().padStart(Number(DECIMALS), '0').replace(/0+$/, '');
-      usdc = frac ? (raw / unit) + '.' + frac : String(raw / unit);
+      usdc = BigInt(j.result);
       break;
     } catch (e) {
       console.log('tip read: ' + rpc + ' threw ' + (e && e.message ? e.message : String(e)));
     }
   }
 
-  const value = { usdc, wallet: WALLET, asset: 'native USDC', network: 'Base', chainId: 8453 };
+  /* What the footer shows is what arrived after this went up, not what the
+     wallet happens to hold. There was dust in it beforehand, and a row reading
+     "0.000658 USDC TIPPED" would be announcing a tip nobody sent. The balance
+     stays in the response so the claim can still be checked against the chain.
+
+     Clamped at zero: withdrawing puts the balance under the baseline, and a
+     negative tip total is not a thing anyone should have to read. */
+  let received = null, balance = null;
+  if (usdc !== null) {
+    balance = fmt(usdc);
+    let base = 0n;
+    try {
+      const row = await env.DB
+        .prepare("SELECT value FROM meta WHERE key = 'tip_baseline_raw'").first();
+      if (row && row.value) base = BigInt(row.value);
+    } catch (e) {
+      console.log('tip baseline read failed: ' + (e && e.message ? e.message : String(e)));
+    }
+    received = fmt(usdc > base ? usdc - base : 0n);
+  }
+
+  const value = { received, balance, wallet: WALLET,
+                  asset: 'native USDC', network: 'Base', chainId: 8453 };
   if (usdc !== null) tipCache = { at: Date.now(), value };
   return value;
 }
@@ -154,7 +182,7 @@ export default {
         }, 404);
       }
 
-      const [counts, tip] = await Promise.all([tally(env), tips()]);
+      const [counts, tip] = await Promise.all([tally(env), tips(env)]);
       const body = { ...counts, tips: tip };
       if (recorded !== undefined) {
         body.recorded = recorded;

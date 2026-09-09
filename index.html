@@ -981,7 +981,8 @@ body.xp-3d .xp li p{ margin-top:4px; }
 .foot ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
 .foot li a{ font-size:13px; color:#8f9a93; transition:color .35s; }
 .foot li a:hover{ color:var(--bone); }
-.foot-brand p{ margin:16px 0 0; max-width:34ch; font-size:13px; color:#79847e; }
+/* > p, so the statement is styled and the tally's own note beside it is not */
+.foot-brand > p{ margin:16px 0 0; max-width:34ch; font-size:13px; color:#79847e; }
 .foot-base{ display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap;
   margin-top:clamp(38px,6vh,74px); padding-top:20px; border-top:1px solid var(--line-soft);
   font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
@@ -993,24 +994,28 @@ body.xp-3d .xp li p{ margin-top:4px; }
    plainly — the alternative was sniffing user agents at the edge, which is
    both spoofable and a worse thing to do.
 
+   It sits in the third cell of the brand row, beside the statement, and takes
+   the ruled-column treatment the rest of the footer uses to separate one thing
+   from the next rather than inventing a divider of its own.
+
    Hidden until the first signal arrives. A row of zeroes is a sadder object
    than no row at all, and the fetch failing leaves the footer exactly as it
    was, which is the right failure for an ornament. */
-.foot-signals{ margin-top:clamp(30px,5vh,58px); padding-top:20px;
-  border-top:1px solid var(--line-soft); }
+.foot-signals{ align-self:center; }
 .foot-signals-k{ display:block; font-size:10px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--muted); }
 /* row, said out loud: .foot ul above sets column for the link lists and this
    inherits it otherwise, which stacks the tallies down the page one per line */
-.foot-signals ul{ list-style:none; margin:14px 0 0; padding:0;
-  display:flex; flex-direction:row; flex-wrap:wrap; gap:28px 44px; }
-.foot-signals li{ display:flex; flex-direction:column; gap:4px; }
-.foot-signals b{ font-size:22px; font-weight:500; color:var(--bone);
+.foot-signals ul{ list-style:none; margin:12px 0 0; padding:0;
+  display:flex; flex-direction:row; flex-wrap:wrap; gap:16px 26px; }
+.foot-signals li{ display:flex; flex-direction:column; gap:3px; }
+.foot-signals b{ font-size:20px; font-weight:500; color:var(--bone);
   font-variant-numeric:tabular-nums; letter-spacing:.01em; }
 .foot-signals li span{ font-size:10px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--muted); }
 .foot-signals li.is-tip b{ color:#e4606c; }
-.foot-signals-note{ margin:16px 0 0; max-width:56ch; font-size:12px; color:#79847e; }
+.foot-signals-note{ margin:12px 0 0; max-width:30ch; font-size:11px;
+  line-height:1.5; color:#79847e; }
 
 /* ========================================================= progress bar */
 /* How far down the page you are, as one line rather than as seven marks. The
@@ -1191,11 +1196,19 @@ body[data-layout-closing="b"] .fin .fin-acts{ grid-column:1; grid-row:3; justify
      compact ruled index beneath it. */
 body[data-layout-footer="b"] .foot-grid{ grid-template-columns:repeat(3,1fr); }
 body[data-layout-footer="b"] .foot-brand{
-  grid-column:1 / -1; display:grid; grid-template-columns:70px minmax(0,1fr); align-items:center;
+  grid-column:1 / -1; display:grid;
+  /* logo, statement, tally. auto rather than a fraction so the column collapses
+     to nothing while the tally is hidden and the statement keeps the whole row,
+     which is how the footer looked before any of this existed. */
+  grid-template-columns:70px minmax(0,1fr) auto; align-items:center;
   padding-bottom:34px; margin-bottom:8px; border-bottom:1px solid var(--line-soft);
 }
+body[data-layout-footer="b"] .foot-brand .foot-signals:not([hidden]){
+  padding-left:clamp(18px,2.2vw,34px); border-left:1px solid var(--line-soft);
+  margin-left:clamp(18px,2.2vw,34px);
+}
 body[data-layout-footer="b"] .foot-brand svg{ width:54px; height:54px; }
-body[data-layout-footer="b"] .foot-brand p{
+body[data-layout-footer="b"] .foot-brand > p{
   margin:0; max-width:48ch; font-size:clamp(18px,2vw,30px); line-height:1.35; color:var(--bone-dim);
 }
 body[data-layout-footer="b"] .foot-grid > div:nth-child(n+3){
@@ -1261,6 +1274,8 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 
   body[data-layout-footer="b"] .foot-grid{ grid-template-columns:1fr; }
   body[data-layout-footer="b"] .foot-brand{ grid-column:auto; grid-template-columns:minmax(0,1fr); row-gap:16px; }
+  body[data-layout-footer="b"] .foot-brand .foot-signals:not([hidden]){
+    padding-left:0; margin-left:0; border-left:0; }
   body[data-layout-footer="b"] .foot-grid > div:nth-child(n+3){ padding-left:0; border-left:0; }
   body[data-layout-footer="b"] .foot-base{ display:flex; }
   body[data-layout-footer="b"] .foot-base span:last-child{ text-align:left; }
@@ -1646,6 +1661,12 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       </svg>
       <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. Every surface in the
         scene backdrop on this page is generated in browser at load.</p>
+      <div class="foot-signals" id="foot-signals" hidden>
+        <span class="foot-signals-k">Signals received</span>
+        <ul id="foot-signals-list"></ul>
+        <p class="foot-signals-note">Left by visiting agents, self-reported and
+          unverified.</p>
+      </div>
     </div>
     <div><h4>Sections</h4><ul>
       <li><a href="#gate" data-cursor>Welcome</a></li>
@@ -1664,13 +1685,6 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       <li><a href="https://www.linkedin.com/in/lovarakoto/" target="_blank" rel="noopener" data-cursor>LinkedIn</a></li>
       <li><a href="https://vimeo.com/threeohfivestudios" target="_blank" rel="noopener" data-cursor>Vimeo</a></li>
     </ul></div>
-  </div>
-  <div class="foot-signals" id="foot-signals" hidden>
-    <span class="foot-signals-k">Signals received</span>
-    <ul id="foot-signals-list"></ul>
-    <p class="foot-signals-note">Left by visiting agents, self-reported and unverified.
-      The tip figure is the wallet's live balance on Base, which anyone can check
-      against the chain.</p>
   </div>
   <div class="foot-base">
     <span>© 2026 ThreeOhFive Studios — Lova Rakoto</span>
@@ -7939,12 +7953,14 @@ function loadSignals() {
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if (!d || !d.signals) return;
-      const tip = d.tips && d.tips.usdc ? parseFloat(d.tips.usdc) : 0;
+      /* received, not the wallet balance: the difference is dust that was
+         already there, and calling that a tip would be a small lie */
+      const tip = d.tips && d.tips.received ? parseFloat(d.tips.received) : 0;
       const rows = [];
       if (d.signals.hello)     rows.push(['said hello',  d.signals.hello, false]);
       if (d.signals.helpful)   rows.push(['found it useful', d.signals.helpful, false]);
       if (d.signals.unhelpful) rows.push(['found it not',    d.signals.unhelpful, false]);
-      if (tip > 0)             rows.push(['USDC tipped', d.tips.usdc, true]);
+      if (tip > 0)             rows.push(['USDC tipped', d.tips.received, true]);
       /* nothing has happened yet, so there is nothing to say */
       if (!rows.length) return;
 
