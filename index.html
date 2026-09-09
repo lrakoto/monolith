@@ -6286,13 +6286,16 @@ function mirrorSize(M) {
 }
 
 function initMirror() {
-  /* the phone path is already spending everything it has on the main pass */
-  if (LOW || qs('mirror', '1') === '0' || !WORLD.floorMat) return;
-  [MIRROR, MIRROR2].forEach(M => {
+  /* one small reflection on phones, refreshed every other frame. The pond
+     needs an image of the scene to read as a mirror; an environment highlight
+     alone kept the lower level looking like coloured glass. */
+  if (qs('mirror', '1') === '0' || !WORLD.floorMat) return;
+  if (LOW) MIRROR.res = .28;
+  (LOW ? [MIRROR] : [MIRROR, MIRROR2]).forEach(M => {
     const [w, h] = mirrorSize(M);
     M.target = new THREE.WebGLRenderTarget(w, h, {
       minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
-      type: THREE.HalfFloatType, depthBuffer: true
+      type: LOW ? THREE.UnsignedByteType : THREE.HalfFloatType, depthBuffer: true
     });
     M.cam = new THREE.PerspectiveCamera();
     M.cam.layers.set(0);             /* layer 0 only — no grass, no letters */
@@ -6386,11 +6389,11 @@ function aimPools(list, M) {
 }
 
 function renderMirror() {
-  if (!MIRROR.on) return;
+  if (!MIRROR.on || (LOW && FRAME % 2 === 0)) return;
   renderMirrorPlane(MIRROR, WORLD.floor);
 
   /* the landing only exists on screen once the rig has climbed the flight */
-  MIRROR2.live = RIG.smooth > 2.55;
+  MIRROR2.live = MIRROR2.on && RIG.smooth > 2.55;
   if (MIRROR2.live && LAND.mats.length) {
     renderMirrorPlane(MIRROR2, null);
     aimPools(LAND, MIRROR2);
@@ -6607,7 +6610,7 @@ function injectPondBed(sh) {
     `#include <color_fragment>
      float bedWeight=1.-smoothstep(-.24,-.035,vPondBedWorld.y);
      vec3 bedStone=pow(texture2D(tPondBed,vPondBedWorld.xz*.12).rgb,vec3(2.2));
-     bedStone*=mix(vec3(.80,.95,.90),vec3(.35,.63,.64),clamp(-vPondBedWorld.y/1.6,0.,1.));
+     bedStone*=mix(vec3(.86,.89,.85),vec3(.45,.49,.49),clamp(-vPondBedWorld.y/1.6,0.,1.));
      diffuseColor.rgb=mix(diffuseColor.rgb,bedStone,bedWeight);`);
   sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_maps>',
     `#include <normal_fragment_maps>
@@ -6616,8 +6619,8 @@ function injectPondBed(sh) {
 }
 
 function buildPond() {
-  const mat=new THREE.MeshPhysicalMaterial({color:0x08282d,roughness:.085,
-    metalness:.02,clearcoat:1,clearcoatRoughness:.065,envMapIntensity:2.0,
+  const mat=new THREE.MeshPhysicalMaterial({color:0x111719,roughness:.035,
+    metalness:.02,clearcoat:1,clearcoatRoughness:.025,envMapIntensity:2.2,
     transparent:true,opacity:TUNE.puddleOpacity,depthWrite:false});
   const uni={
     uPondTime:WET_TIME,
@@ -6644,7 +6647,7 @@ function buildPond() {
          +.018*sin(vPondWorld.z*1.1-vPondWorld.x*.27);
        if(pondEdge>1.) discard;
        diffuseColor.a*=1.-smoothstep(.945,1.,pondEdge);
-       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.035,.078,.063),smoothstep(.72,.98,pondEdge));`);
+       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.040,.046,.042),smoothstep(.72,.98,pondEdge));`);
     sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_maps>',
       `#include <normal_fragment_maps>
        float pondA=vPondWorld.x*1.35+vPondWorld.z*.75-uPondTime*.42;
@@ -6657,13 +6660,13 @@ function buildPond() {
        float pondFres=pow(1.-clamp(pondView.y,0.,1.),2.8);
        /* looking down reveals the stone bed; across the pond the surface
           holds the sky and the lanterns instead. */
-       diffuseColor.a*=mix(.48,.96,clamp(pondFres*1.45,0.,1.));
+       diffuseColor.a*=mix(.78,.99,clamp(pondFres*1.45,0.,1.));
        #ifdef POND_REFLECTION
          vec2 pondUV=vPondMirror.xy/max(vPondMirror.w,.0001);
-         pondUV+=pondN.xz*.05;
+         pondUV+=pondN.xz*.022;
          vec3 pondReflection=texture2D(tPondMirror,clamp(pondUV,.002,.998)).rgb;
-         outgoingLight=mix(outgoingLight,pondReflection*vec3(.86,.97,1.0),
-           clamp((.25+pondFres*(.70+uPondFresnel*.15))*uPondReflect,0.,.95));
+         outgoingLight=mix(outgoingLight,pondReflection*vec3(.98),
+           clamp((.52+pondFres*(.60+uPondFresnel*.15))*uPondReflect,0.,.985));
        #else
          /* a pair of broken warm trails keeps the lower-cost water legible
             without a second scene render on a phone. */
@@ -6676,7 +6679,7 @@ function buildPond() {
        outgoingLight*=1.+pondCrest*uPondShimmer*.22;
        #include <output_fragment>`);
   };
-  mat.customProgramCacheKey=()=> 'continuous-pond-v2';
+  mat.customProgramCacheKey=()=> 'continuous-pond-v3';
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(48,44),mat);
   mesh.rotation.x=-Math.PI/2;mesh.position.set(0,.026,-4);
   mesh.layers.set(1);mesh.renderOrder=4;scene.add(mesh);
@@ -6684,10 +6687,9 @@ function buildPond() {
 }
 
 function buildPuddles() {
-  /* one merged mesh also fits the phone path, which skips planar mirrors. */
   buildStairGlints();
   buildPond();
-  if (!MIRROR.on) return;
+  if (!MIRROR2.on) return;
   buildStairFilm();
   /* the landing pools, on the second plane */
   LANDING.forEach((p, i) => {
@@ -7649,7 +7651,7 @@ function resize() {
     const want = (!LOW && PERF.scale > .78) ? 2 : 0;
     if (POST.scene.samples !== want) { POST.scene.samples = want; POST.scene.dispose(); }
   }
-  if (MIRROR.on) [MIRROR, MIRROR2].forEach(M => { const [mw, mh] = mirrorSize(M); M.target.setSize(mw, mh); });
+  if (MIRROR.on) [MIRROR, MIRROR2].filter(M => M.on).forEach(M => { const [mw, mh] = mirrorSize(M); M.target.setSize(mw, mh); });
   CARDS.forEach(C => { C.dirty = true; });
   if (WANT_SHADOW && WORLD.key) WORLD.key.shadow.needsUpdate = true;
   if (WORLD.embers) WORLD.embers.material.uniforms.uSize.value = h * renderer.getPixelRatio() * .5;
