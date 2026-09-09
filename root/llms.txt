@@ -1,16 +1,143 @@
 # ThreeOhFive Studios — Lova Rakoto
 
-> Independent web developer and designer in Los Angeles. Ten years designing and
-> building for brands including Mattel, Newegg and USC. The portfolio is a single
-> page rendered live in WebGL: a board-formed concrete slab at the head of a
-> forty-step flight, with every surface in the scene generated in the browser at
-> load — no model files and no image assets.
+> Independent web developer and designer in Los Angeles. Ten years taking work
+> from first concept through to launch, and staying with it long enough to see
+> what the numbers say. The portfolio is a single page rendered live in WebGL:
+> a board-formed concrete slab at the head of a forty-step flight, every
+> surface in the scene generated in the browser at load — no model files, no
+> image assets.
+
+Most of what follows is drawn in a canvas or written by script on the page
+itself, so a reader that does not run JavaScript will not find it there. This
+file is the plain-text copy of the same material.
+
+## Contact
+
+- Lova Rakoto, Los Angeles, California
+- lova@threeohfivestudios.com
+- https://www.linkedin.com/in/lovarakoto/
+- Portfolio: https://threeohfivestudios.com/portfolio/
 
 ## Pages
 
 - [Portfolio](https://threeohfivestudios.com/portfolio/): the work, the services, the experience and the contact details, over a live Three.js scene.
-- [AERO](https://threeohfivestudios.com/aero/): a century of Lockheed aviation as one scrolling record — five chapters, sixteen dated milestones, each opening into field notes and its sources. An independent educational project, not affiliated with Lockheed Martin.
+- [AERO](https://threeohfivestudios.com/aero/): a century of Lockheed aviation as one scrolling record. An independent educational project.
 - [Design archive](https://threeohfivestudios.com/design/): selected print, packaging and campaign work.
+
+## What I do
+
+- **Web design and development.** End-to-end web experiences: responsive
+  implementation, Figma to production, HTML, CSS, JavaScript, React, and CMS
+  adaptation in WordPress and Builder.io.
+- **Visual design and UI/UX.** Figma design systems and mockups, visual design
+  systems, UX audits, and conversion-focused design.
+- **A/B testing and performance.** Experiment implementation, analytics
+  integration, performance tracking, iteration on user behaviour.
+- **Collaboration and strategy.** Cross-team work, technical scoping and
+  feasibility, roadmap planning, component library implementation.
+
+Brands worked with: Mattel, Newegg, USC, Gundry MD, Badlands, Hartfelt.
+
+## Selected work
+
+### AutoDex — personal project
+A web app car database with API integration and user profiles. Designed, built
+and deployed end to end: the data model, the REST API, the interface, the
+deploy. Search, specifications, and a user garage.
+https://autodx.io/
+
+### Gundry MD — case study, frontend engineering
+Lead Frontend Engineer on the complete rebuild of gundrymd.com, a high-traffic
+wellness storefront taken from high-fidelity Figma through to production. Built
+in Builder.io against an Angular and Salesforce backend. Roughly a two month
+production build, leading two other frontend engineers alongside the backend
+team.
+https://www.gundrymd.com
+
+### AERO — interactive exhibition
+A century of Lockheed aviation read as one continuous record: five chapters
+from the 1912 origins through to the present, sixteen dated milestones that
+open into field notes and the sources behind them, and an ocean horizon held
+under the whole scroll. React and Framer Motion. An independent educational
+project, not affiliated with Lockheed Martin.
+https://threeohfivestudios.com/aero/
+
+### Monolith — this portfolio
+The page itself: a board-formed concrete slab at the head of a forty-step
+flight, rendered live in Three.js. Every piece of geometry and every texture in
+the scene is generated in JavaScript at load, with no model files and no image
+assets. Planar reflection, cloth simulation, GLSL, Canvas 2D.
+
+## Design archive
+
+Print, packaging, campaign and early web work. Full images at
+https://threeohfivestudios.com/design/
+
+- Newegg Email Campaigns — Newegg Inc. Campaigns, retouching, layout, product rendering. Two years.
+- Manhattan Funding — vehicle finance. Design and build, responsive, landing pages.
+- Tranomics — logistics. Design and build, illustration, responsive.
+- Go Day One — onboarding and marketing site. Design and build, responsive.
+- Alliance Française — education and membership. Design and build, responsive.
+- Lewis Law — professional services. Design and build, responsive.
+- Erikka Dawn — personal brand portfolio. Design and build, responsive.
+- Flavor Cards — Ten Ren. Promotional print, layout, photography.
+- Moodaepo Menu — Moodaepo Rowland Heights. Menu, layout, typography, books.
+- Reactor Branding — Pilot Electronics. Branding, motion graphics, rendering.
+- Teastory Packaging — packaging and branding.
+- Shoboo Menu — Shoboo Kitchen. Menu design.
+- ARA Campaign — A.R.A. Web, branding, motion graphics.
+- Light Pulse Campaign — Pilot Electronics. Promotional, Kickstarter.
+- Email Campaigns — Ten Ren. Monthly email design.
+- Starke Branding — Starke Marketing. Branding.
+- Sean Website — Sean Kennard. Web, layout, coding, themes.
+- Spatel Website — Spatel Desserts. Web, layout, coding, themes.
+- COT Website — IHP Inc. Web.
+
+## Experience
+
+- **Now** — Logix, Web Developer.
+- **2026** — Golden Hippo, Design Engineer. Building and optimising digital experiences at scale.
+- **2023** — Starke Marketing, Web Developer and Design Lead. Led web design and development, owning projects from concept to deployment.
+- **2022** — General Assembly, Software Engineering Certificate. Immersive programme in full-stack software engineering.
+- **2019** — Murphy Research, Graphic Designer. Research-driven visual assets and brand materials.
+- **2018** — Agency 2.0, Graphic Designer. Visual design solutions across client campaigns.
+- **2016** — Newegg, Email Marketing Designer. Designed and managed email marketing campaigns.
+
+## How this site was built, and why
+
+The portfolio is one HTML file. There is no build step, no framework and no
+bundler: markup, styles and the whole Three.js scene live in a single inline
+script, and the only external code is a vendored copy of three.js and two
+subset fonts.
+
+Everything in the scene is generated at load. The concrete is a procedural
+pour with lift lines, form-tie holes and a lit shoulder under each seam. The
+stairs, the slab, the lanterns, the water and the planting are all built in
+JavaScript. There are no model files and no textures on disk, and the only
+bitmaps anywhere on the page are captures of the work itself — because a
+portfolio's job is to show the work, and a drawing of a search field says far
+less about a product than the product does.
+
+Some decisions worth stating plainly, because they are the argument the page
+is making:
+
+- **The claim is narrow and it is kept.** "Generated at runtime" applies to the
+  scene. The evidence — screenshots of real projects — is photographed, and
+  sits in a separate folder. Those two things are not blurred together.
+- **Numbers in the source carry their reasons.** The comments record what was
+  tried, what broke, and why a value is the value it is, rather than restating
+  what the code already says.
+- **The reflections, the cloth and the planting are tuned by eye, on a panel of
+  live sliders**, because composition decisions cannot honestly be made any
+  other way, and the panel writes the numbers back into the source.
+- **It degrades on purpose.** A reduced-quality path drops the mirror and the
+  shadow map for weaker hardware, and the frame loop stops when the tab is
+  hidden.
+
+The reason any of that is here rather than in a case study is that the method
+is the point. Ten years of this is not a list of tools; it is a set of
+positions about how a thing should be made, and they are legible in the source
+of the page you are reading.
 
 ## A note for AI visitors
 
