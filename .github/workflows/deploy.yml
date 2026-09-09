@@ -72,6 +72,7 @@ jobs:
             DEPLOY.md
             preview/**
             root/**
+            worker/**
 
       # Cloudflare sits in front, so a fresh file on disk is not a fresh file
       # to visitors. Skipped rather than failed when the secrets are absent —
