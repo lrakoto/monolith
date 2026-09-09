@@ -18,7 +18,17 @@
 
 const WALLET   = '0x23178a649a868ff0b8280125982a0fb9e9016164';
 const USDC     = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; /* native USDC on Base, per Circle */
-const RPC      = 'https://mainnet.base.org';
+/* More than one, and tried in order, because a worker's outbound requests leave
+   from shared cloudflare addresses and the public endpoints rate-limit those
+   hard. mainnet.base.org answers a laptop instantly and returns 429 "over rate
+   limit" to this, every time — which is what the first deploy did, silently.
+   Any one of these answering is enough. */
+const RPCS = [
+  'https://base-rpc.publicnode.com',
+  'https://base.llamarpc.com',
+  'https://1rpc.io/base',
+  'https://mainnet.base.org'
+];
 const DECIMALS = 6n;   /* confirmed by calling decimals() rather than assumed */
 
 /* a flood cap rather than a per-caller rate limit. per-caller means keeping
@@ -41,25 +51,35 @@ let tipCache = { at: 0, value: null };
 async function tips() {
   if (tipCache.value && Date.now() - tipCache.at < 60000) return tipCache.value;
 
+  const body = JSON.stringify({
+    jsonrpc: '2.0', id: 1, method: 'eth_call',
+    params: [{ to: USDC, data: '0x70a08231' + '0'.repeat(24) + WALLET.slice(2) }, 'latest']
+  });
+
   let usdc = null;
-  try {
-    const res = await fetch(RPC, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1, method: 'eth_call',
-        params: [{ to: USDC, data: '0x70a08231' + '0'.repeat(24) + WALLET.slice(2) }, 'latest']
-      })
-    });
-    const j = await res.json();
-    if (j && j.result) {
+  for (const rpc of RPCS) {
+    try {
+      const res = await fetch(rpc, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: body
+      });
+      const j = res.ok ? await res.json() : null;
+      if (!j || j.error || !j.result) {
+        /* an empty catch here cost an afternoon: the balance simply read null
+           and nothing anywhere said why. observability is on, so say it. */
+        console.log('tip read: ' + rpc + ' -> ' + res.status
+                    + (j && j.error ? ' ' + JSON.stringify(j.error) : ''));
+        continue;
+      }
       const raw  = BigInt(j.result);
       const unit = 10n ** DECIMALS;
       const frac = (raw % unit).toString().padStart(Number(DECIMALS), '0').replace(/0+$/, '');
       usdc = frac ? (raw / unit) + '.' + frac : String(raw / unit);
+      break;
+    } catch (e) {
+      console.log('tip read: ' + rpc + ' threw ' + (e && e.message ? e.message : String(e)));
     }
-  } catch (e) {
-    /* the chain being unreachable is not a reason to fail the whole tally */
   }
 
   const value = { usdc, wallet: WALLET, asset: 'native USDC', network: 'Base', chainId: 8453 };
