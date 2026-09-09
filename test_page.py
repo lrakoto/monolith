@@ -2,6 +2,7 @@
 failure it can have here is silent: a syntax error in the inline script leaves
 the preloader spinning, and a tuning key that exists in one of its three homes
 but not the others just quietly does nothing."""
+import json
 import re
 import shutil
 import subprocess
@@ -16,6 +17,12 @@ SCRIPT_RE = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.S)
 TUNE_RE = re.compile(r"const TUNE = \{(.*?)\n\};", re.S)
 SCHEMA_RE = re.compile(r"const TUNE_SCHEMA = \[(.*?)\n\];", re.S)
 HANDLERS_RE = re.compile(r"buildTunePanel\(\{(.*?)\n  \}\);", re.S)
+SRC_RE = re.compile(r"const WORK_SRC\s+= \{(.*?)\};", re.S)
+INFO_RE = re.compile(r"const WORK_INFO = \{(.*?)\n\};", re.S)
+PLATES_RE = re.compile(r"const CARD_PLATES = \[(.*?)\];", re.S)
+
+# published to the domain root from main, so it is simply absent on a branch
+LLMS = INDEX.parent / "root" / "llms.txt"
 
 
 def inline_script():
@@ -62,6 +69,84 @@ class TuningPanelTests(unittest.TestCase):
         groups = re.findall(r"^\s*\['\w+',[^\]]*'([^']+)'\]", SCHEMA_RE.search(SOURCE).group(1), re.M)
         runs = [g for i, g in enumerate(groups) if i == 0 or g != groups[i - 1]]
         self.assertEqual(len(runs), len(set(runs)), f"a group is split: {runs}")
+
+
+class WorkCardTests(unittest.TestCase):
+    """A featured project is spelled out in four places that have to agree on
+    the same key — the card's data-work, the capture in WORK_SRC, the panel copy
+    in WORK_INFO, and the cloth plate in CARD_PLATES. Nothing at runtime
+    complains when they drift: a card whose key is missing from WORK_INFO simply
+    does not open, and a plate keyed to nothing falls back to the drawing, which
+    looks deliberate."""
+
+    def setUp(self):
+        self.cards = set(re.findall(r'data-work="(\w+)"', SOURCE))
+        self.src_keys = set(re.findall(r"^\s*(\w+):\s*'assets/work/",
+                                       SRC_RE.search(SOURCE).group(1), re.M))
+        self.info = set(re.findall(r"^  (\w+): \{", INFO_RE.search(SOURCE).group(1), re.M))
+        self.plates = set(re.findall(r"'(\w+)'\]", PLATES_RE.search(SOURCE).group(1)))
+        # the same kind again, inside each WORK_INFO entry, where it picks the
+        # drawing the detail panel falls back to when a capture is missing
+        self.info_plates = set(re.findall(r"plate: \[[^\]]*'(\w+)'\]",
+                                          INFO_RE.search(SOURCE).group(1)))
+
+    def test_every_card_has_panel_copy(self):
+        self.assertEqual(self.cards - self.info, set())
+
+    def test_every_panel_belongs_to_a_card(self):
+        self.assertEqual(self.info - self.cards, set())
+
+    def test_every_plate_names_a_card(self):
+        self.assertEqual(self.plates - self.cards, set())
+
+    def test_every_capture_names_a_card(self):
+        self.assertEqual(self.src_keys - self.cards, set())
+
+    def test_every_panel_plate_names_a_card(self):
+        self.assertEqual(self.info_plates - self.cards, set())
+
+
+class MachineReadableTests(unittest.TestCase):
+    """The page states the same work three times over for readers that do not
+    run scripts: the JSON-LD in the head, the noscript block, and llms.txt.
+
+    The prose is deliberately different in each — a panel body, a fallback, a
+    plain-text mirror — so none of this asserts the wording. What it asserts is
+    the part that is silently wrong when it drifts: whether the same projects
+    are named, and whether they point at the same places."""
+
+    def setUp(self):
+        blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>',
+                            SOURCE, re.S)
+        self.assertTrue(blocks, "the head has no JSON-LD block")
+        self.graph = json.loads(blocks[0])["@graph"]
+        self.parts = [p for n in self.graph if n["@type"] == "ProfilePage"
+                      for p in n.get("hasPart", [])]
+
+    def test_json_ld_parses(self):
+        """A malformed block is not an error anywhere — it is simply ignored by
+        every reader it was written for, which is indistinguishable from never
+        having added it."""
+        self.assertTrue(self.parts, "no projects in the JSON-LD")
+
+    def test_json_ld_links_match_the_cards(self):
+        hrefs = set(re.findall(r'<a class="card" href="([^"]+)"', SOURCE))
+        for part in self.parts:
+            self.assertIn(part["url"], hrefs,
+                          f"{part['name']} points somewhere no card does")
+
+    def test_noscript_names_every_featured_project(self):
+        noscript = re.search(r"<noscript>(.*?)</noscript>", SOURCE, re.S)
+        self.assertIsNotNone(noscript, "the noscript fallback is gone")
+        body = noscript.group(1)
+        for title in re.findall(r"title: '([^']+)'", INFO_RE.search(SOURCE).group(1)):
+            self.assertIn(title, body, f"{title} is missing from the noscript block")
+
+    @unittest.skipUnless(LLMS.exists(), "root/llms.txt is published from main")
+    def test_llms_txt_names_every_featured_project(self):
+        text = LLMS.read_text(encoding="utf-8")
+        for title in re.findall(r"title: '([^']+)'", INFO_RE.search(SOURCE).group(1)):
+            self.assertIn(title, text, f"{title} is missing from llms.txt")
 
 
 class BootTests(unittest.TestCase):
