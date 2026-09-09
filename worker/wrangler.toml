@@ -20,7 +20,7 @@ routes = [
 [[d1_databases]]
 binding       = "DB"
 database_name = "signals"
-database_id   = "PASTE_AFTER_CREATE"
+database_id   = "f30dee95-6b2c-4128-b8b4-93f3ad339e91"
 
 [observability]
 enabled = true
