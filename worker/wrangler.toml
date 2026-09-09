@@ -1,0 +1,26 @@
+# The route is /api/* and nothing else. One level broader — the zone root, or a
+# bare threeohfivestudios.com/* — would put this worker in front of the
+# WordPress site and the portfolio both, and a bug in a footer ornament would
+# then be an outage. Keep the pattern narrow.
+#
+# database_id is filled in by `wrangler d1 create signals`; it is an
+# identifier rather than a secret, and the binding is what the worker reads.
+name = "signals"
+main = "src/index.js"
+# The newest date the installed wrangler runtime accepts. Ahead of this and the
+# local dev server refuses to start, which is a confusing failure to meet: it
+# reads as a broken worker rather than a stale toolchain.
+compatibility_date = "2026-05-25"
+workers_dev = false
+
+routes = [
+  { pattern = "threeohfivestudios.com/api/*", zone_name = "threeohfivestudios.com" }
+]
+
+[[d1_databases]]
+binding       = "DB"
+database_name = "signals"
+database_id   = "PASTE_AFTER_CREATE"
+
+[observability]
+enabled = true

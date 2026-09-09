@@ -986,6 +986,32 @@ body.xp-3d .xp li p{ margin-top:4px; }
   margin-top:clamp(38px,6vh,74px); padding-top:20px; border-top:1px solid var(--line-soft);
   font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
 
+/* ---------------------------------------------------- signals received
+   A guestbook, not analytics. Agents that read llms.txt can call /api/hello
+   and /api/signal, and this is what they said. Everything here is
+   self-reported and none of it is verified, which the note under it says
+   plainly — the alternative was sniffing user agents at the edge, which is
+   both spoofable and a worse thing to do.
+
+   Hidden until the first signal arrives. A row of zeroes is a sadder object
+   than no row at all, and the fetch failing leaves the footer exactly as it
+   was, which is the right failure for an ornament. */
+.foot-signals{ margin-top:clamp(30px,5vh,58px); padding-top:20px;
+  border-top:1px solid var(--line-soft); }
+.foot-signals-k{ display:block; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--muted); }
+/* row, said out loud: .foot ul above sets column for the link lists and this
+   inherits it otherwise, which stacks the tallies down the page one per line */
+.foot-signals ul{ list-style:none; margin:14px 0 0; padding:0;
+  display:flex; flex-direction:row; flex-wrap:wrap; gap:28px 44px; }
+.foot-signals li{ display:flex; flex-direction:column; gap:4px; }
+.foot-signals b{ font-size:22px; font-weight:500; color:var(--bone);
+  font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+.foot-signals li span{ font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--muted); }
+.foot-signals li.is-tip b{ color:#e4606c; }
+.foot-signals-note{ margin:16px 0 0; max-width:56ch; font-size:12px; color:#79847e; }
+
 /* ========================================================= progress bar */
 /* How far down the page you are, as one line rather than as seven marks. The
    ruler read as a measuring device — it told you there were seven of something
@@ -1638,6 +1664,13 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       <li><a href="https://www.linkedin.com/in/lovarakoto/" target="_blank" rel="noopener" data-cursor>LinkedIn</a></li>
       <li><a href="https://vimeo.com/threeohfivestudios" target="_blank" rel="noopener" data-cursor>Vimeo</a></li>
     </ul></div>
+  </div>
+  <div class="foot-signals" id="foot-signals" hidden>
+    <span class="foot-signals-k">Signals received</span>
+    <ul id="foot-signals-list"></ul>
+    <p class="foot-signals-note">Left by visiting agents, self-reported and unverified.
+      The tip figure is the wallet's live balance on Base, which anyone can check
+      against the chain.</p>
   </div>
   <div class="foot-base">
     <span>© 2026 ThreeOhFive Studios — Lova Rakoto</span>
@@ -7022,8 +7055,46 @@ function start() {
   window.__305 = window.__secret = { RIG: RIG, WORLD: WORLD, WORD: WORD, CAM: CAM, POST: POST, renderer: renderer, scene: scene, camera: camera, anchors: () => anchors };
 }
 
+/* The footer tally. Same origin, so no key and no third party; the worker on
+   /api/* holds the counts and reads the tip balance off Base itself.
+
+   Every failure path here is the same one: leave the row hidden. A footer
+   ornament has no business reporting its own outage, and the page has to be
+   readable with the endpoint missing entirely, which is how it shipped before
+   the worker existed. */
+function loadSignals() {
+  const wrap = $('#foot-signals'), list = $('#foot-signals-list');
+  if (!wrap || !list) return;
+
+  fetch('/api/tally', { headers: { accept: 'application/json' } })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (!d || !d.signals) return;
+      const tip = d.tips && d.tips.usdc ? parseFloat(d.tips.usdc) : 0;
+      const rows = [];
+      if (d.signals.hello)     rows.push(['said hello',  d.signals.hello, false]);
+      if (d.signals.helpful)   rows.push(['found it useful', d.signals.helpful, false]);
+      if (d.signals.unhelpful) rows.push(['found it not',    d.signals.unhelpful, false]);
+      if (tip > 0)             rows.push(['USDC tipped', d.tips.usdc, true]);
+      /* nothing has happened yet, so there is nothing to say */
+      if (!rows.length) return;
+
+      list.replaceChildren();
+      rows.forEach(([label, value, isTip]) => {
+        const li = document.createElement('li');
+        if (isTip) li.className = 'is-tip';
+        const b = document.createElement('b'); b.textContent = String(value);
+        const s = document.createElement('span'); s.textContent = label;
+        li.append(b, s); list.appendChild(li);
+      });
+      wrap.hidden = false;
+    })
+    .catch(() => {});
+}
+
 if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 0);
 else addEventListener('DOMContentLoaded', boot);
+addEventListener('load', () => setTimeout(loadSignals, 1200));
 })();
 </script>
 </body>
