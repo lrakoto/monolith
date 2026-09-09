@@ -75,6 +75,7 @@ jobs:
             CLAUDE.md
             DEPLOY.md
             preview/**
+            root/**
 
       # Same skip-rather-than-fail shape as deploy.yml, and for the same
       # reason: the secrets context is not allowed in a step-level `if:` and
