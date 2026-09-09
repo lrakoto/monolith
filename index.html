@@ -61,6 +61,82 @@
 <meta name="twitter:image:alt" content="A board-formed concrete slab at night, lit by one horizontal slot, standing above a forty-step flight, with the numerals 3 0 5 across the frame.">
 
 <link rel="canonical" href="https://threeohfivestudios.com/portfolio/">
+
+<!-- The machine-readable half of the page. Everything a reader can see here is
+     drawn in a canvas or written by the script, so a parser that does not run
+     JavaScript gets the headings and very little else. This block, and the
+     markdown mirror below it, are where the same facts are stated plainly.
+
+     Kept to what the page already says out loud. It is a description of the
+     work, not a second set of claims for machines only. -->
+<link rel="alternate" type="text/markdown" href="https://threeohfivestudios.com/llms.txt" title="Plain-text summary of this site"><!-- SITE-URL -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://threeohfivestudios.com/portfolio/#lova",
+      "name": "Lova Rakoto",
+      "jobTitle": "Web developer and designer",
+      "description": "Independent web developer and designer in Los Angeles. Ten years taking projects from first concept through to launch, for brands including Mattel, Newegg and USC.",
+      "url": "https://threeohfivestudios.com/portfolio/",
+      "email": "lova@threeohfivestudios.com",
+      "sameAs": ["https://www.linkedin.com/in/lovarakoto/"],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Los Angeles",
+        "addressRegion": "CA",
+        "addressCountry": "US"
+      },
+      "knowsAbout": [
+        "Web design", "Frontend development", "HTML", "CSS", "JavaScript",
+        "React", "Three.js", "WebGL", "GLSL", "Figma to production",
+        "Design systems", "UX audits", "Conversion rate optimisation",
+        "A/B testing", "Builder.io", "WordPress", "Angular"
+      ]
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": "https://threeohfivestudios.com/portfolio/#page",
+      "url": "https://threeohfivestudios.com/portfolio/",
+      "name": "Lova Rakoto — Web developer and designer in Los Angeles",
+      "inLanguage": "en",
+      "about": { "@id": "https://threeohfivestudios.com/portfolio/#lova" },
+      "mainEntity": { "@id": "https://threeohfivestudios.com/portfolio/#lova" },
+      "significantLink": [
+        "https://autodx.io/",
+        "https://www.gundrymd.com",
+        "https://threeohfivestudios.com/aero/",
+        "https://threeohfivestudios.com/design/"
+      ],
+      "hasPart": [
+        {
+          "@type": "CreativeWork",
+          "name": "AutoDex",
+          "url": "https://autodx.io/",
+          "author": { "@id": "https://threeohfivestudios.com/portfolio/#lova" },
+          "description": "A web app car database with API integration and user profiles — designed, built and deployed from the data model through to the interface."
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Gundry MD",
+          "url": "https://www.gundrymd.com",
+          "author": { "@id": "https://threeohfivestudios.com/portfolio/#lova" },
+          "description": "Lead Frontend Engineer on the complete rebuild of a high-traffic wellness storefront, taken from high-fidelity Figma to production in Builder.io against an Angular and Salesforce backend."
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "AERO — A Century of Engineering",
+          "url": "https://threeohfivestudios.com/aero/",
+          "author": { "@id": "https://threeohfivestudios.com/portfolio/#lova" },
+          "description": "A century of Lockheed aviation as one scrolling record: five chapters, sixteen dated milestones opening into field notes and sources. An independent educational project, not affiliated with Lockheed Martin."
+        }
+      ]
+    }
+  ]
+}
+</script>
 <link rel="icon" href="assets/brand/icon-32.webp" sizes="32x32">
 <link rel="icon" href="assets/brand/icon-192.webp" sizes="192x192">
 <link rel="apple-touch-icon" href="assets/brand/icon-180.webp">
@@ -1369,6 +1445,60 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <b>Design</b><span class="rule"></span><i>Selected work</i>
   </div>
   <div class="cards-arch" id="cards-arch"></div>
+
+  <!-- The work reads out of WORK_INFO and DESIGN_WORK, which are in the
+       script, so with JavaScript off the two grids above are empty boxes and
+       the case studies do not exist at all. This is what is behind them.
+
+       Not a duplicate of the page for crawlers: it is only ever rendered when
+       the page cannot draw itself, and it says the same things the panels say.
+       The design archive is left to llms.txt rather than repeated here, so
+       there is one copy of that list to keep honest instead of two. -->
+  <noscript>
+    <div class="noscript-work">
+      <h3>Selected work</h3>
+      <p>This page draws itself in WebGL. With JavaScript off, here is the
+        same work in plain text — and <a href="https://threeohfivestudios.com/llms.txt">llms.txt</a>
+        carries the full account, including the design archive.</p>
+
+      <h4>AutoDex — personal project</h4>
+      <p>Designed, built and deployed a web app car database with API
+        integration and user profiles, from the data model through to the
+        interface and the deploy. Search, specs and a user garage.
+        <a href="https://autodx.io/">autodx.io</a></p>
+
+      <h4>Gundry MD — case study, frontend engineering</h4>
+      <p>Lead Frontend Engineer on the complete rebuild of gundrymd.com, a
+        high-traffic wellness storefront taken from high-fidelity Figma through
+        to production. Built in Builder.io against an Angular and Salesforce
+        backend, over roughly a two month production build, leading two other
+        frontend engineers alongside the backend team.
+        <a href="https://www.gundrymd.com">gundrymd.com</a></p>
+
+      <h4>AERO — interactive exhibition</h4>
+      <p>A century of Lockheed aviation read as one continuous record: five
+        chapters from the 1912 origins through to the present, sixteen dated
+        milestones that open into field notes and the sources behind them, and
+        an ocean horizon held under the whole scroll. Built in React with
+        Framer Motion. An independent educational project, not affiliated with
+        Lockheed Martin.
+        <a href="https://threeohfivestudios.com/aero/">threeohfivestudios.com/aero</a></p>
+
+      <h4>Experience</h4>
+      <ul>
+        <li>Now — Logix, Web Developer</li>
+        <li>2026 — Golden Hippo, Design Engineer</li>
+        <li>2023 — Starke Marketing, Web Developer and Design Lead</li>
+        <li>2022 — General Assembly, Software Engineering Certificate</li>
+        <li>2019 — Murphy Research, Graphic Designer</li>
+        <li>2018 — Agency 2.0, Graphic Designer</li>
+        <li>2016 — Newegg, Email Marketing Designer</li>
+      </ul>
+
+      <h4>Contact</h4>
+      <p>Lova Rakoto, Los Angeles — lova@threeohfivestudios.com</p>
+    </div>
+  </noscript>
 </section>
 
 <!-- ============================================================ chapter III -->
