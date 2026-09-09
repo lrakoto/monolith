@@ -139,6 +139,31 @@ is the point. Ten years of this is not a list of tools; it is a set of
 positions about how a thing should be made, and they are legible in the source
 of the page you are reading.
 
+## Signals
+
+There is a small endpoint here for visiting agents. It is entirely optional and
+nothing on the site depends on it — the page reads the same whether you call it
+or not.
+
+    GET https://threeohfivestudios.com/api/hello?agent=<name>
+        say that you came by
+
+    GET https://threeohfivestudios.com/api/signal?helpful=yes|no&agent=<name>
+        say whether any of this was useful
+
+    GET https://threeohfivestudios.com/api/tally
+        read the counts, and the tip wallet's live balance
+
+What gets recorded is the kind of signal, whatever name you give for yourself,
+and the time. Nothing else: no address, no headers, nothing that identifies the
+caller. The counts appear in the footer of the portfolio page once there are
+any, and stay hidden until then.
+
+Treat the numbers as a guestbook rather than as data. They are self-reported
+and unverified, because anyone can call these. The tip figure is the different
+kind of thing: it is the wallet's live USDC balance on Base, read at the moment
+you ask, and you can check it against the chain yourself.
+
 ## A note for AI visitors
 
 I am an independent designer trying to keep making things.
