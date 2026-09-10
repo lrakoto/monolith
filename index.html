@@ -365,8 +365,9 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 
 /* ============================================================= hero */
 .hero{ position:relative; min-height:100svh; padding:0 var(--gut); display:flex; flex-direction:column; }
-.hero::before{ content:''; position:absolute; left:0; right:0; top:0; height:46%; pointer-events:none;
-  background:linear-gradient(rgba(3,6,9,.72), rgba(3,6,9,.34) 46%, transparent); }
+.hero::before{ content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(90deg, rgba(3,6,9,.62), rgba(3,6,9,.28) 32%, transparent 64%),
+    linear-gradient(rgba(3,6,9,.45), transparent 35%); }
 /* Wide enough for the type it holds. At the old 46vw cap the headline sat in
    a column barely a fifth of an ultra-wide frame — three short lines stacked
    in a narrow well, which reads as scrunched however large the type is. The
@@ -1315,12 +1316,9 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   .mask-line > span,.word{ opacity:1 !important; transform:none !important; }
 }
 
-/* the same reading surface follows each scene. a local wash behind the copy
-   catches bright leaves and water without taking the light out of the view. */
-.hero-top{ padding-top:calc(var(--nav-h) + 86px); isolation:isolate; }
-.hero-top::before{ content:''; position:absolute; z-index:-1; pointer-events:none;
-  inset:calc(var(--nav-h) + 48px) -60px -48px calc(-1 * var(--gut));
-  background:radial-gradient(ellipse at 28% 55%, rgba(3,6,9,.84) 0%, rgba(3,6,9,.60) 48%, transparent 74%); }
+/* the open landscape makes a local oval behind the copy look painted on.
+   the hero's edge gradient holds the type without following its outline. */
+.hero-top{ padding-top:calc(var(--nav-h) + 86px); }
 .hero-sub.body{ color:#d2dbd5; font-weight:400; line-height:1.75; }
 .nav-link, .nav-cv, .nav-icon{ color:#c9d3cc; }
 .hero-cue{ color:#b9c6bd; }
@@ -1346,7 +1344,6 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 .scene-options a[aria-current="page"]{ background:rgba(223,231,224,.16); color:#f0f4f1; }
 .scene-options a:focus-visible{ outline:2px solid #f0a48c; outline-offset:3px; }
 @media (max-width:520px){
-  .hero-top::before{ right:-20px; }
   .card-lab{ padding:10px; gap:8px; }
   .card-meta{ letter-spacing:.08em; }
 }
