@@ -6819,9 +6819,6 @@ function resize() {
 
 function updateWorld(dt) {
   WORLD.uT.value = clock;
-  if (WORLD.distantClouds) WORLD.distantClouds.forEach(m => {
-    m.position.x=m.userData.x0+Math.sin(clock*.025+m.userData.phase)*4;
-  });
   WET_TIME.value = REDUCE ? 0 : clock;
 
   /* the focused chapter warms the lanterns and swells the disc */
@@ -6997,18 +6994,6 @@ function texDistantStone() {
   for(let y=128;y<1024;y+=128){x.fillStyle='rgba(18,29,32,.12)';x.fillRect(0,y,512,1);}
   return c;
 }
-function texDistantCloud(seed) {
-  const c=cvs(384,256),x=c.getContext('2d'),im=x.createImageData(384,256),n=noise2D(seed);
-  for(let y=0;y<256;y++)for(let xx=0;xx<384;xx++){
-    const u=(xx/384-.5)*2,v=(y/256-.5)*2;
-    const f=fbm(n,u*3.1+7,v*3.1+4,5,2,.52)*.5+.5;
-    const edge=Math.max(0,1-u*u-v*v);
-    const a=Math.pow(edge,1.2)*smooth(.28,.66,f)*.83;
-    const light=clamp(.58-v*.20+f*.22,0,1),i=(y*384+xx)*4;
-    im.data[i]=118+light*86;im.data[i+1]=109+light*88;im.data[i+2]=115+light*82;im.data[i+3]=a*255;
-  }
-  x.putImageData(im,0,0);return c;
-}
 function buildDistantLandscape() {
   camera.far=1600;camera.updateProjectionMatrix();tmpCam.far=1600;tmpCam.updateProjectionMatrix();
   scene.fog=new THREE.FogExp2(0x41434a,.00145);
@@ -7023,7 +7008,7 @@ function buildDistantLandscape() {
   const ground=new THREE.PlaneGeometry(1800,1800,LOW?100:180,LOW?100:180);
   ground.rotateX(-Math.PI/2);ground.translate(0,0,-540);
   const pos=ground.attributes.position,colors=new Float32Array(pos.count*3);
-  const near=new THREE.Color(0x85534b),far=new THREE.Color(0x4b4d53),col=new THREE.Color();
+  const near=new THREE.Color(0xac4938),far=new THREE.Color(0x764a49),col=new THREE.Color();
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i),z=pos.getZ(i),h=distantHeight(x,z);pos.setY(i,h);
     col.copy(near).lerp(far,clamp((-z-40)/780,0,1));col.multiplyScalar(.85+(h+5)*.026);
@@ -7032,10 +7017,12 @@ function buildDistantLandscape() {
   ground.setAttribute('color',new THREE.BufferAttribute(colors,3));ground.computeVertexNormals();
   scene.add(new THREE.Mesh(ground,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0})));
 
-  const slab=new THREE.Group();slab.position.set(52,108,-440);slab.rotation.y=-.24;
+  /* a longer empty approach and a taller proportion make the distance legible.
+     bury the footing just under the sand now that there is no cloud bank. */
+  const slab=new THREE.Group();slab.position.set(52,distantHeight(52,-660)+179,-660);slab.rotation.y=-.24;
   const stone=tx(texDistantStone()),front=new THREE.MeshStandardMaterial({map:stone,color:0x55666a,roughness:.94});
   const side=new THREE.MeshStandardMaterial({map:stone,color:0x28383f,roughness:.96});
-  slab.add(new THREE.Mesh(new THREE.BoxGeometry(74,224,48),[side,side,front,side,front,side]));
+  slab.add(new THREE.Mesh(new THREE.BoxGeometry(74,360,48),[side,side,front,side,front,side]));
   scene.add(slab);WORLD.distantSlab=slab;
 
   /* tiny stones and markers give the empty ground a unit of measure. */
@@ -7051,24 +7038,9 @@ function buildDistantLandscape() {
     marker.position.set(x,distantHeight(x,z)+.82,z);scene.add(marker);
   }
 
-  /* several overlapping banks conceal the footing, without attaching a white
-     stripe to the slab. the darker rear layer separates it from the sky. */
-  const cloudMaps=[tx(texDistantCloud(601)),tx(texDistantCloud(719)),tx(texDistantCloud(831))];
-  WORLD.distantClouds=[];
-  for(let i=0;i<(LOW?13:21);i++){
-    const z=-485+rnd()*145,x=52+(rnd()-.5)*360,w=90+rnd()*130,h=35+rnd()*65;
-    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({
-      map:cloudMaps[i%3],color:i%3===0?0xbfa29e:0x88979b,transparent:true,opacity:.48+rnd()*.2,
-      depthWrite:false,fog:true}));
-    mesh.position.set(x,8+rnd()*40,z);mesh.userData={x0:x,phase:rnd()*TAU};
-    scene.add(mesh);WORLD.distantClouds.push(mesh);
-  }
   const moon=new THREE.Mesh(new THREE.PlaneGeometry(74,74),new THREE.MeshBasicMaterial({
     map:tx(texDisc()),color:0x94b9bb,transparent:true,opacity:.6,fog:false,depthWrite:false}));
   moon.position.set(-24,284,-650);scene.add(moon);
-  const veil=new THREE.Mesh(new THREE.PlaneGeometry(112,96),new THREE.MeshBasicMaterial({
-    map:cloudMaps[1],color:0x405963,transparent:true,opacity:.65,fog:false,depthWrite:false}));
-  veil.position.set(-7,269,-640);scene.add(veil);
   WORLD.fg=[];
 }
 
