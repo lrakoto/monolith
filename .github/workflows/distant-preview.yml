@@ -1,0 +1,85 @@
+# isolated comparison copy; never uploads to the three established scenes.
+name: distant-preview
+
+on:
+  push:
+    branches: [codex/distant-monolith]          # only the isolated study branch
+  workflow_dispatch:          # and a manual re-run, for when a deploy is lost
+
+concurrency:                  # never let two deploys interleave over FTP
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The suite is fast and the page has no other guard. A broken index.html
+      # is silent until the preloader hangs, so it must not reach the host.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test before publishing
+        run: python3 -B -m unittest discover -p 'test_*.py' -v
+
+      - name: Upload to threeohfivestudios.com/portfolio
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps                     # explicit FTPS; see README if the host refuses
+          server-dir: /threeohfivestudios.com/portfolio-study/
+          # Everything that is not the website. Named rather than globbed,
+          # because *.md would take FONT-LICENSES.md with it — the embedded
+          # faces are licensed on the condition that attribution travels with
+          # them, so that one file is part of the site and ships.
+          #
+          # serve.py matters most: it has an endpoint that writes to
+          # index.html and must never reach a public host. DEPLOY.md is here
+          # for a quieter reason — it names the cPanel home directory, the
+          # deploy layout and the .htaccess backup, none of which needs to be
+          # readable by anyone who guesses the filename.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/*.py
+            **/__pycache__/**
+            **/.DS_Store
+            README.md
+            AGENTS.md
+            CLAUDE.md
+            DEPLOY.md
+            root/**
+            worker/**
+
+      # Cloudflare sits in front, so a fresh file on disk is not a fresh file
+      # to visitors. Skipped rather than failed when the secrets are absent —
+      # the deploy still succeeded, the cache just has to age out.
+      #
+      # The skip is decided inside the step, not with `if:`. The secrets context
+      # is not available to a step-level if, and GitHub rejects the whole
+      # workflow file for using it there — it does not skip the step, it
+      # refuses to run anything at all.
+      - name: Purge Cloudflare
+        env:
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          if [ -z "$CF_ZONE_ID" ] || [ -z "$CF_API_TOKEN" ]; then
+            echo "No Cloudflare secrets set — skipping purge. The deploy succeeded;"
+            echo "the cache will age out on its own, or purge it by hand."
+            exit 0
+          fi
+          curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"prefixes":["threeohfivestudios.com/portfolio-study/"]}' \
+            | tee /dev/stderr | grep -q '"success":true'

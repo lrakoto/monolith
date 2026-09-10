@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lova Rakoto — Web developer and designer in Los Angeles</title>
 <meta name="description" content="I specialize in helping businesses and individuals create an impactful, thoughtful, and elegant digital presence. Ten years designing and building for brands like Mattel, Newegg and USC — in a portfolio whose every surface is generated in the browser at load.">
@@ -1423,7 +1424,8 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 <section class="hero" id="hero" data-cam="0">
   <nav class="scene-picker" aria-label="Choose a scene">
     <div class="scene-options">
-      <a href="https://threeohfivestudios.com/portfolio/" aria-current="page">Monolith</a>
+      <a href="https://threeohfivestudios.com/portfolio/">Original</a>
+      <a href="https://threeohfivestudios.com/portfolio-study/" aria-current="page">Study</a>
       <a href="https://threeohfivestudios.com/portfolio-a/">Forest</a>
       <a href="https://threeohfivestudios.com/portfolio-b/">Stream</a>
     </div>
@@ -4890,16 +4892,8 @@ const XP_ANCHORS = [];
    make one is to watch it move. */
 const XP = { dist: 9.2, side: 3.15, drop: -0.55 };
 function buildXpAnchors() {
-  const rows = $$('.xp li');
-  if (!rows.length || COARSE) return;
-  rows.forEach((el, i) => {
-    const side = i % 2 ? 1 : -1;
-    if (side < 0) el.classList.add('xp-l');
-    XP_ANCHORS.push({ v: new THREE.Vector3(), el: el, side: side });
-  });
-  XP_TITLE.el = $('.xp-title-in');
-  XP_TITLE.lab = $('.xp-label');
-  document.body.classList.add('xp-3d');
+  /* the distant landscape never climbs the old stairs; keep the readable
+     timeline in document flow instead of attaching it to empty space. */
 }
 
 /* When the chapter's title holds the frame.
@@ -5975,7 +5969,7 @@ function initPost() {
       ' c = aces(c);\n' +
       ' float l = dot(c, vec3(0.2126,0.7152,0.0722));\n' +
       ' c = mix(vec3(l), c, uSat);\n' +
-      ' c = mix(c, c*vec3(0.74,1.03,1.11), smoothstep(0.55,0.0,l)*0.80);\n' +    /* teal shadows */
+      ' c = mix(c, c*vec3(0.96,1.00,1.03), smoothstep(0.55,0.0,l)*0.80);\n' +    /* teal shadows */
       ' c = mix(c, c*vec3(1.035,0.995,0.968), smoothstep(0.50,1.0,l)*0.26);\n' + /* warm highs   */
       ' float v = smoothstep(1.22, 0.26, length(d*vec2(1.0,0.94))*1.42);\n' +
       ' c *= mix(1.0, v, uVig);\n' +
@@ -6180,27 +6174,13 @@ function initTuning() {
 
 /* ================================================= 8 · the camera rig */
 const CAM = [
-  { p: [  0.0, 4.05, 13.6 ], t: [  0.0, 6.60, -18.0 ], fov: 36 },  /* 0 hero        */
-  { p: [ -5.6, 2.35, 11.6 ], t: [  1.2, 5.60, -14.0 ], fov: 48 },  /* 1 the slab     */
-  { p: [  1.2, 3.60,  2.2 ], t: [ -0.6, 7.50, -22.0 ], fov: 40 },  /* 2 gardens     */
-  { p: [  5.2, 2.10, -3.4 ], t: [ -2.6, 7.00, -20.0 ], fov: 46 },  /* 3 craft       */
-  /* Experience is the flight. The rig drops to the foot of it and looks
-     straight up the run, so forty treads fill the frame and recede — which is
-     what the section's rows are laid out against. No world constant moved to
-     get this: the architecture is the same, the camera is just on the ground
-     at the bottom instead of halfway up, and a low lens does the work that
-     lengthening the stairs would have done at the cost of retuning the hero. */
-  { p: [  0.0, 1.95, -10.5 ], t: [  0.0, 9.20, -34.0 ], fov: 52 }, /* 4 experience  */
-  /* Carried further up the run than it used to sit, so the climb through the
-     experience chapter passes the whole set of roles rather than stopping
-     level with the fourth. Still looking at the slab, just from higher. */
-  { p: [  0.0, 9.60, -30.5 ], t: [  0.0, 14.2, -42.0 ], fov: 42 }, /* 5 contact     */
-  /* The last shot used to sit above the top of the flight looking down at
-     the ground past it — target y 3 at z −34, with the slab standing at
-     z −44 and its slot up at y 15.4, so the thing the whole page climbs
-     toward was out of frame above the camera. It now looks at the slot, from
-     far enough back that the slab very nearly fills the height. */
-  { p: [  0.0, 11.0, -19.0 ], t: [  0.0, 15.6, -44.0 ], fov: 40 }  /* 6 footer      */
+  { p: [-8, 7, 42], t: [0, 88, -440], fov: 48 },
+  { p: [-5, 8, 32], t: [5, 90, -440], fov: 48 },
+  { p: [0, 8, 23], t: [8, 92, -440], fov: 49 },
+  { p: [5, 9, 13], t: [10, 92, -440], fov: 49 },
+  { p: [9, 9, 3], t: [12, 94, -440], fov: 49 },
+  { p: [12, 10, -7], t: [14, 96, -440], fov: 49 },
+  { p: [14, 10, -16], t: [15, 98, -440], fov: 49 }
 ];
 const RIG = { prog: 0, smooth: 0, mx: 0, my: 0, tmx: 0, tmy: 0, intro: 0, focus: -1, focusAmt: 0, pointer: 0, hold: 0, holding: 0, xp: 0 };
 let curveP, curveT, tmpCam;
@@ -6217,12 +6197,8 @@ const _p = new THREE.Vector3(), _t = new THREE.Vector3(), _d = new THREE.Vector3
    axis and opens up a little instead of letting the sides fall away. */
 function aspectFix() { return clamp((1.62 - vpW() / vpH()) / 1.05, 0, 1); }
 function fitAspect(p, t, fov) {
-  const nf = aspectFix();
-  if (nf <= 0) return fov;
-  _d.subVectors(p, t).normalize();
-  p.addScaledVector(_d, nf * 8.2);
-  p.y += nf * 1.1;
-  return fov * (1 + nf * .40);
+  const nf=aspectFix();
+  t.x=lerp(t.x,52,nf);return fov+nf*5;
 }
 /* The role the climb is standing at, as a world point, lerped between the two
    it lies between so the lens pans across rather than cutting. */
@@ -6252,7 +6228,7 @@ function applyCamera() {
      rather than one long stare up the treads. The aim is deliberately partial:
      taken all the way it centres the card and throws away the flight behind
      it, and the flight is what the section is about. */
-  const xpN = xpNear();
+  const xpN = XP_ANCHORS.length ? xpNear() : 0;
   if (xpN > .002) _t.lerp(xpTarget(_xpAim), TUNE.xpAim * xpN);
 
   fov = fitAspect(_p, _t, fov);
@@ -6843,6 +6819,9 @@ function resize() {
 
 function updateWorld(dt) {
   WORLD.uT.value = clock;
+  if (WORLD.distantClouds) WORLD.distantClouds.forEach(m => {
+    m.position.x=m.userData.x0+Math.sin(clock*.025+m.userData.phase)*4;
+  });
   WET_TIME.value = REDUCE ? 0 : clock;
 
   /* the focused chapter warms the lanterns and swells the disc */
@@ -6982,57 +6961,125 @@ const TIMER = qs('driver', 'raf') === 'timer';
 function queue() { TIMER ? setTimeout(() => frame(performance.now()), 16) : requestAnimationFrame(frame); }
 
 /* ======================================================== 14 · booting */
+/* distance is the subject of this study. terrain moves beneath the camera,
+   while the slab stays several hundred metres away for the whole scroll. */
+function distantHeight(x, z) {
+  return 2.8 * Math.sin(z * .027 + x * .009) + 1.7 * Math.sin(x * .041 - z * .013)
+    + .9 * Math.sin(z * .081 + x * .017);
+}
+function texDistantSky() {
+  const c = cvs(2048, 1024), x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 1024);
+  [[0,'#101c26'],[.32,'#233741'],[.55,'#41474b'],[.70,'#795356'],[.83,'#9c5c55'],[1,'#282c34']]
+    .forEach(v => g.addColorStop(v[0],v[1]));
+  x.fillStyle=g;x.fillRect(0,0,2048,1024);
+  x.globalAlpha=.10;x.globalCompositeOperation='overlay';
+  x.drawImage(fbmCanvas(1024,512,135,4,3,.8),0,0,2048,1024);
+  x.globalAlpha=1;x.globalCompositeOperation='source-over';
+  const rnd=mulberry32(723);
+  for(let i=0;i<340;i++){
+    const y=rnd()*560, a=(.1+rnd()*.3)*(1-y/600);
+    x.fillStyle='rgba(207,226,228,'+a+')';x.beginPath();x.arc(rnd()*2048,y,.4+rnd()*.7,0,TAU);x.fill();
+  }
+  return c;
+}
+function texDistantStone() {
+  const c=cvs(512,1024),x=c.getContext('2d'),rnd=mulberry32(918);
+  x.fillStyle='#889393';x.fillRect(0,0,512,1024);
+  x.globalAlpha=.22;x.globalCompositeOperation='multiply';
+  x.drawImage(fbmCanvas(512,1024,811,5,5,1.1),0,0);
+  x.globalAlpha=1;x.globalCompositeOperation='source-over';
+  for(let i=0;i<220;i++){
+    const px=rnd()*512, y=rnd()*1024;
+    x.strokeStyle='rgba(18,29,32,'+(.06+rnd()*.18)+')';x.lineWidth=.5+rnd()*1.4;
+    x.beginPath();x.moveTo(px,y);x.lineTo(px+(rnd()-.5)*2,y+12+rnd()*160);x.stroke();
+  }
+  for(let y=128;y<1024;y+=128){x.fillStyle='rgba(18,29,32,.12)';x.fillRect(0,y,512,1);}
+  return c;
+}
+function texDistantCloud(seed) {
+  const c=cvs(384,256),x=c.getContext('2d'),im=x.createImageData(384,256),n=noise2D(seed);
+  for(let y=0;y<256;y++)for(let xx=0;xx<384;xx++){
+    const u=(xx/384-.5)*2,v=(y/256-.5)*2;
+    const f=fbm(n,u*3.1+7,v*3.1+4,5,2,.52)*.5+.5;
+    const edge=Math.max(0,1-u*u-v*v);
+    const a=Math.pow(edge,1.2)*smooth(.28,.66,f)*.83;
+    const light=clamp(.58-v*.20+f*.22,0,1),i=(y*384+xx)*4;
+    im.data[i]=118+light*86;im.data[i+1]=109+light*88;im.data[i+2]=115+light*82;im.data[i+3]=a*255;
+  }
+  x.putImageData(im,0,0);return c;
+}
+function buildDistantLandscape() {
+  camera.far=1600;camera.updateProjectionMatrix();tmpCam.far=1600;tmpCam.updateProjectionMatrix();
+  scene.fog=new THREE.FogExp2(0x41434a,.00145);
+  scene.background=new THREE.Color(0x17232d);
+  scene.add(new THREE.HemisphereLight(0xa2b6be,0x513333,.65));
+  const key=new THREE.DirectionalLight(0xd6ded8,2.2);key.position.set(-240,460,140);scene.add(key);
+  const rim=new THREE.DirectionalLight(0xe79888,.65);rim.position.set(120,40,-620);scene.add(rim);
+  const sky=new THREE.Mesh(new THREE.PlaneGeometry(2800,1500),new THREE.MeshBasicMaterial({
+    map:tx(texDistantSky()),fog:false,depthWrite:false,toneMapped:false}));
+  sky.position.set(0,290,-1100);scene.add(sky);WORLD.sky=sky;
+
+  const ground=new THREE.PlaneGeometry(1800,1800,LOW?100:180,LOW?100:180);
+  ground.rotateX(-Math.PI/2);ground.translate(0,0,-540);
+  const pos=ground.attributes.position,colors=new Float32Array(pos.count*3);
+  const near=new THREE.Color(0x85534b),far=new THREE.Color(0x4b4d53),col=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i),z=pos.getZ(i),h=distantHeight(x,z);pos.setY(i,h);
+    col.copy(near).lerp(far,clamp((-z-40)/780,0,1));col.multiplyScalar(.85+(h+5)*.026);
+    colors.set([col.r,col.g,col.b],i*3);
+  }
+  ground.setAttribute('color',new THREE.BufferAttribute(colors,3));ground.computeVertexNormals();
+  scene.add(new THREE.Mesh(ground,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0})));
+
+  const slab=new THREE.Group();slab.position.set(52,108,-440);slab.rotation.y=-.24;
+  const stone=tx(texDistantStone()),front=new THREE.MeshStandardMaterial({map:stone,color:0x55666a,roughness:.94});
+  const side=new THREE.MeshStandardMaterial({map:stone,color:0x28383f,roughness:.96});
+  slab.add(new THREE.Mesh(new THREE.BoxGeometry(74,224,48),[side,side,front,side,front,side]));
+  scene.add(slab);WORLD.distantSlab=slab;
+
+  /* tiny stones and markers give the empty ground a unit of measure. */
+  const rnd=mulberry32(407),rockMat=new THREE.MeshStandardMaterial({color:0x39383c,roughness:1,flatShading:true});
+  const rockGeo=new THREE.DodecahedronGeometry(1,0);
+  for(let i=0;i<(LOW?55:100);i++){
+    const z=25-rnd()*530,x=(rnd()-.5)*430,size=.25+Math.pow(rnd(),3)*6;
+    const rock=new THREE.Mesh(rockGeo,rockMat);rock.position.set(x,distantHeight(x,z)+size*.22,z);
+    rock.scale.set(size*1.8,size*.55,size);rock.rotation.y=rnd()*TAU;scene.add(rock);
+  }
+  for(let i=0;i<9;i++){
+    const z=-12-i*28,x=23-i*.8,marker=new THREE.Mesh(new THREE.BoxGeometry(.32,1.65,.42),rockMat);
+    marker.position.set(x,distantHeight(x,z)+.82,z);scene.add(marker);
+  }
+
+  /* several overlapping banks conceal the footing, without attaching a white
+     stripe to the slab. the darker rear layer separates it from the sky. */
+  const cloudMaps=[tx(texDistantCloud(601)),tx(texDistantCloud(719)),tx(texDistantCloud(831))];
+  WORLD.distantClouds=[];
+  for(let i=0;i<(LOW?13:21);i++){
+    const z=-485+rnd()*145,x=52+(rnd()-.5)*360,w=90+rnd()*130,h=35+rnd()*65;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({
+      map:cloudMaps[i%3],color:i%3===0?0xbfa29e:0x88979b,transparent:true,opacity:.48+rnd()*.2,
+      depthWrite:false,fog:true}));
+    mesh.position.set(x,8+rnd()*40,z);mesh.userData={x0:x,phase:rnd()*TAU};
+    scene.add(mesh);WORLD.distantClouds.push(mesh);
+  }
+  const moon=new THREE.Mesh(new THREE.PlaneGeometry(74,74),new THREE.MeshBasicMaterial({
+    map:tx(texDisc()),color:0x94b9bb,transparent:true,opacity:.6,fog:false,depthWrite:false}));
+  moon.position.set(-24,284,-650);scene.add(moon);
+  const veil=new THREE.Mesh(new THREE.PlaneGeometry(112,96),new THREE.MeshBasicMaterial({
+    map:cloudMaps[1],color:0x405963,transparent:true,opacity:.65,fog:false,depthWrite:false}));
+  veil.position.set(-7,269,-640);scene.add(veil);
+  WORLD.fg=[];
+}
+
 const JOBS = [
   ['Reading the type', () => document.fonts && document.fonts.load('600 320px Wordmark')],
   ['Fetching the work', () => loadWorkShots()],
-  /* critical jobs are marked rather than counted: fetching the work moved
-     renderer setup to third, and the old index check left failed boots locked. */
-  ['Pouring the ground', () => { initGL(); WORLD.uT = { value: 0 }; buildRig(); buildEnvironment(); buildLights(); }, true],
-  ['Cutting the approach', () => buildShell()],
-  ['Raising the slab', () => buildMonolith()],
-  ['Hanging the moon', () => buildMoon()],
-  ['Setting the threshold', () => buildTorii()],
-  ['Placing the stones', () => {
-    buildRocks();
-    buildLantern(7.4, -7.0, 1.15); buildLantern(-7.6, -5.2, 1.0);
-    /* The pairs flanking the flight were given flat heights — 2 and PODIUM —
-       and the flight does not reach either at those depths, so both pairs hung
-       in the air. Solve the step under each one from the same constants the
-       treads and cheeks are built from, and they stand on the rail instead of
-       beside it. */
-    const stepAt   = z => Math.max(0, (STAIR_Z0 - z) / STAIR_RUN - .5);
-    const cheekTop = z => (stepAt(z) + 1) * (PODIUM / STEPS) + .45;
-    const cheekX   = z => (STAIR_W + (STEPS - stepAt(z)) * .052) / 2 + .45;
-    [-14.4, -23.5].forEach((z, i) => {
-      const sc = i ? .95 : .90;
-      buildLantern( cheekX(z), z, sc, cheekTop(z));
-      buildLantern(-cheekX(z), z, sc, cheekTop(z));
-    });
-  }],
-  ['Setting the stones', () => {
-    buildStele(71, 12.6, -13.0, 1.05); buildStele(72, -11.8, -9.4, .95);
-    buildStele(73, 9.2, -19.0, .82);   buildStele(74, -14.5, -17.5, 1.0);
-    buildStele(75, 16.5, -6.0, .88);
-  }],
-  ['Painting the near grass', () => buildForeground()],
-  ['Cutting the word', () => buildWordmark()],
-  ['Raising the mist', () => { buildAtmosphere(); buildLeafFall(); buildWisps(); }],
-  ['Polishing the water', () => {
-    initPost(); buildCards(); buildCardCloth();
-    WORLD.fg.forEach(m => m.layers.set(1));
-    WORD.glyphs.forEach(m => m.layers.set(2));
-    if (WORLD.rain) WORLD.rain.layers.set(1);
-    /* the fall is all around the rig, including behind it — mirroring it
-       would drop leaves into the water that are nowhere near the water */
-    if (WORLD.leaves) WORLD.leaves.mesh.layers.set(1);
-    WORLD.ripples.forEach(r => r.layers.set(1));
-    /* after the layer assignments above, not before — the mirror camera is
-       set to layer 0 and what it excludes depends on them having run */
-    initMirror(); buildPuddles(); initTuning();
-    layoutWord(); measure();          /* measure() places the roles */
-    /* nothing that casts a shadow ever moves, so bake it once */
-    if (WANT_SHADOW && WORLD.key) { WORLD.key.shadow.autoUpdate = false; WORLD.key.shadow.needsUpdate = true; }
-  }]
+  ['Pouring the ground', () => { initGL(); WORLD.uT = { value: 0 }; buildRig(); }, true],
+  ['Finding the horizon', () => buildDistantLandscape(), true],
+  ['Preparing the work', () => {
+    initPost(); buildCards(); buildCardCloth(); layoutWord(); measure();
+  }, true]
 ];
 
 function boot() {
