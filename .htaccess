@@ -1,0 +1,9 @@
+# revalidate the page on each visit; assets keep their normal cache lifetime.
+<FilesMatch "^index\.html$">
+  <IfModule mod_expires.c>
+    ExpiresActive Off
+  </IfModule>
+  <IfModule mod_headers.c>
+    Header always set Cache-Control "no-cache, must-revalidate"
+  </IfModule>
+</FilesMatch>
