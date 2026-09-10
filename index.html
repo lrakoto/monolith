@@ -1316,9 +1316,9 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 
 /* the same reading surface follows each scene. a local wash behind the copy
    catches bright leaves and water without taking the light out of the view. */
-.hero-top{ padding-top:calc(var(--nav-h) + 132px); isolation:isolate; }
+.hero-top{ padding-top:calc(var(--nav-h) + 86px); isolation:isolate; }
 .hero-top::before{ content:''; position:absolute; z-index:-1; pointer-events:none;
-  inset:calc(var(--nav-h) + 94px) -60px -48px calc(-1 * var(--gut));
+  inset:calc(var(--nav-h) + 48px) -60px -48px calc(-1 * var(--gut));
   background:radial-gradient(ellipse at 28% 55%, rgba(3,6,9,.84) 0%, rgba(3,6,9,.60) 48%, transparent 74%); }
 .hero-sub.body{ color:#d2dbd5; font-weight:400; line-height:1.75; }
 .nav-link, .nav-cv, .nav-icon{ color:#c9d3cc; }
@@ -1333,23 +1333,18 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 
 /* ordinary links let each scene release its renderer before the next loads,
    and keep the choice usable even if webgl cannot start. */
-.scene-picker{ position:absolute; top:calc(var(--nav-h) + 20px); left:var(--gut);
+.scene-picker{ position:absolute; top:calc(var(--nav-h) + 12px); left:var(--gut);
   right:var(--gut); z-index:3; width:fit-content; max-width:calc(100% - 2 * var(--gut)); }
-.scene-picker-label{ display:block; margin:0 0 8px 4px; color:#c6d1ca;
-  font-size:10px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; }
-.scene-options{ display:flex; gap:4px; padding:4px; border:1px solid rgba(223,231,224,.24);
-  border-radius:100px; background:rgba(3,6,9,.88); }
-.scene-options a{ display:flex; align-items:center; justify-content:center; gap:7px;
-  min-height:44px; padding:0 16px; border-radius:100px; color:#c6d1ca;
-  font-size:12px; font-weight:500; text-decoration:none;
+.scene-options{ display:flex; gap:2px; padding:2px; border:1px solid rgba(223,231,224,.16);
+  border-radius:100px; background:rgba(3,6,9,.76); }
+.scene-options a{ display:flex; align-items:center; justify-content:center;
+  min-height:30px; padding:0 10px; border-radius:100px; color:#c6d1ca;
+  font-size:11px; font-weight:500; text-decoration:none;
   transition:background .2s, color .2s; }
 .scene-options a:hover{ background:rgba(223,231,224,.12); color:#fff; }
-.scene-options a[aria-current="page"]{ background:#dfe7e0; color:#101915; }
-.scene-options a[aria-current="page"]::before{ content:''; width:5px; height:5px;
-  border-radius:50%; background:currentColor; }
+.scene-options a[aria-current="page"]{ background:rgba(223,231,224,.16); color:#f0f4f1; }
 .scene-options a:focus-visible{ outline:2px solid #f0a48c; outline-offset:3px; }
 @media (max-width:520px){
-  .scene-options a{ padding:0 12px; font-size:11px; }
   .hero-top::before{ right:-20px; }
   .card-lab{ padding:10px; gap:8px; }
   .card-meta{ letter-spacing:.08em; }
@@ -1427,7 +1422,6 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 <!-- ============================================================ hero -->
 <section class="hero" id="hero" data-cam="0">
   <nav class="scene-picker" aria-label="Choose a scene">
-    <span class="scene-picker-label">Explore the scenes</span>
     <div class="scene-options">
       <a href="https://threeohfivestudios.com/portfolio/" aria-current="page">Monolith</a>
       <a href="https://threeohfivestudios.com/portfolio-a/">Forest</a>
