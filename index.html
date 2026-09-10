@@ -365,9 +365,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 
 /* ============================================================= hero */
 .hero{ position:relative; min-height:100svh; padding:0 var(--gut); display:flex; flex-direction:column; }
-.hero::before{ content:''; position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(90deg, rgba(3,6,9,.62), rgba(3,6,9,.28) 32%, transparent 64%),
-    linear-gradient(rgba(3,6,9,.45), transparent 35%); }
+
 /* Wide enough for the type it holds. At the old 46vw cap the headline sat in
    a column barely a fifth of an ultra-wide frame — three short lines stacked
    in a narrow well, which reads as scrunched however large the type is. The
@@ -1316,8 +1314,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   .mask-line > span,.word{ opacity:1 !important; transform:none !important; }
 }
 
-/* the open landscape makes a local oval behind the copy look painted on.
-   the hero's edge gradient holds the type without following its outline. */
+/* the introduction sits directly on the open landscape. */
 .hero-top{ padding-top:calc(var(--nav-h) + 86px); }
 .hero-sub.body{ color:#d2dbd5; font-weight:400; line-height:1.75; }
 .nav-link, .nav-cv, .nav-icon{ color:#c9d3cc; }
@@ -6959,7 +6956,8 @@ function queue() { TIMER ? setTimeout(() => frame(performance.now()), 16) : requ
    while the slab stays several hundred metres away for the whole scroll. */
 function distantHeight(x, z) {
   return 2.8 * Math.sin(z * .027 + x * .009) + 1.7 * Math.sin(x * .041 - z * .013)
-    + .9 * Math.sin(z * .081 + x * .017);
+    + .9 * Math.sin(z * .081 + x * .017)
+    + 34 * Math.exp(-Math.pow((z + 820) / 115, 2)) * (.88 + .12 * Math.sin(x * .009));
 }
 function texDistantSky() {
   const c = cvs(2048, 1024), x = c.getContext('2d');
@@ -6992,15 +6990,15 @@ function texDistantStone() {
   return c;
 }
 function buildDistantLandscape() {
-  camera.far=1600;camera.updateProjectionMatrix();tmpCam.far=1600;tmpCam.updateProjectionMatrix();
-  scene.fog=new THREE.FogExp2(0x41434a,.00145);
+  camera.far=2400;camera.updateProjectionMatrix();tmpCam.far=2400;tmpCam.updateProjectionMatrix();
+  scene.fog=new THREE.FogExp2(0x41434a,.00095);
   scene.background=new THREE.Color(0x17232d);
   scene.add(new THREE.HemisphereLight(0xa2b6be,0x513333,.65));
   const key=new THREE.DirectionalLight(0xd6ded8,2.2);key.position.set(-240,460,140);scene.add(key);
   const rim=new THREE.DirectionalLight(0xe79888,.65);rim.position.set(120,40,-620);scene.add(rim);
-  const sky=new THREE.Mesh(new THREE.PlaneGeometry(2800,1500),new THREE.MeshBasicMaterial({
+  const sky=new THREE.Mesh(new THREE.PlaneGeometry(4200,2100),new THREE.MeshBasicMaterial({
     map:tx(texDistantSky()),fog:false,depthWrite:false,toneMapped:false}));
-  sky.position.set(0,290,-1100);scene.add(sky);WORLD.sky=sky;
+  sky.position.set(0,420,-1700);scene.add(sky);WORLD.sky=sky;
 
   const ground=new THREE.PlaneGeometry(1800,1800,LOW?100:180,LOW?100:180);
   ground.rotateX(-Math.PI/2);ground.translate(0,0,-540);
@@ -7014,12 +7012,12 @@ function buildDistantLandscape() {
   ground.setAttribute('color',new THREE.BufferAttribute(colors,3));ground.computeVertexNormals();
   scene.add(new THREE.Mesh(ground,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0})));
 
-  /* a longer empty approach and a taller proportion make the distance legible.
-     bury the footing just under the sand now that there is no cloud bank. */
-  const slab=new THREE.Group();slab.position.set(52,distantHeight(52,-660)+179,-660);slab.rotation.y=-.24;
+  /* the dune ridge hides the footing. the spire rises beyond the horizon,
+     rather than standing on the same stretch of sand as the waymarkers. */
+  const slab=new THREE.Group();slab.position.set(52,300,-1060);slab.rotation.y=-.24;
   const stone=tx(texDistantStone()),front=new THREE.MeshStandardMaterial({map:stone,color:0x55666a,roughness:.94});
   const side=new THREE.MeshStandardMaterial({map:stone,color:0x28383f,roughness:.96});
-  slab.add(new THREE.Mesh(new THREE.BoxGeometry(74,360,48),[side,side,front,side,front,side]));
+  slab.add(new THREE.Mesh(new THREE.BoxGeometry(100,640,64),[side,side,front,side,front,side]));
   scene.add(slab);WORLD.distantSlab=slab;
 
   /* tiny stones and markers give the empty ground a unit of measure. */
