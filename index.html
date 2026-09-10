@@ -4897,10 +4897,9 @@ function buildXpAnchors() {
 const XP_TITLE = { el: null, lab: null };
 function updateXpTitle() {
   const el = XP_TITLE.el; if (!el) return;
-  /* the shorter approach needs a little clear water after the process copy.
-     bring the heading in later, but keep its exit and the first role where
-     they were so this pause does not add another stretch of empty scroll. */
-  const amt = clamp(Math.min((RIG.smooth - 3.40) / .16, (3.82 - RIG.smooth) / .16), 0, 1);
+  /* wait for the lens to settle in front of the stairs. the full heading
+     belongs to that still view, then clears before the first role arrives. */
+  const amt = clamp(Math.min((RIG.smooth - 3.64) / .08, (3.90 - RIG.smooth) / .06), 0, 1);
   if (amt <= .003) {
     if (el.style.opacity !== '0') el.style.opacity = '0';
   } else {
@@ -4914,11 +4913,11 @@ function updateXpTitle() {
   /* The corner label takes over where the title leaves off, and the roles wait
      for both — see xpNear. Three things arriving on the same stretch of scroll
      was the one thing that read as clutter rather than sequence, so they are
-     handed off rather than crossfaded: title out by 3.82, roles from 3.78,
-     label from 3.85. */
+     handed off rather than crossfaded: title out by 3.90, then the label
+     and first role arrive from 3.92. */
   const lab = XP_TITLE.lab;
   if (lab) {
-    const l = clamp(Math.min((RIG.smooth - XP_SEC + .15) / .15,
+    const l = clamp(Math.min((RIG.smooth - XP_SEC + .08) / .08,
                              (XP_SEC + 1.15 - RIG.smooth) / .30), 0, 1);
     lab.style.opacity = l.toFixed(3);
   }
@@ -4994,7 +4993,7 @@ let XP_CW = 0, XP_TH = 0;            /* card width, title height — per layout 
    stairProgress puts stop 0 at XP_SEC and the last at XP_SEC + 1. */
 function xpNear() {
   if (!XP_ANCHORS.length) return 0;
-  return clamp(Math.min((RIG.smooth - XP_SEC + .22) / .22,
+  return clamp(Math.min((RIG.smooth - XP_SEC + .08) / .08,
                         (XP_SEC + XP_RUN + .17 - RIG.smooth) / .17), 0, 1);
 }
 function updateXpAnchors() {
@@ -6220,12 +6219,22 @@ function xpParked() {
   const f = RIG.xp - Math.floor(RIG.xp);
   return 1 - 4 * f * (1 - f);
 }
+/* a short arrival outside the gateway gives the heading a place to stand.
+   blend back into the existing climb so none of the role stops move. */
+const XP_ENTRY_P = new THREE.Vector3(0, 2.8, -3.8);
+const XP_ENTRY_T = new THREE.Vector3(0, 2.0, -13.0);
+function xpEntryWeight(progress) {
+  return smooth(3.20, 3.64, progress) * (1 - smooth(3.84, 4.0, progress));
+}
 function applyCamera() {
   const N = CAM.length - 1;
   const u = clamp(RIG.smooth / N, 0, 1);
   curveP.getPoint(u, _p); curveT.getPoint(u, _t);
   const i = clamp(Math.floor(RIG.smooth), 0, N - 1), f = clamp(RIG.smooth - i, 0, 1);
   let fov = lerp(CAM[i].fov, CAM[i + 1].fov, f);
+  const entry = XP_ANCHORS.length ? xpEntryWeight(RIG.smooth) : 0;
+  _p.lerp(XP_ENTRY_P, entry); _t.lerp(XP_ENTRY_T, entry);
+  fov = lerp(fov, 52, entry);
 
   /* The experience chapter looks at what it has climbed to. The rig still
      travels the same curve — the climb is the chapter — but the lens leans
@@ -6258,7 +6267,7 @@ function applyCamera() {
   }
 
   /* parallax — a hand-held drift, never enough to break the frame */
-  const par = 1 - smooth(0, 1.6, RIG.smooth) * .55;
+  const par = (1 - smooth(0, 1.6, RIG.smooth) * .55) * (1 - entry);
   _p.x += RIG.mx * 0.62 * par; _p.y += RIG.my * 0.34 * par;
   _t.x -= RIG.mx * 0.20 * par; _t.y -= RIG.my * 0.12 * par;
 
