@@ -151,8 +151,9 @@
   --muted:#78837c;
   --line:rgba(223,231,224,.13);
   --line-soft:rgba(223,231,224,.07);
-  --brand:#e4606c;        /* the coral of the studio script mark */
-  --brand-deep:#a82448;   /* its shadow side, for gradients that need a floor */
+  --brand:#8fbf9b;        /* fern green keeps the scene distinct in the chrome */
+  --brand-rgb:143,191,155;
+  --brand-deep:#38674a;   /* its shadow side, for gradients that need a floor */
   --ember:#ff6f66;        /* the warm end, tied to the slot light in the scene */
   --gold:#c9a24a;
   --pad:clamp(20px, 3.4vw, 56px);
@@ -183,7 +184,7 @@ body{
   overflow-x:hidden;
 }
 body.is-locked{ overflow:hidden; height:100vh; }
-::selection{ background:var(--brand); color:#fff; }
+::selection{ background:var(--brand); color:var(--ink); }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -310,7 +311,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 .brand-tx{ display:flex; flex-direction:column; line-height:1; gap:3px; }
 .brand-tx b{ font-size:12px; font-weight:500; letter-spacing:.2em; }
 /* No space between the two halves — the colour is the word break, which is
-   the one place the studio coral earns its keep in the chrome. */
+   where the scene accent carries through the studio name. */
 .brand-tx b em{ font-style:normal; color:var(--brand); }
 .brand-tx i{ font-style:normal; font-size:8px; letter-spacing:.72em; color:var(--muted); }
 .nav-links{ display:flex; gap:clamp(18px,2.6vw,46px); margin-left:auto; }
@@ -523,7 +524,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
 /* the riser: drops from this tread to the level of the step below it */
 /* the riser now falls on the right, since the flight descends that way */
 .proc li::before{ content:''; position:absolute; right:-1px; top:0; height:100%; width:1px;
-  background:linear-gradient(rgba(228,96,108,.55), rgba(228,96,108,0) 72%); }
+  background:linear-gradient(rgba(var(--brand-rgb),.55), rgba(var(--brand-rgb),0) 72%); }
 /* the lit nosing on the front edge of the tread */
 .proc li::after{ content:''; position:absolute; left:0; top:-1px; height:1px;
   width:clamp(22px,3vw,46px); background:var(--brand); }
@@ -638,7 +639,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
 /* the lit shoulder that sits under every seam in the pour */
 .xp li::before{ content:''; position:absolute; left:0; right:0; top:0; height:1px;
   background:rgba(214,224,230,.11); }
-.xp li:last-child::before{ background:rgba(228,96,108,.55); }
+.xp li:last-child::before{ background:rgba(var(--brand-rgb),.55); }
 .xp li:last-child{ border-bottom:1px solid rgba(0,0,0,.5); }
 /* Each role steps back from the one above it, so the column reads as a flight
    descending into the page rather than as a stack of rules. The indent is the
@@ -743,7 +744,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
   border:1px solid rgba(223,231,224,.3); padding:12px 18px; transition:border-color .4s, background .4s; }
 /* inline-flex otherwise overrides the browser's hidden rule. */
 .wmodal-cta[hidden]{ display:none; }
-.wmodal-cta:hover{ border-color:var(--brand); background:rgba(228,96,108,.09); }
+.wmodal-cta:hover{ border-color:var(--brand); background:rgba(var(--brand-rgb),.09); }
 .wmodal-x{ position:absolute; top:8px; right:10px; z-index:3; width:44px; height:44px;
   font-size:22px; line-height:1; color:var(--bone-dim); }
 .wmodal-x:hover{ color:var(--bone); }
@@ -802,7 +803,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
     padding:1px;
     background:linear-gradient(104deg,
       transparent 0%, transparent 30%,
-      rgba(228,96,108,.85) 42%,
+      rgba(var(--brand-rgb),.85) 42%,
       rgba(255,205,150,.78) 50%,
       rgba(223,231,224,.62) 58%,
       transparent 70%, transparent 100%);
@@ -928,7 +929,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
   cursor:pointer; transition:padding .5s var(--ease-out);
 }
 .les::before{ content:''; position:absolute; left:calc(var(--gut) * -1); right:0; top:0; bottom:0;
-  background:linear-gradient(90deg, rgba(228,96,108,.11), transparent 46%);
+  background:linear-gradient(90deg, rgba(var(--brand-rgb),.11), transparent 46%);
   opacity:0; transition:opacity .55s var(--ease); pointer-events:none; }
 .les:hover::before{ opacity:1; }
 .les:hover{ padding-left:clamp(8px,1.2vw,18px); }
@@ -1015,7 +1016,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
   font-variant-numeric:tabular-nums; letter-spacing:.01em; }
 .foot-signals li span{ font-size:10px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--muted); }
-.foot-signals li.is-tip b{ color:#e4606c; }
+.foot-signals li.is-tip b{ color:var(--brand); }
 .foot-signals-note{ margin:12px 0 0; max-width:30ch; font-size:11px;
   line-height:1.5; color:#79847e; }
 
@@ -1027,7 +1028,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
 .prog{ position:fixed; left:0; right:0; top:0; height:2px; z-index:90; pointer-events:none;
   background:rgba(223,231,224,.07); }
 .prog i{ display:block; height:100%; width:0; background:var(--brand);
-  box-shadow:0 0 12px rgba(228,96,108,.55); transform-origin:0 50%; }
+  box-shadow:0 0 12px rgba(var(--brand-rgb),.55); transform-origin:0 50%; }
 @media (prefers-reduced-motion:no-preference){ .prog i{ transition:width .12s linear; } }
 
 /* ============================================================= cursor */
@@ -1174,7 +1175,7 @@ body[data-layout-curriculum="b"] .les{
    which left a third of the row empty and read as a fifth discipline that had
    gone missing rather than as a deliberate margin. */
 body[data-layout-curriculum="b"] .les{ grid-column:span 3; }
-body[data-layout-curriculum="b"] .les::before{ left:0; background:linear-gradient(145deg,rgba(228,96,108,.15),transparent 58%); }
+body[data-layout-curriculum="b"] .les::before{ left:0; background:linear-gradient(145deg,rgba(var(--brand-rgb),.15),transparent 58%); }
 body[data-layout-curriculum="b"] .les:hover{ padding-left:32px; }
 body[data-layout-curriculum="b"] .les h3{ font-size:clamp(20px,2vw,30px); }
 body[data-layout-curriculum="b"] .les p{ display:block; max-width:34ch; }
@@ -1342,8 +1343,8 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   font-size:11px; font-weight:500; text-decoration:none;
   transition:background .2s, color .2s; }
 .scene-options a:hover{ background:rgba(223,231,224,.12); color:#fff; }
-.scene-options a[aria-current="page"]{ background:rgba(223,231,224,.16); color:#f0f4f1; }
-.scene-options a:focus-visible{ outline:2px solid #f0a48c; outline-offset:3px; }
+.scene-options a[aria-current="page"]{ background:rgba(var(--brand-rgb),.16); color:var(--brand); }
+.scene-options a:focus-visible{ outline:2px solid var(--brand); outline-offset:3px; }
 @media (max-width:520px){
   .hero-top::before{ right:-20px; }
   .card-lab{ padding:10px; gap:8px; }
@@ -1368,7 +1369,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       <!-- the slab and its slot, the one mark this page earns -->
       <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
         <rect x="13.5" y="5.5" width="17" height="33" stroke="#dfe7e0" stroke-width="1.2"/>
-        <rect x="13.5" y="20.4" width="17" height="3.2" fill="#e4606c"/>
+        <rect x="13.5" y="20.4" width="17" height="3.2" fill="var(--brand)"/>
       </svg>
     </div>
     <div class="pre-mark-tx"><b>THREEOHFIVE<em>STUDIOS</em></b><i>LOS ANGELES</i></div>
@@ -1389,7 +1390,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <svg viewBox="0 0 44 44" fill="none" aria-hidden="true">
       <rect x="13" y="5" width="18" height="34" fill="#dfe7e0" fill-opacity=".07"/>
       <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
-      <rect x="13" y="20" width="18" height="3.6" fill="#e4606c"/>
+      <rect x="13" y="20" width="18" height="3.6" fill="var(--brand)"/>
     </svg>
     <span class="brand-tx"><b>THREEOHFIVE<em>STUDIOS</em></b><i>LOS ANGELES</i></span>
   </a>
@@ -1704,7 +1705,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
       <svg viewBox="0 0 44 44" fill="none" width="34" height="34" aria-hidden="true">
         <rect x="13" y="5" width="18" height="34" fill="#dfe7e0" fill-opacity=".07"/>
         <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
-        <rect x="13" y="20" width="18" height="3.6" fill="#e4606c"/>
+        <rect x="13" y="20" width="18" height="3.6" fill="var(--brand)"/>
       </svg>
       <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. Every surface in the
         scene backdrop on this page is generated in browser at load.</p>
@@ -5386,7 +5387,7 @@ function loadWorkShots() {
 }
 
 const CARD_INK  = 'rgba(223,231,224,';
-const CARD_CORAL= 'rgba(228,96,108,';
+const CARD_ACCENT = 'rgba(' + getComputedStyle(document.documentElement).getPropertyValue('--brand-rgb').trim() + ',';
 
 /* the inset the artwork lives in, and its faint housing */
 function cardPanel(x, W, H) {
@@ -5436,7 +5437,7 @@ function cardArtAutodex(x, W, H) {
   x.strokeStyle = CARD_INK + '.22)'; x.lineWidth = 1.4;
   x.strokeRect(P + 20.5, sy + .5, w - 116, 26);
   cardBar(x, P + 32, sy + 11, 78, 3.5, '.34');
-  x.fillStyle = CARD_CORAL + '.85)'; x.fillRect(P + w - 84, sy, 64, 27);
+  x.fillStyle = CARD_ACCENT + '.85)'; x.fillRect(P + w - 84, sy, 64, 27);
 
   /* three vehicle tiles: a body line and two wheels is enough of a car */
   const cols = 3, gap = 12, tw = (w - 40 - gap * (cols - 1)) / cols, th = 74;
@@ -5475,7 +5476,7 @@ function cardArtShop(x, W, H) {
   x.fillStyle = 'rgba(223,231,224,.06)'; x.fillRect(P + 18, by, w - 36, 58);
   cardBar(x, P + 32, by + 16, w * .38, 6, '.36');
   cardBar(x, P + 32, by + 30, w * .26, 3.5, '.18');
-  x.fillStyle = CARD_CORAL + '.88)'; x.fillRect(P + 32, by + 40, 62, 11);
+  x.fillStyle = CARD_ACCENT + '.88)'; x.fillRect(P + 32, by + 40, 62, 11);
 
   /* four products — a bottle is a shoulder, a body and a cap */
   const cols = 4, gap = 10, tw = (w - 36 - gap * (cols - 1)) / cols, ty = by + 74, th = 76;
@@ -5565,7 +5566,7 @@ function cardArtAero(x, W, H) {
     cardBar(x, cardX + 66, r.y + 22, mw * .30, 3, r.open ? '.22' : '.13');
     if (r.open) cardBar(x, cardX + 14, r.y + 32, 46, 2.5, '.30');
     /* the one coral on the card is the entry being read */
-    x.fillStyle = r.open ? CARD_CORAL + '.90)' : CARD_INK + '.20)';
+    x.fillStyle = r.open ? CARD_ACCENT + '.90)' : CARD_INK + '.20)';
     x.beginPath(); x.arc(sx + .5, r.y + 15, r.open ? 3.4 : 2.2, 0, TAU); x.fill();
   });
 
