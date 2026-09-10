@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="robots" content="noindex,nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lova Rakoto — Web developer and designer in Los Angeles</title>
@@ -1417,7 +1418,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   <nav class="scene-picker" aria-label="Choose a scene">
     <div class="scene-options">
       <a href="https://threeohfivestudios.com/portfolio/">Monolith</a>
-      <a href="https://threeohfivestudios.com/portfolio-a/" aria-current="page">Forest</a>
+      <a href="https://threeohfivestudios.com/portfolio-a/">Forest</a>
     </div>
   </nav>
   <div class="hero-top">
@@ -1468,9 +1469,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
         intent survives all the way into production code.</p>
       <p class="body" data-rv="up">That means end-to-end web experiences that pair strong visual design with
         clean, scalable development, and a process that treats a site as a growth tool rather than a
-        delivery. Success is built on vision, strategy and collaboration. This page is the argument: every
-        surface below is generated in the browser at load, with no model files and no images behind
-        the scene.</p>
+        delivery. Success is built on vision, strategy and collaboration. Explore a selection of my work below.</p>
       <a class="arrowlink" href="#pathways" data-rv="fade" data-cursor>
         <span>See recent work</span>
         <span class="ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
@@ -1698,8 +1697,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
         <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
         <rect x="13" y="20" width="18" height="3.6" fill="var(--brand)"/>
       </svg>
-      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. Every surface in the
-        scene backdrop on this page is generated in browser at load.</p>
+      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles.</p>
       <div class="foot-signals" id="foot-signals" hidden>
         <span class="foot-signals-k">Signals received</span>
         <ul id="foot-signals-list"></ul>
@@ -5661,6 +5659,7 @@ const XP = { dist: 9.2, side: 3.15, drop: -0.55 };
 function buildXpAnchors() {
   const rows = $$('.xp li');
   if (!rows.length || COARSE) return;
+  return; /* the cathedral keeps its scale while the roles remain in the page. */
   rows.forEach((el, i) => {
     const side = i % 2 ? 1 : -1;
     if (side < 0) el.classList.add('xp-l');
@@ -7021,27 +7020,13 @@ function initTuning() {
 
 /* ================================================= 8 · the camera rig */
 const CAM = [
-  { p: [  0.0, 4.05, 13.6 ], t: [  0.0, 6.60, -18.0 ], fov: 36 },  /* 0 hero        */
-  { p: [ -5.6, 2.35, 11.6 ], t: [  1.2, 5.60, -14.0 ], fov: 48 },  /* 1 the slab     */
-  { p: [  1.2, 3.60,  2.2 ], t: [ -0.6, 7.50, -22.0 ], fov: 40 },  /* 2 gardens     */
-  { p: [  5.2, 2.10, -3.4 ], t: [ -2.6, 7.00, -20.0 ], fov: 46 },  /* 3 craft       */
-  /* Experience is the flight. The rig drops to the foot of it and looks
-     straight up the run, so forty treads fill the frame and recede — which is
-     what the section's rows are laid out against. No world constant moved to
-     get this: the architecture is the same, the camera is just on the ground
-     at the bottom instead of halfway up, and a low lens does the work that
-     lengthening the stairs would have done at the cost of retuning the hero. */
-  { p: [  0.0, 1.95, -10.5 ], t: [  0.0, 9.20, -34.0 ], fov: 52 }, /* 4 experience  */
-  /* Carried further up the run than it used to sit, so the climb through the
-     experience chapter passes the whole set of roles rather than stopping
-     level with the fourth. Still looking at the slab, just from higher. */
-  { p: [  0.0, 9.60, -30.5 ], t: [  0.0, 14.2, -42.0 ], fov: 42 }, /* 5 contact     */
-  /* The last shot used to sit above the top of the flight looking down at
-     the ground past it — target y 3 at z −34, with the slab standing at
-     z −44 and its slot up at y 15.4, so the thing the whole page climbs
-     toward was out of frame above the camera. It now looks at the slot, from
-     far enough back that the slab very nearly fills the height. */
-  { p: [  0.0, 11.0, -19.0 ], t: [  0.0, 15.6, -44.0 ], fov: 40 }  /* 6 footer      */
+  {p:[0,2.4,32],t:[0,35,-108],fov:52},
+  {p:[-2,3.8,25],t:[0,39,-110],fov:52},
+  {p:[2,4.2,18],t:[0,41,-112],fov:54},
+  {p:[0,5.5,9],t:[0,43,-116],fov:56},
+  {p:[0,7,-2],t:[0,47,-120],fov:58},
+  {p:[0,12,-20],t:[0,52,-122],fov:60},
+  {p:[0,14,-28],t:[0,55,-123],fov:60}
 ];
 const RIG = { prog: 0, smooth: 0, mx: 0, my: 0, tmx: 0, tmy: 0, intro: 0, focus: -1, focusAmt: 0, pointer: 0, hold: 0, holding: 0, xp: 0 };
 let curveP, curveT, tmpCam;
@@ -7832,58 +7817,216 @@ const TIMER = qs('driver', 'raf') === 'timer';
 function queue() { TIMER ? setTimeout(() => frame(performance.now()), 16) : requestAnimationFrame(frame); }
 
 /* ======================================================== 14 · booting */
+/* the familiar pond sits under architecture and trees several orders larger.
+   tiny lamps and fine risers carry the scale; the lens never rushes past them. */
+const CATHEDRAL_ASSETS = new Map();
+async function loadCathedralAssets() {
+  const responses=await Promise.all(['geometry.json','geometry.bin'].map(name=>fetch('assets/cathedral/'+name)));
+  if(responses.some(r=>!r.ok)) throw new Error('cathedral assets unavailable');
+  const [catalog,buffer]=await Promise.all([responses[0].json(),responses[1].arrayBuffer()]);
+  for(const item of catalog){
+    const interleaved=new THREE.InterleavedBuffer(new Float32Array(buffer,item.offset,item.vertices*8),8);
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.InterleavedBufferAttribute(interleaved,3,0));
+    geo.setAttribute('normal',new THREE.InterleavedBufferAttribute(interleaved,3,3));
+    geo.setAttribute('uv',new THREE.InterleavedBufferAttribute(interleaved,2,6));
+    geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buffer,item.offset+item.vertices*32,item.indices),1));
+    /* ordinary attributes let the existing material batches merge these meshes. */
+    for(const [name,width,offset] of [['position',3,0],['normal',3,3],['uv',2,6]]){
+      const data=new Float32Array(item.vertices*width);
+      for(let i=0;i<item.vertices;i++) for(let k=0;k<width;k++) data[i*width+k]=interleaved.array[i*8+offset+k];
+      geo.setAttribute(name,new THREE.BufferAttribute(data,width));
+    }
+    geo.computeBoundingSphere();CATHEDRAL_ASSETS.set(item.name,geo);
+  }
+}
+function buildCathedral() {
+  scene.background = new THREE.Color(0x101e1a);
+  scene.fog = new THREE.FogExp2(0x162b25, .0038);
+  camera.far = 650; camera.updateProjectionMatrix(); tmpCam.far = 650;
+  renderer.toneMappingExposure = 1.0;
+  scene.add(new THREE.HemisphereLight(0xa4bcb0, 0x101c13, .55));
+  const key = new THREE.DirectionalLight(0xe3e8cc, 1.65);
+  key.position.set(-45,135,15); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x7baca0,.65);
+  rim.position.set(20,65,-150);scene.add(rim);
+  const rnd = mulberry32(30571), n = noise2D(511);
+  const rock = texStone(8701,{base:[86,94,79],moss:.25,relief:1.6});
+  const stone = new THREE.MeshStandardMaterial({map:tx(rock.map,{wrap:THREE.RepeatWrapping,repeat:[3,8]}),
+    normalMap:tx(rock.normal,{wrap:THREE.RepeatWrapping,repeat:[3,8],srgb:false}),
+    normalScale:new THREE.Vector2(.35,.35),roughness:.92,envMapIntensity:.18,color:0x727b68});
+  const pale = stone.clone();pale.color.set(0xe0e0cd);
+  const paleTex=texStone(8713,{base:[172,176,159],moss:0,relief:.8});
+  pale.map=tx(paleTex.map,{wrap:THREE.RepeatWrapping,repeat:[2,4]});
+  pale.emissive=new THREE.Color(0x1d2923);pale.emissiveIntensity=.22;
+  const dark = stone.clone();dark.color.set(0x3c493c);
+  const batches = new Map();
+  const batch = mesh => {
+    mesh.updateMatrix();mesh.geometry.applyMatrix4(mesh.matrix);
+    if (!batches.has(mesh.material)) batches.set(mesh.material,[]);
+    batches.get(mesh.material).push(mesh.geometry);
+  };
+  const box = (w,h,d,x,y,z,mat=stone) => {
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+    m.position.set(x,y,z);batch(m);return m;
+  };
+  const ground = new THREE.PlaneGeometry(380,450,70,90), gp=ground.attributes.position;
+  for(let i=0;i<gp.count;i++) {
+    const x=gp.getX(i),z=-gp.getY(i)-95;
+    const rise=clamp((-z-18)/96,0,1)*34;
+    const bank=smooth(5,15,Math.abs(x));
+    const pond=1-smooth(.7,1.1,Math.hypot(x/34,(z+1)/34));
+    gp.setZ(i,rise*bank + bank*(2+4*fbm(n,x*.035,z*.035,4,2,.5))-1.8*pond);
+  }
+  ground.computeVertexNormals();
+  const floorMat=dark.clone();floorMat.color.set(0x0a180d);floorMat.envMapIntensity=.05;
+  const floor=new THREE.Mesh(ground,floorMat);floor.rotation.x=-Math.PI/2;floor.position.z=-95;
+  scene.add(floor);WORLD.floor=floor;WORLD.floorMat=floorMat;
+  /* narrow treads repeat enough times to make the monument feel remote. */
+  const stairCount=144, tread=96/stairCount, rise=34/stairCount;
+  const steps=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),stone,stairCount);
+  const nosingMat=stone.clone();nosingMat.color.set(0x8b927d);
+  const nosings=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),nosingMat,stairCount);
+  const obj=new THREE.Object3D();
+  for(let i=0;i<stairCount;i++){
+    const w=10.8-i/stairCount*2.6;
+    const height=(i+1)*rise;
+    obj.position.set(0,height*.5,-18-(i+.5)*tread);
+    obj.scale.set(w,height,tread+.025);obj.updateMatrix();steps.setMatrixAt(i,obj.matrix);
+    obj.position.set(0,height+.014,-18-i*tread-.025);obj.scale.set(w,.028,.08);
+    obj.updateMatrix();nosings.setMatrixAt(i,obj.matrix);
+  }
+  scene.add(steps);scene.add(nosings);
+  box(19,2.5,14,0,32.8,-120,dark);
+  /* the open slot has a curved foot rather than three unrelated poles.
+     differing prong heights preserve the reference's asymmetric silhouette. */
+  const shape=new THREE.Shape();
+  shape.moveTo(-7,0);shape.lineTo(7,0);shape.lineTo(7,78);shape.lineTo(2.6,78);
+  shape.lineTo(2.6,25);shape.quadraticCurveTo(2.6,22,0,22);
+  shape.quadraticCurveTo(-2.6,22,-2.6,25);shape.lineTo(-2.6,73);
+  shape.lineTo(-7,73);shape.closePath();
+  const monument=new THREE.Mesh(CATHEDRAL_ASSETS.has('monument') ? CATHEDRAL_ASSETS.get('monument').clone() : new THREE.ExtrudeGeometry(shape,{depth:5.2,bevelEnabled:true,bevelThickness:.10,bevelSize:.10,bevelSegments:1,steps:1,curveSegments:14}),pale);
+  monument.position.set(0,34,-126);scene.add(monument);WORLD.cathedralMonument=monument;
+  box(3.6,4.3,.13,0,36.15,-120.65,new THREE.MeshBasicMaterial({color:0x0b1915}));
+  const inscription=cvs(512,256),ix=inscription.getContext('2d');
+  ix.font='400 176px sans-serif';ix.textAlign='center';ix.textBaseline='middle';
+  ix.fillStyle='#b5b7a3';ix.fillText('305',258,127);ix.fillStyle='#424e45';ix.fillText('305',256,130);
+  const letters=new THREE.Mesh(new THREE.PlaneGeometry(10,5),new THREE.MeshBasicMaterial({map:tx(inscription),transparent:true,depthWrite:false,fog:true}));
+  letters.position.set(0,46,-120.66);letters.material.opacity=.7;scene.add(letters);
+  const warm=new THREE.MeshBasicMaterial({color:0xffcb7e});
+  const lampMat=new THREE.MeshStandardMaterial({color:0x514d36,roughness:.78});
+  const glowMap=tx(texGlow('rgba(255,192,102,1)','rgba(255,126,50,.1)'));
+  for(let i=0;i<13;i++){
+    const u=i/12,z=-20-u*92,y=u*34;
+    for(const side of [-1,1]){
+      const x=side*(5.9-u*1.25);
+      box(.13,1.55,.13,x,y+.775,z,lampMat);box(.72,.08,.64,x,y+1.57,z,lampMat);
+      box(.42,.12,.38,x,y+1.47,z,warm);
+      const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowMap,color:0xffbb70,transparent:true,opacity:.3,depthWrite:false,blending:THREE.AdditiveBlending}));
+      halo.position.set(x,y+1.45,z);halo.scale.set(1.25,1.25,1);scene.add(halo);
+      if(i%3===0){const light=new THREE.PointLight(0xffbc79,1.5,6,2);light.position.set(x,y+1.7,z);scene.add(light);}
+    }
+  }
+  const doorway=new THREE.PointLight(0xffb675,4,18,2);doorway.position.set(0,38,-118);scene.add(doorway);
+  /* bark runs vertically; buttresses join each giant to its bank rather than
+     ending the trunk on a neat cylinder rim. */
+  const bark=texStone(6610,{base:[48,62,43],moss:.55,relief:3});
+  const barkMat=new THREE.MeshStandardMaterial({map:tx(bark.map,{wrap:THREE.RepeatWrapping,repeat:[4,1]}),
+    normalMap:tx(bark.normal,{wrap:THREE.RepeatWrapping,repeat:[4,1],srgb:false}),normalScale:new THREE.Vector2(.8,.35),roughness:1,color:0x657356});
+  const trunks=[];
+  for(let i=0;i<44;i++){
+    const side=i%2?-1:1,z=20-Math.floor(i/2)*11.5;
+    const x=side*(25+rnd()*24+(i>20?rnd()*45:0)),r=3.3+rnd()*3.0,h=110+rnd()*75;
+    const y=clamp((-z-18)/96,0,1)*34;
+    const sculpted=i<12 && CATHEDRAL_ASSETS.has('rooted_trunk_'+i%3);
+    const geo=sculpted ? CATHEDRAL_ASSETS.get('rooted_trunk_'+i%3).clone() : new THREE.CylinderGeometry(r*.42,r,h,LOW?9:14,12);
+    if(sculpted){geo.scale(r/4.8,h/135,r/4.8);geo.translate(0,-h*.5,0);}
+    const p=geo.attributes.position;
+    for(let k=0;!sculpted && k<p.count;k++){
+      const px=p.getX(k),py=p.getY(k),pz=p.getZ(k),ang=Math.atan2(pz,px);
+      const swell=1+.065*Math.sin(ang*9+py*.02)+.04*Math.sin(ang*17);
+      p.setXYZ(k,px*swell+Math.sin(py*.022+i)*.75,py,pz*swell);
+    }
+    geo.computeVertexNormals();const trunk=new THREE.Mesh(geo,barkMat);
+    trunk.position.set(x,y+h*.5-1,z);batch(trunk);trunks.push({x,z,y,r,h});
+    for(let j=0;!sculpted && j<4;j++){
+      const a=j*TAU/4+rnd()*.4;
+      const root=new THREE.Mesh(new THREE.ConeGeometry(r*.52,r*2.5,5),barkMat);
+      root.position.set(x+Math.cos(a)*r*.68,y+r*.75,z+Math.sin(a)*r*.68);root.scale.set(1,1,.55);root.rotation.y=-a;batch(root);
+    }
+  }
+  /* shrubs overlap in depth and change height with the hillside; the middle
+     stays open all the way to the door. three shared plates avoid new textures
+     for every bush, while yaw and scale break their repeated outlines. */
+  const plants=[5,8,11].map((stems,i)=>cutoutMaterial(texUnderstory(981+i*91,{stems,leaf:.45,w:768,h:640}),.012,0x829b72,.3));
+  const ferns=[5,8].map((fronds,i)=>cutoutMaterial(texFernCutout(521+i*45,{fronds,w:512,h:512}),.018,0x89a76a,.3));
+  for(let i=0;i<(LOW?80:130);i++){
+    const z=14-rnd()*166,side=i%2?-1:1,x=side*(7+rnd()*44);
+    if(z> -18&&Math.abs(x)<15)continue;
+    const y=clamp((-z-18)/96,0,1)*34,h=1.5+rnd()*3;
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(h*1.8,h,3,3),ferns[i%2]);
+    m.position.set(x,y+h*.44,z);m.rotation.y=(rnd()-.5)*1.2;batch(m);
+  }
+  /* high crowns disappear into the mist and crop beyond the frame. */
+  const leafMat=new THREE.MeshStandardMaterial({map:tx(texLeaf()),transparent:true,alphaTest:.25,side:THREE.DoubleSide,roughness:1,color:0x456747});
+  const leaves=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),leafMat,LOW?3200:7200);
+  const count=leaves.count,color=new THREE.Color();
+  for(let i=0;i<count;i++){
+    const tr=trunks[i%trunks.length],a=rnd()*TAU,r=Math.sqrt(rnd())*17;
+    obj.position.set(tr.x+Math.cos(a)*r,tr.y+tr.h*.62+rnd()*tr.h*.35,tr.z+Math.sin(a)*r);
+    obj.rotation.set(rnd()*Math.PI,rnd()*TAU,rnd()*Math.PI);obj.scale.set(2+rnd()*4,1+rnd()*3,1);obj.updateMatrix();leaves.setMatrixAt(i,obj.matrix);
+    leaves.setColorAt(i,color.setHSL(.24+rnd()*.08,.22+rnd()*.22,.24+rnd()*.2));
+  }
+  scene.add(leaves);
+  /* close overlapping crowns conceal the hillside, with individual leaves
+     attached to small branch masses rather than loose flecks in the air. */
+  const shrubMat=leafMat.clone();shrubMat.color.set(0x253e23);shrubMat.envMapIntensity=.05;
+  const shrubs=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),shrubMat,LOW?28000:52000);
+  const centers=Array.from({length:120},(_,i)=>{
+    const z=-13-rnd()*138,x=(i%2?-1:1)*(7+rnd()*30);
+    return {x,z,y:clamp((-z-18)/96,0,1)*34,r:2.5+rnd()*4};
+  });
+  for(let i=0;i<shrubs.count;i++){
+    const c=centers[i%centers.length],a=rnd()*TAU,v=rnd()*2-1,r=c.r*(.80+rnd()*.25);
+    obj.position.set(c.x+Math.cos(a)*r*Math.sqrt(1-v*v),c.y+2.4+c.r*.6+v*r*.7,c.z+Math.sin(a)*r*Math.sqrt(1-v*v));
+    obj.rotation.set((rnd()-.5)*2,rnd()*TAU,(rnd()-.5)*2);
+    const size=1.2+rnd()*1.1;obj.scale.set(size,size*.7,1);obj.updateMatrix();shrubs.setMatrixAt(i,obj.matrix);
+    shrubs.setColorAt(i,color.setHSL(.22+rnd()*.08,.24+rnd()*.15,.26+rnd()*.24));
+  }
+  scene.add(shrubs);
+  for(let i=0;i<14;i++){
+    const side=i%2?-1:1,z=8-rnd()*23,x=side*(12+rnd()*6),h=.8+rnd()*1.7;
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(h*1.5,h,4,4),ferns[i%2]);m.position.set(x,h*.44,z);m.rotation.y=(rnd()-.5)*.9;batch(m);
+  }
+  /* each material is one draw, even where hundreds of plants share it. */
+  batches.forEach((geos,mat)=>{
+    scene.add(new THREE.Mesh(mergeGeos(geos),mat));
+  });
+  initMirror();buildPond();
+  /* only the water reflects; the sloping banks stay matte and dark. */
+  floorMat.onBeforeCompile=()=>{};floorMat.needsUpdate=true;
+  WORLD.pond.material.color.set(0x345542);WORLD.pond.material.envMapIntensity=.75;
+  WORLD.pond.geometry.dispose();WORLD.pond.geometry=new THREE.PlaneGeometry(72,68);WORLD.pond.position.z=-2;
+  const pondCompile=WORLD.pond.material.onBeforeCompile;
+  WORLD.pond.material.onBeforeCompile=sh=>{
+    pondCompile(sh);
+    sh.fragmentShader=sh.fragmentShader.replace('vec2(vPondWorld.x/21.,(vPondWorld.z+4.)/18.)','vec2(vPondWorld.x/32.,(vPondWorld.z+2.)/31.)');
+  };
+  WORLD.pond.material.customProgramCacheKey=()=> 'cathedral-pond-v1';
+  const rafts=[[-13,7,7,4],[12,5,6,4],[-9,-6,5,3],[10,-12,4,3],[-3,9,2.8,2],[6,1,2.3,2]];
+  rafts.forEach(([x,z,w,h],i)=>{
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx(texLilyPads(291+i*17,{w:512,h:Math.round(512*h/w),pads:i<2?7:3,r:.14})),transparent:true,alphaTest:.05,depthWrite:false,color:0x9eaf75,fog:true}));
+    m.rotation.x=-Math.PI/2;m.position.set(x,.055,z);m.layers.set(1);m.renderOrder=11;scene.add(m);
+  });
+}
+
 const JOBS = [
   ['Reading the type', () => document.fonts && document.fonts.load('600 320px Wordmark')],
   ['Fetching the work', () => loadWorkShots()],
-  /* critical jobs are marked rather than counted: fetching the work moved
-     renderer setup to third, and the old index check left failed boots locked. */
-  ['Pouring the ground', () => { initGL(); WORLD.uT = { value: 0 }; buildRig(); buildEnvironment(); buildLights(); }, true],
-  ['Cutting the approach', () => buildShell()],
-  ['Raising the slab', () => buildMonolith()],
-  ['Hanging the moon', () => buildMoon()],
-  ['Setting the threshold', () => buildTorii()],
-  ['Planting the pond', () => {
-    buildPondPlanting();
-    buildLantern(7.4, -7.0, 1.15);
-    /* The pairs flanking the flight were given flat heights — 2 and PODIUM —
-       and the flight does not reach either at those depths, so both pairs hung
-       in the air. Solve the step under each one from the same constants the
-       treads and cheeks are built from, and they stand on the rail instead of
-       beside it. */
-    const stepAt   = z => Math.max(0, (STAIR_Z0 - z) / STAIR_RUN - .5);
-    const cheekTop = z => (stepAt(z) + 1) * (PODIUM / STEPS) + .45;
-    const cheekX   = z => (STAIR_W + (STEPS - stepAt(z)) * .052) / 2 + .45;
-    [-14.4, -23.5].forEach((z, i) => {
-      const sc = i ? .95 : .90;
-      buildLantern( cheekX(z), z, sc, cheekTop(z));
-      buildLantern(-cheekX(z), z, sc, cheekTop(z));
-    });
-  }],
-  ['Planting the flight', () => buildStairPlanting()],
-  ['Setting the stones', () => {
-    buildStele(71, 12.6, -13.0, 1.05); buildStele(72, -11.8, -9.4, .95);
-    buildStele(73, 9.2, -19.0, .82);   buildStele(74, -14.5, -17.5, 1.0);
-    buildStele(75, 16.5, -6.0, .88);
-  }],
-  ['Painting the near grass', () => buildForeground()],
-  ['Cutting the word', () => buildWordmark()],
-  ['Raising the mist', () => { buildAtmosphere(); buildLeafFall(); buildWisps(); }],
-  ['Polishing the water', () => {
-    initPost(); buildCards(); buildCardCloth();
-    WORLD.fg.forEach(m => m.layers.set(1));
-    WORD.glyphs.forEach(m => m.layers.set(2));
-    if (WORLD.rain) WORLD.rain.layers.set(1);
-    /* the fall is all around the rig, including behind it — mirroring it
-       would drop leaves into the water that are nowhere near the water */
-    if (WORLD.leaves) WORLD.leaves.mesh.layers.set(1);
-    WORLD.ripples.forEach(r => r.layers.set(1));
-    /* after the layer assignments above, not before — the mirror camera is
-       set to layer 0 and what it excludes depends on them having run */
-    initMirror(); buildPuddles(); initTuning();
-    layoutWord(); measure();          /* measure() places the roles */
-    /* nothing that casts a shadow ever moves, so bake it once */
-    if (WANT_SHADOW && WORLD.key) { WORLD.key.shadow.autoUpdate = false; WORLD.key.shadow.needsUpdate = true; }
-  }]
+  ['Pouring the ground', () => { initGL(); WORLD.uT={value:0}; buildRig(); buildEnvironment(); }, true],
+  ['Carving the trees', () => loadCathedralAssets()],
+  ['Growing the cathedral', () => buildCathedral(), true],
+  ['Finishing the view', () => { initPost(); buildCards(); buildCardCloth(); layoutWord(); measure(); }]
 ];
 
 function boot() {
