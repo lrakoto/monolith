@@ -4897,12 +4897,10 @@ function buildXpAnchors() {
 const XP_TITLE = { el: null, lab: null };
 function updateXpTitle() {
   const el = XP_TITLE.el; if (!el) return;
-  /* Ramps in over the last of the approach and is gone before the first role.
-     It cannot start earlier than this: the services chapter's own cards are
-     still holding the screen until about 3.2, and two chapters' copy on the
-     glass at once reads as a mistake. The tail is cut before the first role
-     arrives, so the two are handed off rather than crossfaded. */
-  const amt = clamp(Math.min((RIG.smooth - 3.20) / .32, (3.82 - RIG.smooth) / .20), 0, 1);
+  /* the shorter approach needs a little clear water after the process copy.
+     bring the heading in later, but keep its exit and the first role where
+     they were so this pause does not add another stretch of empty scroll. */
+  const amt = clamp(Math.min((RIG.smooth - 3.40) / .16, (3.82 - RIG.smooth) / .16), 0, 1);
   if (amt <= .003) {
     if (el.style.opacity !== '0') el.style.opacity = '0';
   } else {
