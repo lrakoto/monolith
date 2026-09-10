@@ -888,9 +888,9 @@ body.xp-3d .xp li p{ margin-top:4px; }
 /* fixed, or the gradient is measured against a 6000-pixel body box and the
    moon ends up somewhere around the curriculum table */
 .no-webgl body{ background:
-  radial-gradient(11vw 11vw at 73% 17%, rgba(232,52,28,.95), rgba(158,20,16,.62) 44%, rgba(96,12,12,.20) 64%, transparent 72%),
-  radial-gradient(38vw 32vw at 50% 46%, rgba(228,104,24,.40), rgba(122,42,10,.18) 54%, transparent 74%),
-  radial-gradient(120% 80% at 50% 0%, rgba(120,150,158,.16), transparent 60%), #05070a;
+  radial-gradient(6vw 6vw at 73% 17%, rgba(186,195,212,.42), rgba(119,130,154,.12) 48%, transparent 72%),
+  radial-gradient(70vw 36vw at 50% 70%, rgba(166,77,85,.22), rgba(104,54,70,.10) 54%, transparent 78%),
+  linear-gradient(#06080d, #171820 48%, #35272f 76%, #0b0c10);
   background-attachment:fixed; }
 .no-webgl .word-fb{
   display:block; position:absolute; left:0; right:0; bottom:16%; z-index:1;
@@ -1854,8 +1854,8 @@ const TUNE = {
   stairEdgeShine:   0.480,
   envIntensity:     1.15,
   slotBright:       3.000,
-  moonBright:       0.460,
-  moonSize:         1.00,
+  moonBright:       0.320,
+  moonSize:         0.76,
   lampBright:       8.00,
   lampReach:        30.50,
   nearReach:        12.60,
@@ -2258,10 +2258,10 @@ function texMote() {
 function texEnv() {
   const W = 512, H = 256, c = cvs(W, H), x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0,   '#151f2c');          /* zenith                        */
-  g.addColorStop(.42, '#22303f');
-  g.addColorStop(.50, '#2b3a49');          /* the haze band at the horizon  */
-  g.addColorStop(.58, '#0d1319');
+  g.addColorStop(0,   '#11131b');          /* zenith                        */
+  g.addColorStop(.42, '#28232b');
+  g.addColorStop(.50, '#463038');          /* the haze band at the horizon  */
+  g.addColorStop(.58, '#171318');
   g.addColorStop(1,   '#04060a');          /* the ground half, near black   */
   x.fillStyle = g; x.fillRect(0, 0, W, H);
 
@@ -2293,131 +2293,52 @@ function buildEnvironment() {
   pm.dispose(); t.dispose();
 }
 
-/* the night sky itself: black at altitude, going to the fog colour at the
-   horizon so the backdrop and the depth cue meet without a seam */
-/* The sky was a five-stop gradient, a wash of noise and four hundred stars of
-   one kind. It read as a backdrop rather than as air, which is what made the
-   moon look pasted on to it — the fault was never really the moon.
-
-   Three things changed. It is drawn at four times the resolution, because a
-   512px sheet stretched across the whole dome bands visibly in the darks where
-   almost all of this image lives. The stars have magnitude now: a great many
-   faint ones, a few bright, and the bright ones carry a small halo the way a
-   real one does through atmosphere — an even scatter of identical dots is the
-   thing that reads as a texture rather than as a sky. And a galactic band runs
-   across it, faint enough to be atmosphere rather than a feature.
-
-   The moon itself is left alone deliberately. The comment on buildMoon records
-   that a detailed one was tried and taken out: turned cold it stopped being a
-   graphic and became an unconvincing photograph. Giving it craters again would
-   be re-making a decision somebody already made and wrote down. */
+/* dusk stays low behind the slab. the zenith is neutral charcoal, and the
+   coral belongs to air near the horizon rather than tinting the whole view.
+   a few stars survive above it; a galactic band competed with the architecture. */
 function texSky() {
   const W = 2048, H = 2048, c = cvs(W, H), x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, 'rgb(5,8,13)');     g.addColorStop(.34, 'rgb(13,22,31)');
-  g.addColorStop(.66, 'rgb(17,26,34)'); g.addColorStop(.88, 'rgb(24,35,42)');
-  g.addColorStop(1, 'rgb(14,22,28)');
+  g.addColorStop(0, '#06080d');
+  g.addColorStop(.32, '#11131b');
+  g.addColorStop(.52, '#23212a');
+  g.addColorStop(.68, '#493038');
+  g.addColorStop(.79, '#36262d');
+  g.addColorStop(1, '#0b0c10');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
 
-  /* The galactic band: a soft diagonal of dust, well under the noise floor of
-     anything else in the frame, there to stop the upper sky being flat.
-
-     Built on its own canvas and then composited, which is the whole trick.
-     It used to be painted straight onto the sky and eroded in place with a
-     destination-out — but destination-out writes to *alpha*, this texture is
-     rendered by an opaque material, and the upload divides the colour back
-     out by the alpha it just lowered. So the erosion never subtracted
-     anything; it multiplied. The "soft dust" arrived as a hard bright slab
-     with two straight edges and a corner sitting inside the frame, which was
-     the only straight line in the sky and the first thing anyone saw in it.
-     Composited from a scratch canvas the erase lands on the band's own alpha,
-     source-over does the blend, and the sky underneath stays opaque. */
-  const bandH = Math.round(H * .32), bandW = W * 2;
-  const bc = cvs(bandW, bandH), bx = bc.getContext('2d');
-  const mw = bx.createLinearGradient(0, 0, 0, bandH);
-  mw.addColorStop(0, 'rgba(120,150,180,0)');
-  mw.addColorStop(.42, 'rgba(126,152,178,.055)');
-  mw.addColorStop(.54, 'rgba(140,164,188,.075)');
-  mw.addColorStop(1, 'rgba(120,150,180,0)');
-  bx.fillStyle = mw; bx.fillRect(0, 0, bandW, bandH);
-  bx.globalCompositeOperation = 'destination-out';
-  bx.globalAlpha = .55;
-  bx.drawImage(fbmCanvas(512, 256, 991, 5, 4, 1.1), 0, 0, bandW, bandH);
-  /* and both ends taper away. The band is longer than the canvas is wide but
-     it is also rotated, so a square end lands inside the frame — it has to
-     leave the sky rather than stop in it. */
-  bx.globalAlpha = 1;
-  const ends = bx.createLinearGradient(0, 0, bandW, 0);
-  ends.addColorStop(0, 'rgb(0,0,0)');        ends.addColorStop(.26, 'rgba(0,0,0,0)');
-  ends.addColorStop(.74, 'rgba(0,0,0,0)');   ends.addColorStop(1, 'rgb(0,0,0)');
-  bx.fillStyle = ends; bx.fillRect(0, 0, bandW, bandH);
-  x.save();
-  x.translate(W * .5, H * .30); x.rotate(-.42);
-  x.drawImage(bc, -W, -bandH / 2);
-  x.restore();
-  /* cloud, and a low warm bloom off the valley behind the ridge */
-  x.globalAlpha = .34; x.globalCompositeOperation = 'overlay';
-  x.drawImage(fbmCanvas(W, H, 313, 5, 3, .9), 0, 0);
+  /* broad enough to read as the last light beyond the ridge, with no bright
+     centre that could become a second sun beside the slot. */
+  const glow = x.createRadialGradient(W * .5, H * .70, 0, W * .5, H * .70, W * .48);
+  glow.addColorStop(0, 'rgba(186,88,91,.20)');
+  glow.addColorStop(.48, 'rgba(135,65,77,.10)');
+  glow.addColorStop(1, 'rgba(90,46,61,0)');
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  x.globalAlpha = .12; x.globalCompositeOperation = 'overlay';
+  x.drawImage(fbmCanvas(1024, 512, 313, 4, 3, .8), 0, 0, W, H);
   x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  const wg = x.createRadialGradient(W * .68, H * .95, 4, W * .68, H * .95, W * .44);
-  wg.addColorStop(0, 'rgba(150,66,26,.30)'); wg.addColorStop(.5, 'rgba(96,44,22,.12)');
-  wg.addColorStop(1, 'rgba(0,0,0,0)');
-  x.fillStyle = wg; x.fillRect(0, 0, W, H);
-  /* Stars with magnitude. rnd^3 is what does the work: it makes the great
-     majority faint and a handful bright, which is the distribution a real sky
-     has and the reason this reads as depth rather than as dots. The brightest
-     few get a halo, because that is what atmosphere does to a bright star and
-     it is the only cue at this scale that says the air has substance. */
+
   const rnd = mulberry32(881);
-  for (let i = 0; i < 2600; i++) {
-    const sx = rnd() * W, sy = rnd() * H * .82;
-    const mag = Math.pow(rnd(), 3);                    /* 0 faint … 1 brilliant */
-    const r = .5 + mag * 1.6;
-    const fade = 1 - sy / H;                           /* thinner toward the horizon haze */
-    const a = (.07 + mag * .78) * fade;
-    /* Only the genuinely brilliant get a halo, and a tight one. The first
-       pass gave it to the top quarter at five and a half radii, which at this
-       texture scale is wider than the old stars were — seven hundred soft
-       discs, and the sky read as falling snow rather than as stars. */
-    if (mag > .95) {
-      const hr = r * 2.4;
-      const h = x.createRadialGradient(sx, sy, 0, sx, sy, hr);
-      h.addColorStop(0, 'rgba(206,226,240,' + a * .30 + ')');
-      h.addColorStop(1, 'rgba(206,226,240,0)');
-      x.fillStyle = h;
-      x.beginPath(); x.arc(sx, sy, hr, 0, TAU); x.fill();
-    }
-    /* the coldest are bluest, the brightest nearly white */
-    const tint = mag > .55 ? '228,238,246' : (rnd() < .22 ? '186,206,236' : '206,224,236');
-    x.fillStyle = 'rgba(' + tint + ',' + a + ')';
-    x.beginPath(); x.arc(sx, sy, r, 0, TAU); x.fill();
+  for (let i = 0; i < 180; i++) {
+    const sx = rnd() * W, sy = rnd() * H * .52, mag = Math.pow(rnd(), 3);
+    const a = (.06 + mag * .28) * (1 - sy / (H * .60));
+    x.fillStyle = 'rgba(220,225,234,' + a + ')';
+    x.beginPath(); x.arc(sx, sy, .45 + mag * .75, 0, TAU); x.fill();
   }
   return c;
 }
 
-/* the wooded ridge the valley closes with — black, ragged, mostly fog */
+/* low bare ridges leave the slab as the only tall silhouette. */
 function texRidge() {
   const W = 2048, H = 512, c = cvs(W, H), x = c.getContext('2d');
-  const n = noise2D(1207), rnd = mulberry32(1207);
+  const n = noise2D(1207);
   x.beginPath(); x.moveTo(0, H);
   for (let i = 0; i <= W; i += 4) {
     const t = i / W;
-    const ridge = .46 + .30 * (fbm(n, t * 2.4, .5, 4, 2.1, .55) * .5 + .5)
-                      + .16 * (fbm(n, t * 7.5, 3.1, 3, 2.2, .5) * .5 + .5);
-    x.lineTo(i, H - ridge * H * .84);
+    const ridge = .26 + .12 * (fbm(n, t * 2.4, .5, 3, 2.1, .5) * .5 + .5);
+    x.lineTo(i, H - ridge * H);
   }
-  x.lineTo(W, H); x.closePath();
-  x.fillStyle = '#050809'; x.fill();
-  /* conifer spikes along the crest so the silhouette reads as forest */
-  x.fillStyle = '#050809';
-  for (let i = 0; i < 460; i++) {
-    const px = rnd() * W, t = px / W;
-    const ridge = .46 + .30 * (fbm(n, t * 2.4, .5, 4, 2.1, .55) * .5 + .5)
-                      + .16 * (fbm(n, t * 7.5, 3.1, 3, 2.2, .5) * .5 + .5);
-    const by = H - ridge * H * .84, hh = 8 + rnd() * 30, ww = 3 + rnd() * 6;
-    x.beginPath(); x.moveTo(px, by - hh); x.lineTo(px + ww, by + 4); x.lineTo(px - ww, by + 4);
-    x.closePath(); x.fill();
-  }
+  x.lineTo(W, H); x.closePath(); x.fillStyle = '#08090c'; x.fill();
   return c;
 }
 
@@ -2886,8 +2807,8 @@ function initGL() {
      moved the hall by 0.18 of a luminance unit, the fog colour moves it
      properly. And it reaches by distance, so the foreground does not
      follow it down. */
-  scene.fog = new THREE.FogExp2(0x050a0e, 0.0168);
-  scene.background = new THREE.Color(0x060a0d);
+  scene.fog = new THREE.FogExp2(0x0b0c10, 0.0140);
+  scene.background = new THREE.Color(0x0b0c10);
   camera = new THREE.PerspectiveCamera(36, vpW() / vpH(), .35, 220);
   scene.add(camera);
 }
@@ -2983,12 +2904,12 @@ function buildShell() {
 
   /* the sky, hung far enough back that the whole frustum sits inside it */
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(360, 190),
-    new THREE.MeshBasicMaterial({ color: hdr(.60, .70, .80), map: tx(texSky()),
+    new THREE.MeshBasicMaterial({ color: hdr(.82, .82, .82), map: tx(texSky()),
       depthWrite: false, fog: false, toneMapped: false }));
   sky.position.set(0, 62, -108); sky.renderOrder = 0; scene.add(sky);
   WORLD.sky = sky;
 
-  /* the wooded ridge that closes the valley — three-quarters eaten by fog,
+  /* the bare ridge that closes the valley — three-quarters eaten by fog,
      which is the only reason the ground plane can just stop out there */
   /* z, centre y, width, height, x — kept low: a crest that climbs past the
      hall's eaves stops reading as distance and starts reading as a cut-out */
@@ -3233,7 +3154,7 @@ function buildMonolith() {
   mist.position.set(0, PODIUM + 3.2, TEMPLE_Z + 10); mist.renderOrder = 2; scene.add(mist);
 }
 
-/* --------------------------------------------------- the vermilion moon
+/* -------------------------------------------------------- the dusk moon
    Hung well behind the hall so the roof crosses its lower left — near
    enough to the ridge to sit in the mist, far enough that it never moves
    against the buildings when the rig drifts.                             */
@@ -3243,7 +3164,7 @@ function buildMoon() {
     /* The grade lives here, on a near-neutral albedo. It used to be the blood
        moon this page was named for; with a warm slot burning in the slab the
        scene cannot afford a second warm source, so the moon goes cold and the
-       frame runs on one opposition — a lit seam against a blue night.
+       smaller disc now leaves the coral dusk and the lit seam room to breathe.
        Written in linear, not display: the map is decoded out of sRGB before
        this multiplies it, and reading a ratio straight off a reference plate
        is what left the original a pale pink. */
@@ -3257,16 +3178,18 @@ function buildMoon() {
        graphic and started being an unconvincing photograph: stylised in a
        scene that had gone literal around it. A slab does not need a
        photographic moon behind it. It needs a circle. */
-    new THREE.MeshBasicMaterial({ map: tx(texDisc()), color: hdr(TUNE.moonBright, TUNE.moonBright * 1.26, TUNE.moonBright * 1.65),
+    new THREE.MeshBasicMaterial({ map: tx(texDisc()), color: hdr(TUNE.moonBright, TUNE.moonBright * 1.08, TUNE.moonBright * 1.18),
       transparent: true, depthWrite: false, fog: false, toneMapped: false }));
   disc.position.set(MOON.x, MOON.y, MOON.z); disc.renderOrder = 1;
+  disc.scale.setScalar(TUNE.moonSize);
   scene.add(disc); WORLD.moon = disc;
 
   /* the air around it — a wide, weak corona that the bloom picks up */
   const halo = new THREE.Mesh(new THREE.PlaneGeometry(MOON.r * 6.4, MOON.r * 6.4),
-    new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(172,206,232,.90)', 'rgba(78,124,168,.26)')),
+    new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(192,202,219,.65)', 'rgba(109,117,141,.16)')),
       transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .22 }));
   halo.position.set(MOON.x, MOON.y, MOON.z - .3); halo.renderOrder = 0;
+  halo.scale.setScalar(TUNE.moonSize);
   scene.add(halo); WORLD.moonHalo = halo;
 }
 /* On a tall frame the rig steps back and its horizontal reach narrows, which
@@ -3561,44 +3484,16 @@ function cutoutMaterial(canvasEl, sway, tint, glow) {
 }
 
 function buildForeground() {
-  /* the plane widths are sized against the frustum at their own depth: a
-     26-unit sheet two metres from the lens only shows its middle tenth */
+  /* the two gardens have foliage close to the lens. here the stone banks stay
+     low and still so the wet court and the flight can carry the approach. */
   const layers = [
-    /* name        canvas                                                                     x     y     z     w     h   sway */
-    /* Every one of these was dropped by about a metre. They used to close
-       the bottom of the hero completely — a continuous bank of grass from the
-       lower edge of the frame up to the podium — and with the court behind it
-       there was no ground on screen at any waypoint on the page. That was
-       fine for a scene lit by paper lanterns and nothing else. It is not fine
-       for a wet one: the reflection, the puddles and most of the specular
-       work all live on a surface the composition had walled off. Lowering the
-       banks opens a strip of standing water either side of the flight and
-       keeps the grass reading as foreground. */
-    ['grassFar',  texGrassCutout(101, { crest: .30, peak: .46, wide: .42, blades: 11000, len: 34, warm: .70, crest2: .46, crest3: .40 }),
-                  -3.4,  1.85, -0.4, 24, 12, .040],
-    ['rockLeft',  texRockCutout(404, { blobs: [[.24, .78, .48, .38], [.58, .94, .46, .30], [.84, 1.06, .42, .28]] }),
-                  -7.2,  1.80,  1.8, 17, 11.3, .010],
-    /* The two near banks were raised again to close more of the bottom edge.
-       Only these two: grassFar stays low, because the metre they were all
-       dropped by is what opened the strip of standing water either side of
-       the flight, and lifting the far bank as well walls the court off again
-       and takes the reflection with it. */
-    ['grassMid',  texGrassCutout(202, { crest: .60, peak: .55, wide: .40, blades: 13000, len: 40, warm: .95, crest2: -.44, crest3: .34 }),
-                   3.9,  2.42,  3.6, 15,  8.8, .062],
-    ['grassNear', texGrassCutout(303, { crest: .42, peak: .62, wide: .48, blades: 16000, len: 50, warm: .85, crest2: .42, crest3: .44 }),
-                  -1.9,  2.38,  5.6, 12,  7.4, .092],
-    /* the bough hangs overhead and was never in the way — it stays put */
-    ['bough',     texBranchCutout(505, { dry: true }), 4.6, 2.95, 6.4, 13, 8.7, .045],
-    ['rockNear',  texRockCutout(606, { blobs: [[.18, .86, .54, .44], [.54, 1.02, .50, .36], [.86, .92, .40, .32]] }),
-                  -6.6,  0.85,  6.0, 9, 6, .008]
+    ['rockLeft', texRockCutout(404, { blobs: [[.24, .78, .48, .38], [.58, .94, .46, .30], [.84, 1.06, .42, .28]] }),
+      -8.6, .75, 1.8, 15, 8.4, 0],
+    ['rockNear', texRockCutout(606, { blobs: [[.18, .86, .54, .44], [.54, 1.02, .50, .36], [.86, .92, .40, .32]] }),
+      -7.8, .25, 6.0, 8, 4.8, 0]
   ];
-  /* the rocks keep their own tone; only the growing things get dried out */
-  const DRY = 0x59635c, STONE = 0x8f9698;
-  const tints = { grassFar: DRY, grassMid: DRY, grassNear: DRY, bough: 0x5d6360,
-                  rockLeft: STONE, rockNear: STONE };
-  /* stone does not transmit; the growing things do */
-  const glows = { grassFar: .55, grassMid: 1.0, grassNear: 1.15, bough: .5,
-                  rockLeft: .10, rockNear: .10 };
+  const tints = { rockLeft: 0x8f9398, rockNear: 0x8f9398 };
+  const glows = { rockLeft: .04, rockNear: .04 };
   WORLD.fg = [];
   layers.forEach(L => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(L[5], L[6], 12, 12), cutoutMaterial(L[1], L[7], tints[L[0]], glows[L[0]]));
@@ -3688,22 +3583,22 @@ const WORD = { glyphs: [], group: null, ink: null, reveal: 0 };
 /* --------------------------------------------------------- atmospherics */
 function buildAtmosphere() {
   /* drifting haze slabs */
-  const hazeTex = tx(texGlow('rgba(160,205,210,.55)', 'rgba(110,165,175,.18)'));
+  const hazeTex = tx(texGlow('rgba(175,166,180,.42)', 'rgba(132,113,133,.12)'));
   WORLD.haze = [];
   const rnd = mulberry32(66);
-  for (let i = 0; i < (LOW ? 4 : 6); i++) {
+  for (let i = 0; i < (LOW ? 3 : 4); i++) {
     const s = 12 + rnd() * 15;
     const h = new THREE.Mesh(new THREE.PlaneGeometry(s, s * .55),
       new THREE.MeshBasicMaterial({ map: hazeTex, transparent: true, blending: THREE.AdditiveBlending,
-        depthWrite: false, fog: false, opacity: .05 + rnd() * .07 }));
+        depthWrite: false, fog: false, opacity: .025 + rnd() * .035 }));
     h.position.set((rnd() - .5) * 44, 1.5 + rnd() * 10, -38 + rnd() * 40);
     h.renderOrder = 4;
-    h.userData = { sp: .06 + rnd() * .12, ph: rnd() * TAU, x0: h.position.x };
+    h.userData = { sp: .018 + rnd() * .025, ph: rnd() * TAU, x0: h.position.x };
     scene.add(h); WORLD.haze.push(h);
   }
 
-  /* embers around the lantern and the disc */
-  const N = LOW ? 220 : 460;
+  /* a few slow motes catch the lanterns; the gardens carry the busy air. */
+  const N = LOW ? 24 : 56;
   const pos = new Float32Array(N * 3), seed = new Float32Array(N);
   for (let i = 0; i < N; i++) {
     pos[i * 3] = (rnd() - .5) * 30; pos[i * 3 + 1] = rnd() * 11; pos[i * 3 + 2] = -26 + rnd() * 36;
@@ -3719,7 +3614,7 @@ function buildAtmosphere() {
     vertexShader:
       'attribute float aSeed; uniform float uT; uniform float uSize; varying float vA;\n' +
       'void main(){ vec3 p=position;\n' +
-      ' p.y = mod(p.y + uT*(0.14+aSeed*0.28), 11.5);\n' +
+      ' p.y = mod(p.y + uT*(0.05+aSeed*0.09), 11.5);\n' +
       ' p.x += sin(uT*0.36 + aSeed*22.0)*0.85;\n' +
       ' p.z += cos(uT*0.29 + aSeed*17.0)*0.7;\n' +
       ' vec4 mv = modelViewMatrix * vec4(p,1.0);\n' +
@@ -3729,120 +3624,10 @@ function buildAtmosphere() {
     fragmentShader:
       'uniform sampler2D uTex; varying float vA;\n' +
       'void main(){ vec4 t=texture2D(uTex, gl_PointCoord);\n' +
-      ' gl_FragColor = vec4(t.rgb*vec3(1.6,0.78,0.42), t.a*vA*0.75); }'
+      ' gl_FragColor = vec4(t.rgb*vec3(1.6,0.78,0.42), t.a*vA*0.36); }'
   }));
   emb.frustumCulled = false; emb.renderOrder = 5;
   scene.add(emb); WORLD.embers = emb;
-
-  /* Fireflies. The embers rise off the lanterns and are the fire in the scene;
-     these are the opposite and have to read as alive rather than as more
-     sparks, so three things separate them. They hover instead of climbing —
-     three wander periods that do not divide into each other, so no mote ever
-     repeats a path. They are cooler and paler, a yellow-white against the
-     ember orange. And they blink: the brightness is a sine raised to the
-     fifth, which leaves most of them dark at any instant and a few lit, which
-     is what a field of them actually looks like and also what stops a hundred
-     and thirty additive sprites from turning the low half of the frame into
-     haze.
-
-     Held low and close to the planting — knee height to twice head height,
-     out to twenty metres either side and back as far as the head of the
-     flight — because a firefly forty metres out is one pixel that flickers,
-     which reads as a dead subpixel rather than as an insect. Everything moves
-     in the vertex shader off the clock the rest of the scene already runs on,
-     so the whole field is one draw call and nothing per frame on the CPU.
-
-     Left on layer 0, unlike the wisps and the rain: these are the one drifting
-     thing in the scene that is genuinely out in the world rather than near the
-     lens, so the puddles are welcome to reflect them. */
-  const FN = LOW ? 55 : 130;
-  const fpos = new Float32Array(FN * 3), fseed = new Float32Array(FN);
-  /* They follow the ground rather than sitting on one plane. The first pass
-     scattered them all at court level, and the page spends most of its length
-     climbing — from the fourth waypoint on, the court is behind and below the
-     rig and every firefly was out of frame. Solved off the same constants the
-     treads are built from, so each one hovers a metre or two above whatever
-     surface is under it: the court at the front, the flight through the middle,
-     the landing at the top. */
-  const flyGround = z => z >= STAIR_Z0 ? 0
-    : z <= STAIR_Z0 - STEPS * STAIR_RUN ? PODIUM
-    : (Math.max(0, (STAIR_Z0 - z) / STAIR_RUN - .5) + 1) * (PODIUM / STEPS);
-  for (let i = 0; i < FN; i++) {
-    /* forward of the gate as well as behind it. Started at the foot of the
-       flight, every one of them was ten to thirty-five metres out, which is a
-       speck that flickers — indistinguishable from a dead subpixel. The near
-       ones are what make the field read at all. */
-    const fz = -40 + rnd() * 50;
-    /* narrow where the flight is, wide out on the open court, so they gather
-       along the climb instead of spreading thin across ground nothing looks at */
-    const spread = fz < STAIR_Z0 ? 15 : 34;
-    fpos[i * 3]     = (rnd() - .5) * spread;
-    fpos[i * 3 + 1] = flyGround(fz) + .45 + Math.pow(rnd(), 1.5) * 3.4;
-    fpos[i * 3 + 2] = fz;
-    fseed[i] = rnd();
-  }
-  const fg = new THREE.BufferGeometry();
-  fg.setAttribute('position', new THREE.BufferAttribute(fpos, 3));
-  fg.setAttribute('aSeed', new THREE.BufferAttribute(fseed, 1));
-  const fly = new THREE.Points(fg, new THREE.ShaderMaterial({
-    /* Warmer than the first pass, which sat at a yellow-green and read as
-       pollen. A firefly's lantern is closer to a candle than to a leaf, and
-       against this scene's blue night the warm end is also the only place it
-       can be bright without going white. */
-    uniforms: { uT: WORLD.uT, uTex: { value: tx(texGlow('rgba(255,238,172,1)', 'rgba(255,176,74,.32)')) },
-      uSize: { value: vpH() * .5 } },
-    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-    vertexShader:
-      'attribute float aSeed; uniform float uT; uniform float uSize; varying float vA;\n' +
-      'void main(){ vec3 p=position; float s=aSeed*63.0;\n' +
-      ' p.x += sin(uT*(0.17+aSeed*0.19) + s)*1.35;\n' +
-      ' p.y += sin(uT*(0.13+aSeed*0.14) + s*1.7)*0.60;\n' +
-      ' p.z += cos(uT*(0.15+aSeed*0.17) + s*2.3)*1.15;\n' +
-      ' vec4 mv = modelViewMatrix * vec4(p,1.0);\n' +
-      ' float b = sin(uT*(0.52+aSeed*0.80) + s*3.1)*0.5 + 0.5;\n' +
-      ' vA = pow(b, 2.8) * (0.55 + aSeed*0.45);\n' +
-      ' gl_PointSize = uSize*(0.019+aSeed*0.024)/max(-mv.z,0.6);\n' +
-      ' gl_Position = projectionMatrix * mv; }',
-    fragmentShader:
-      'uniform sampler2D uTex; varying float vA;\n' +
-      'void main(){ if (vA <= 0.004) discard;\n' +
-      ' vec4 t=texture2D(uTex, gl_PointCoord);\n' +
-      ' gl_FragColor = vec4(t.rgb*vec3(1.60,1.10,0.42), t.a*vA*1.30); }'
-  }));
-  fly.frustumCulled = false; fly.renderOrder = 5;
-  scene.add(fly); WORLD.flies = fly;
-
-  /* rain in the slot of open sky */
-  if (!LOW) {
-    const D = 900, rp = new Float32Array(D * 2 * 3), rt = new Float32Array(D * 2), rs = new Float32Array(D * 2), rl = new Float32Array(D * 2);
-    for (let i = 0; i < D; i++) {
-      const x = (rnd() - .5) * 40, z = -30 + rnd() * 34, y = rnd() * 17, sp = 7 + rnd() * 9, ln = .30 + rnd() * .55;
-      for (let k = 0; k < 2; k++) {
-        const o = (i * 2 + k) * 3;
-        rp[o] = x; rp[o + 1] = y; rp[o + 2] = z;
-        rt[i * 2 + k] = k; rs[i * 2 + k] = sp; rl[i * 2 + k] = ln;
-      }
-    }
-    const rg = new THREE.BufferGeometry();
-    rg.setAttribute('position', new THREE.BufferAttribute(rp, 3));
-    rg.setAttribute('aTop', new THREE.BufferAttribute(rt, 1));
-    rg.setAttribute('aSpeed', new THREE.BufferAttribute(rs, 1));
-    rg.setAttribute('aLen', new THREE.BufferAttribute(rl, 1));
-    const rain = new THREE.LineSegments(rg, new THREE.ShaderMaterial({
-      uniforms: { uT: WORLD.uT },
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-      vertexShader:
-        'attribute float aTop; attribute float aSpeed; attribute float aLen; uniform float uT; varying float vA;\n' +
-        'void main(){ vec3 p=position;\n' +
-        ' float y = mod(p.y - uT*aSpeed, 17.0);\n' +
-        ' p.y = y + aTop*aLen;\n' +
-        ' vA = smoothstep(0.0,3.0,y)*smoothstep(17.0,11.0,y);\n' +
-        ' gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0); }',
-      fragmentShader: 'varying float vA;\nvoid main(){ gl_FragColor = vec4(0.55,0.74,0.82, vA*0.024); }'
-    }));
-    rain.frustumCulled = false; rain.renderOrder = 6;
-    scene.add(rain); WORLD.rain = rain;
-  }
 
   /* ripples on the standing water */
   const ringC = cvs(256, 256), rx2 = ringC.getContext('2d');
@@ -3852,7 +3637,7 @@ function buildAtmosphere() {
   rx2.fillStyle = rg2; rx2.fillRect(0, 0, 256, 256);
   const ringTex = tx(ringC);
   WORLD.ripples = [];
-  for (let i = 0; i < (LOW ? 6 : 13); i++) {
+  for (let i = 0; i < (LOW ? 2 : 4); i++) {
     const r = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
       new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, blending: THREE.AdditiveBlending,
         depthWrite: false, fog: true, opacity: 0 }));
@@ -3879,7 +3664,7 @@ function buildAtmosphere() {
    walked out from under its weather. */
 const LEAF_AHEAD = 11, LEAF_SPREAD = 12, LEAF_R = 30;
 function buildLeafFall() {
-  const N = LOW ? 110 : 260;
+  const N = LOW ? 24 : 48;
   const mat = new THREE.MeshStandardMaterial({
     /* Dust, not leaves. The alphaTest comes right down because a mote is
        mostly soft edge — at .42 the flake was clipped back to its hard core
@@ -3898,9 +3683,9 @@ function buildLeafFall() {
     x: (rnd() - .5) * 2 * LEAF_R, z: (rnd() - .5) * 2 * LEAF_R, y: rnd() * 26,
     /* A leaf falls; dust hangs. Roughly a third of the descent rate and half
        the tumble, so the fall reads as air rather than as weather. */
-    fall: .16 + rnd() * .34,
+    fall: .05 + rnd() * .09,
     sway: .30 + rnd() * .9, swayPh: rnd() * TAU, swayAmp: .38 + rnd() * 1.15,
-    spin: (rnd() - .5) * 1.1, roll: rnd() * TAU, rollSp: .2 + rnd() * .8,
+    spin: (rnd() - .5) * .35, roll: rnd() * TAU, rollSp: .08 + rnd() * .2,
     tilt: rnd() * TAU, s: .30 + rnd() * .75
   });
   scene.add(inst);
@@ -5357,10 +5142,10 @@ function buildCardCloth() {
 }
 
 function buildLights() {
-  scene.add(new THREE.HemisphereLight(0x53838f, 0x060a08, .13));
+  scene.add(new THREE.HemisphereLight(0x8b8b9b, 0x0b090b, .10));
 
-  const key = new THREE.DirectionalLight(0xb6dbe4, 1.22);
-  key.position.set(2.6, 21, 2.5);
+  const key = new THREE.DirectionalLight(0xc9d0db, 1.15);
+  key.position.set(-8.5, 24, 5.5);
   key.target.position.set(0, 2.2, -12.5); scene.add(key.target);
   if (WANT_SHADOW) {
     key.castShadow = true;
@@ -5368,7 +5153,7 @@ function buildLights() {
     key.shadow.mapSize.set(S, S);
     const c = key.shadow.camera;
     c.left = -26; c.right = 26; c.top = 34; c.bottom = -16; c.near = 3; c.far = 78;
-    key.shadow.bias = -0.0012; key.shadow.normalBias = .035; key.shadow.radius = 2.2;
+    key.shadow.bias = -0.0012; key.shadow.normalBias = .035; key.shadow.radius = 1.3;
   }
   scene.add(key); WORLD.key = key;
 
@@ -5384,12 +5169,13 @@ function buildLights() {
      With the concrete wet it carries its own edge, and the old value washed
      the whole mass to a flat lit grey — the silhouette went a second time,
      from the opposite direction. */
-  const moonKey = new THREE.DirectionalLight(0x9fc4e0, .66);
+  const moonKey = new THREE.DirectionalLight(0xb6bfd3, .44);
   moonKey.position.set(26, 30, -60);
   moonKey.target.position.set(0, 12, -40); scene.add(moonKey.target);
   scene.add(moonKey);
 
-  const rimL = new THREE.DirectionalLight(0x6f93b4, .22);
+  /* a trace of the horizon catches the left arris; the front stays neutral. */
+  const rimL = new THREE.DirectionalLight(0xe49a99, .32);
   rimL.position.set(-22, 26, -58);
   rimL.target.position.set(0, 12, -42); scene.add(rimL.target);
   scene.add(rimL);
@@ -5409,7 +5195,7 @@ function buildLights() {
   const moonL = new THREE.PointLight(0x6f9ec8, 2.6, 46, 2);
   moonL.position.set(11.0, 17.0, -24.0); scene.add(moonL); WORLD.moonLight = moonL;
 
-  const fill = new THREE.PointLight(0x86c6d2, 0.95, 30, 2);
+  const fill = new THREE.PointLight(0xa4afc5, 0.58, 30, 2);
   fill.position.set(-1, 13.5, -16.0); scene.add(fill);
 
   /* the flight is the spine of the composition — without a lamp of its own it
@@ -6173,7 +5959,7 @@ function initTuning() {
     stairFilmRough:  v => (WORLD.stairFilms || []).forEach(m => { m.roughness = v; }),
     envIntensity:    v => envMats.forEach(e => { e.m.envMapIntensity = e.base * v; }),
     slotBright:      v => { if (WORLD.slot) WORLD.slot.color.setRGB(v * SLOT_RGB[0], v * SLOT_RGB[1], v * SLOT_RGB[2]); },
-    moonBright:      v => { if (WORLD.moon) WORLD.moon.material.color.setRGB(v, v * 1.26, v * 1.65); },
+    moonBright:      v => { if (WORLD.moon) WORLD.moon.material.color.setRGB(v, v * 1.08, v * 1.18); },
     moonSize:        v => { if (WORLD.moon) { WORLD.moon.scale.setScalar(v); WORLD.moonHalo.scale.setScalar(v); } }
   });
 }
@@ -6852,7 +6638,7 @@ function updateWorld(dt) {
   if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .30 + f * .14 + Math.sin(clock * .6) * .035;
   if (WORLD.hallLight) WORLD.hallLight.intensity = 3.4 * (1 + f * .30) * (1 + Math.sin(clock * .43) * .045);
   /* the moon only breathes — the haze in front of it is what actually moves */
-  if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .44 + f * .10 + Math.sin(clock * .34) * .05;
+  if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .20 + f * .05 + Math.sin(clock * .14) * .02;
   if (WORLD.lanternLights) WORLD.lanternLights.forEach((l, i) => {
     l.intensity = 2.6 * (1 + f * .55) * (.86 + .22 * Math.sin(clock * (2.3 + i * .7) + i * 2.1) + .1 * pulse);
   });
@@ -6866,7 +6652,7 @@ function updateWorld(dt) {
 
   /* haze slides across the courtyard */
   if (WORLD.haze) WORLD.haze.forEach(h => {
-    h.position.x = h.userData.x0 + Math.sin(clock * h.userData.sp + h.userData.ph) * 5.5;
+    h.position.x = h.userData.x0 + Math.sin(clock * h.userData.sp + h.userData.ph) * 3.0;
     h.quaternion.copy(camera.quaternion);
   });
 
@@ -7011,12 +6797,10 @@ const JOBS = [
   }],
   ['Setting the stones', () => {
     buildStele(71, 12.6, -13.0, 1.05); buildStele(72, -11.8, -9.4, .95);
-    buildStele(73, 9.2, -19.0, .82);   buildStele(74, -14.5, -17.5, 1.0);
-    buildStele(75, 16.5, -6.0, .88);
   }],
-  ['Painting the near grass', () => buildForeground()],
+  ['Framing the court', () => buildForeground()],
   ['Cutting the word', () => buildWordmark()],
-  ['Raising the mist', () => { buildAtmosphere(); buildLeafFall(); buildWisps(); }],
+  ['Raising the mist', () => { buildAtmosphere(); buildLeafFall(); }],
   ['Polishing the water', () => {
     initPost(); buildCards(); buildCardCloth();
     WORLD.fg.forEach(m => m.layers.set(1));
