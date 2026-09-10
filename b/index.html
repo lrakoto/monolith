@@ -439,19 +439,10 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
    out of flow and pins each one to a stair tread — see updateXpAnchors. The
    long scroll belongs to that climb. A static list needs only the space its
    rows take, or phones spend several empty screens getting to contact. */
-/* Seven stops with a dwell on each. At 340vh a stop got half a viewport of
-   scroll and the pause never registered — the climb read as one continuous
-   slide past a wall of cards.
-
-   The dwell is bought twice over, and it has to be. Raising xpHold alone takes
-   the extra pause out of the move between stops, which is the one part of this
-   chapter that must not get quicker; lengthening the section alone stretches
-   pause and move together and buys nothing but scrolling. So the section grows
-   and the hold rises with it, and the move comes out where it went in. The
-   chapter's scroll runs from this section's centre to the next one's, so half
-   of what is added here reaches the climb — see XP_RUN. */
+/* the approach ends near the section's top, not halfway through its height.
+   the remaining scroll keeps the seven role dwells without an empty runway. */
 #experience{ min-height:100svh; }
-body.xp-3d #experience{ min-height:3000vh; }
+body.xp-3d #experience{ min-height:1600vh; }
 /* No scrim here. A chapter's scrim exists to hold its copy off the scene, but
    this chapter's copy is standing *in* the scene on the steps, each panel
    carrying its own ground — so the radial wash was only dimming the flight
@@ -1274,7 +1265,6 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <div class="scene-options">
       <a href="https://threeohfivestudios.com/portfolio/">Monolith</a>
       <a href="https://threeohfivestudios.com/portfolio-a/">Forest</a>
-      <a href="https://threeohfivestudios.com/portfolio-b/" aria-current="page">Stream</a>
     </div>
   </nav>
   <div class="hero-top">
@@ -7435,6 +7425,8 @@ function measure() {
   anchors = SECS.map((el, i) => {
     if (i === 0) return 0;
     if (i === SECS.length - 1) return maxScroll;
+    if (i === XP_SEC && XP_ANCHORS.length)
+      return clamp(el.offsetTop + vpH() * .5, 0, maxScroll);
     return clamp(el.offsetTop + el.offsetHeight * .5 - vpH() * .5, 0, maxScroll);
   });
   for (let i = 1; i < anchors.length; i++) anchors[i] = Math.max(anchors[i], anchors[i - 1] + 1);
