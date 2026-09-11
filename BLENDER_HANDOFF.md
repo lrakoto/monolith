@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_tone.py`, `renders/cathedral-tone-study.png`, and `renders/cathedral-tone-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_highlights.py`, `renders/cathedral-highlight-study.png`, and `renders/cathedral-highlight-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -172,6 +172,13 @@ before reading these numbers as a ranking:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **highlights** — at a matching mean our p95 sat at 60 against the reference's 78: the same
+  average spread over far fewer bright pixels, which is missing local contrast rather than wrong
+  exposure. Every light here was a broad soft point, which lights every face of a crown about
+  equally, so nothing had a lit side. A sun supplies that, and the lighting budget then shifts
+  from fill to key: fill sets the median, the key sets the tail. Contrast goes 32 to 40 against
+  the reference 46, and rms still improves. Note a sun's energy is irradiance, so the scene's
+  times nine scaling does not apply to it.
 - **tone** — the trunks came down again, the last surfaces the map had running bright. The tower
   was left alone: its cells read high because it covers more of them than the reference's tower
   does, not because its surface is brighter. Measured directly, our tower surface is already
@@ -199,6 +206,10 @@ before reading these numbers as a ranking:
   streaks read coarse and a hundred read as nothing, while at 1200 fifty is about right.
 - Prefer Generated texture coordinates over Object where a feature count matters. Object
   coordinates carry the source mesh's own units, so the multiplier is guesswork.
+- Check p95 and contrast, not just rms. The difference map averages each cell, so it cannot see
+  local contrast at all and will happily reward a flatter picture: darkening the tower improved
+  rms while dropping p95 from 77 to 62. The shore pass lost twenty points of p95 unnoticed for
+  four passes because only the cell averages were being watched.
 - When a detail layer grows, it takes over the tone of whatever it covers. Tripling the leaf size
   darkened every crown, because the leaf tones had been set back when a leaf was a single pixel and
   the shell underneath was what you saw. Near and far leaves now carry separate tones, and the near
