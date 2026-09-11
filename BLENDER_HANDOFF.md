@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_vines.py`, `renders/cathedral-vines-study.png`, and `renders/cathedral-vines-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_spill.py`, `renders/cathedral-spill-study.png`, and `renders/cathedral-spill-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -176,6 +176,14 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **spill** — two cells had been running ten over for several passes, and raycasting them landed
+  within a few units of where the `near bank opening` fill sits. That light was placed for the near
+  bank and had been lighting the middle distance the whole time; moving it lower and nearer the
+  camera and trimming it fixes both. The shoreline growth was also reaching into the bottom right
+  pond cell, which the reference keeps bright, so it starts further out.
+  Pulling the fill back then left the brightest bank tier standing fifteen over against darker
+  surroundings, so fewer crowns take it. Worth expecting: trimming a fill changes what every tier
+  above it is measured against.
 - **vines** — the trunks were speckled with clumps where the reference drapes them in continuous
   hanging curtains. Clumps give a ragged silhouette but never the vertical run, so the vines are
   real geometry: thin tapered strands hung off the sampled trunk profile, drifting as they fall,
