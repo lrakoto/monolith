@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_shade.py`, `renders/cathedral-shade-study.png`, and `renders/cathedral-shade-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill, taper, scale, shade; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_lace.py`, `renders/cathedral-lace-study.png`, and `renders/cathedral-lace-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill, taper, scale, shade, lace; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -89,6 +89,15 @@ From `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`:
 ```sh
 /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 --python tools/render_cathedral_branches.py
 ```
+
+`renders/cathedral-presentation.png` is a 1800px, 200 sample version of the latest pass for showing
+the work; it took about 14 minutes on CPU and measures the same as the study render at rms 5.0. The
+extra resolution is worth having for judging the canopy, which shows its lobe structure far more
+plainly there than at 1200.
+
+A filepath beginning `//` in Blender is relative to the blend file, not the working directory. The
+blend files live in `renders/`, so `//renders/x.png` writes `renders/renders/x.png` and the render
+still exits 0. Pass an absolute path or check where the file actually landed.
 
 Blender 5.2.1 LTS is installed. CPU rendering works; Metal previously stalled while waiting for kernels. Sandboxed Blender previously crashed before executing the script, so background render commands have needed the normal `require_escalated` execution path. Do not bypass approval review or kill the user's GUI Blender. Poll the exact process/session started for this task, using waits of at most 30–60 seconds and concise progress updates.
 
@@ -237,6 +246,12 @@ contrast figures beside them:
   so the upper right bank comes up about a dozen where the reference has it in deep shade. Tightening
   the lit tier there recovered half. Kept because canopy character is visible across the whole frame
   and a fifth of a point of rms is not.
+- **lace** — the crown templates had not been touched since the branch study: a few large lobes
+  packed close, which closes the silhouette. The reference's crowns are lacy, so the templates now
+  carry many more, smaller lobes spread wider, with stronger displacement. The canopy stops reading
+  as cauliflower and starts reading as forest. Opening the crowns lets background through and drops
+  the mean by most of a point, so the tone comes back up to meet it; rms and mean absolute error
+  both hold at their best while the median and contrast improve.
 - **shade** — that residual is then closed. Raycasting the bright cells put them within a few dozen
   units of the `near bank opening` fill again, so it comes down a second time. rms returns to 5.0
   with the larger crowns kept and mean absolute error reaches 4.1, the best of the run. That fill
@@ -413,21 +428,40 @@ Latest result: 24 tests run, one skipped. Those tests validate the website/tunin
 
 Keep Lova's authorship block in the existing repository locations exactly as written. This handoff adds workflow notes, not a replacement authorship statement.
 
-## Agreed next passes
+## Where to pick up
 
-The user approved the proposed sequence: forest mass refinement, architectural refinement (recessed 305, entrance, restrained stair variation), atmospheric refinement, then selective foliage realism. The stands study was reviewed positively. The architecture study was reviewed positively. The atmospheric/backdrop and first foliage passes were also reviewed positively. The latest delivered visual is the branch study. Start there; do not restart an earlier atmospheric pass. A useful next refinement is reducing the remaining rounded support shapes, guided by a fresh comparison with the reference and the user’s feedback. Keep the camera and proportions steady unless new feedback reopens them.
+Start from `tools/render_cathedral_shade.py`, the latest builder, and measure before changing
+anything: rms 5.0 against the reference, mean absolute error 4.1, mean 45.6 against 45.9, p95 77.3
+against 78.2, contrast 50.2 against 46.1. Keep the camera and proportions steady unless the user
+reopens them.
 
-## Latest reference comparison
+The open items, in the order they look worth taking:
+
+- **The upper frame.** Measured, characterised, and deliberately left alone; see "The largest
+  remaining difference" above, including why the obvious fix costs the trunks.
+- **Contrast is about four over**, entirely through the shadows: p5 sits at 27 against 32. Every
+  global lever for that has been tried and the results are recorded in "Lessons from those passes".
+  A local one might still exist.
+- The canopy templates were opened up in the lace pass and now read much closer. What is still
+  visibly different is the very edge of each crown, which the reference breaks into individual
+  sprays rather than a continuous fuzzy outline.
+- The stair treads stop reading about sixty percent up; the reference keeps them to the top.
+
+## Historical: backdrop pass reference comparison
 
 The exact index-2 reference was reopened for the backdrop pass. Its distant forest is much quieter than the modeled bands in our previous renders. Increasing haze alone did not adequately remove that pattern. The 28 distant stems are now hidden (retained for comparison); a remote procedural emissive surface with subtle elongated noise serves as the distant forest in this composition study. Be explicit about this approach: the main scene is modeled, while the far background is a procedural backdrop. Camera pose and lens remain fixed; far clipping increases to include the background. The first new near-bank light made a strong lower-right water reflection, so it was raised and reduced in radius before the final comparison.
 
-## First selective foliage pass
+## Historical: first selective foliage pass
+
+Superseded by the crown, separation and scale passes. Kept for the failure modes it records.
 
 Seven shared leaf meshes each contain 11,000 small cupped leaves sampled by triangle area from their corresponding crown mesh. These are instanced on crowns with working Y < 365 and |X| < 265, preserving the underlying planting/camera. Distant crowns remain simple. Each leaf uses one of four muted greens; the supporting core gets fine material bump. A dedicated RNG prevents template changes from moving the rest of the scene. The first full render took about 2m36s on CPU, at 1200px/64 samples. Surface detail is more visible on the nearer banks, but the rounded support shapes still read; do not call this finished realistic foliage. Inspect the detail crop before the next iteration.
 
 The initial builder failed because a scalar named `area` shadowed the light helper. It was renamed `triangle_area`, and leaf winding was corrected before the successful render. Blender returned process exit 0 even for that Python exception, so inspect logs for exceptions and confirm a new image was actually saved.
 
-## Branch cluster refinement
+## Historical: branch cluster refinement
+
+Superseded. The leaf counts and sizes quoted here are no longer current; see the crowns pass.
 
 The branch study retains the accepted camera, architecture, planting positions, and backdrop. Each crown family now combines 7,500 surface leaves with up to 550 small branching shoots (downward-facing samples are skipped), each carrying 12 varied leaves. Thin tapered woody stems share the foliage mesh and use the bark material. Separate random generators keep the rest of the scene stable. The full 1200px/64-sample render completed in about 2m40s on CPU. The change is subtle at full-frame scale; inspect the matching close-up before assessing whether the rounded supporting masses need a larger structural change.
 
