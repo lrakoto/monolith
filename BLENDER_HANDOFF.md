@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_gaps.py`, `renders/cathedral-gaps-study.png`, and `renders/cathedral-gaps-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_cling.py`, `renders/cathedral-cling-study.png`, and `renders/cathedral-cling-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -176,6 +176,12 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **cling** — the trunk foliage had been placed at the trunk's nominal radius, which is its radius
+  at the base. The trunk tapers, so at height those clumps sat outside the actual surface and read
+  as a string of beads hanging in the air beside it, which the trunk pass never caught because it
+  was judged on the map rather than on a crop. Sampling the mesh's real radial profile per height
+  band and hanging them on that fixes it. Giving the sunward ones a lit tone is also reverted: fine
+  on the trunk face, wrong at the silhouette, where it made the beads glow against the sky.
 - **gaps** — cell averages were matching to about four levels while the median still ran four
   high, so the darks missing were inside the cells rather than across them. Wider stand heights and
   a thinner understory help a little, and the tower comes down while the lit canopy comes up, which
