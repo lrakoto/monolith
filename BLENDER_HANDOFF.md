@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_sunside.py`, `renders/cathedral-sunside-study.png`, and `renders/cathedral-sunside-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_gradient.py`, `renders/cathedral-gradient-study.png`, and `renders/cathedral-gradient-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -173,6 +173,13 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **gradient** — the reference's right bank reads 36 up the slope and 50 to 63 at the waterline;
+  ours did the reverse, because the key lights tops. So the stand at the water takes more of the
+  brightest tier and the emergent rule stops lighting crowns high on the right. Worth knowing: the
+  brightest tier overshot contrast to 51.6 at first and had to come back halfway, since a lit stand
+  should be foliage in sun rather than the second brightest thing in the frame after the tower.
+  Also tried and reverted: removing the right near field's brighter leaf tier now the key is
+  correct. It is still earning its place, and dropping it cost six points of p95.
 - **sunside** — the map had been lopsided for several passes, the right running five to fourteen
   over at every height while the left ran under, and no amount of per crown material tiering moved
   it. The cause was the key's azimuth. At -26 degrees the lit face of each bank is the one turned
