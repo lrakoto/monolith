@@ -166,3 +166,14 @@ growth; camera and lighting are unchanged. It replaces the same 34 shoreline sta
 98 overlapping clumps to keep ground cover without hiding the crown edge. Use `--retain-understory`
 to keep the original foreground. Comparison: `tools/compare_sprays.py -- --variant hero-crown`.
 No render or Blender output from this pass should be staged or pushed.
+
+
+## Irregular canopy — local outputs, 2026-09-11
+
+The `hero-canopy` variant builds on the fuller crown with a broader, uneven outline and grouped
+leaf values. `cathedral-hero-canopy-study.png` / `.blend` stay local. Compare with the previous
+crown using `tools/compare_sprays.py -- --variant hero-canopy --baseline hero-crown`. Render: 1200px,
+64 samples, 2m40s. Cell RMS 4.937 versus 4.995 before; leaves still need less uniform size/crispness.
+Historical `cathedral-canopy-study.*` is a different archived pass, restored and verified after
+an initial naming collision. The runner now rejects tracked output paths; `--output-name` permits
+rebuilding historical profiles under new local filenames.

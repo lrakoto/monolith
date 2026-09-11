@@ -3,10 +3,11 @@ import numpy as np
 from pathlib import Path
 import argparse, sys
 parser=argparse.ArgumentParser()
-parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown'))
+parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy'))
+parser.add_argument('--baseline', choices=('lace','hero-crown'), default='lace')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 root=Path(__file__).resolve().parents[1]
-files=[root/'reference/midjourney-index2.png', root/'renders/cathedral-lace-study.png', root/('renders/cathedral-'+args.variant+'-study.png')]
+files=[root/'reference/midjourney-index2.png', root/('renders/cathedral-'+args.baseline+'-study.png'), root/('renders/cathedral-'+args.variant+'-study.png')]
 patches=[]
 for path in files:
     image=bpy.data.images.load(str(path));image.colorspace_settings.name='Non-Color'

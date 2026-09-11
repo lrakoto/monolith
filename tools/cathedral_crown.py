@@ -5,7 +5,7 @@ import bpy
 from mathutils import Vector
 
 
-def build_crown(materials):
+def build_crown(materials, layered=False):
     rng = random.Random(305911)
     verts, faces, tones = [], [], []
 
@@ -31,6 +31,12 @@ def build_crown(materials):
     def leaf(point, forward, length, tone):
         forward.normalize()
         normal = Vector((rng.uniform(-.9,.9), rng.uniform(-.9,.9), rng.uniform(.3,1)))
+        if layered:
+            # neighbouring sprays share their value so highlights describe branches, not confetti.
+            patch = math.sin(point.x*9 + point.z*3) * math.cos(point.y*7 - point.z*4)
+            value = .38 + point.z*.4 + patch*.30
+            tone = max(0, min(3, int(value*4)))
+            normal.x *= .5; normal.y *= .5
         side = normal.cross(forward).normalized()
         normal = forward.cross(side).normalized()
         offset = len(verts)
@@ -47,13 +53,20 @@ def build_crown(materials):
               ((.27,.45,.27),(.48,.30,.36)), ((-.36,-.40,-.07),(.39,.29,.27)),
               ((.08,-.43,.03),(.40,.32,.30)), ((.49,-.30,-.13),(.35,.32,.28)),
               ((.06,-.03,-.14),(.42,.38,.32))]
+    if layered:
+        groups = [((-.70,-.01,.07),(.43,.34,.20)), ((-.32,-.06,.30),(.43,.38,.26)),
+                  ((.06,.12,.44),(.49,.38,.23)), ((.50,.08,.19),(.42,.36,.24)),
+                  ((.88,.08,-.09),(.23,.29,.17)), ((-.44,.43,.11),(.35,.34,.27)),
+                  ((.26,.46,.25),(.44,.30,.26)), ((-.44,-.40,-.14),(.38,.29,.19)),
+                  ((.01,-.40,-.02),(.37,.31,.24)), ((.57,-.29,-.20),(.31,.29,.19)),
+                  ((.08,-.02,-.20),(.35,.34,.22))]
     root = Vector((.08,.05,-.82));fork = Vector((-.08,.08,-.30))
     branch(root, fork, .028)
     for index,(location,radii) in enumerate(groups):
         center=Vector(location)
         elbow=fork.lerp(center,.55)+Vector((0,.06,-.05))
         branch(fork,elbow,.014);branch(elbow,center,.008)
-        for j in range(120):
+        for j in range([100,150,130,90,65,120,110,95,80,55,70][index] if layered else 120):
             direction=Vector((rng.gauss(0,1),rng.gauss(0,1),rng.gauss(0,1))).normalized()
             radius=rng.uniform(.35,1)**.5
             end=center+Vector(tuple(direction[k]*radii[k]*radius for k in range(3)))
@@ -69,7 +82,7 @@ def build_crown(materials):
                 leaf(point,forward,rng.uniform(.024,.048),rng.randrange(4))
         # uneven curtains connect the lit crown to the shaded bank without a continuous skirt.
         if center.y < .15:
-            for trail in range(9):
+            for trail in range([6,11,5,8,4,7,7,12,7,10,5][index] if layered else 9):
                 start=center+Vector((rng.uniform(-radii[0],radii[0]),-radii[1]*rng.uniform(.5,.9),-radii[2]*.2))
                 length=rng.uniform(.18,.58)
                 prior=start

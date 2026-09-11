@@ -1,6 +1,6 @@
 """Focused variants of the saved Lace scene, without copying its scene builder.
 
-blender --background --threads 8 --python tools/render_cathedral_study.py -- --variant sprays
+blender --background --threads 8 --python tools/render_cathedral_study.py -- --variant hero-canopy
 Use --variant baseline for the identical saved scene. --quick skips the blend save.
 """
 import argparse
@@ -14,10 +14,11 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 args = argparse.ArgumentParser()
-args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown'), default='sprays')
+args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy'), default='hero-canopy')
 args.add_argument('--quick', action='store_true')
 args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
 args.add_argument('--resolution', type=int, default=1200)
+args.add_argument('--output-name', help='unique filename stem when rebuilding an archived variant')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
 assert source.exists(), source
@@ -121,7 +122,7 @@ def make_sprays(family, materials):
     return mesh
 
 
-if args.variant == 'hero-crown':
+if args.variant in ('hero-crown', 'hero-canopy'):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_crown import build_crown
     targets = [o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0]
@@ -130,7 +131,7 @@ if args.variant == 'hero-crown':
     for old in targets:
         old.hide_render = True
         bpy.data.objects['shoreline foliage ' + old.name.rsplit(' ', 1)[1]].hide_render = True
-    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials))
+    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant == 'hero-canopy'))
     scene.collection.objects.link(crown)
     if not args.retain_understory:
         cleared = []
@@ -174,6 +175,16 @@ scene.render.resolution_percentage = 100
 scene.cycles.samples = 16 if args.quick else 64
 scene.cycles.device = 'CPU'
 name = 'cathedral-' + args.variant + ('-quick' if args.quick else '-study')
+if args.output_name:
+    assert Path(args.output_name).name == args.output_name, 'output name must be a filename stem'
+    name = args.output_name
+# archived outputs are inputs for other agents, so refuse to overwrite tracked study files.
+import subprocess
+for extension in ('.png', '.blend'):
+    relative = 'renders/' + name + extension
+    tracked = subprocess.check_output(['git', '-C', str(ROOT), 'ls-files', '--', relative], text=True).strip()
+    if tracked:
+        raise RuntimeError('Output is an archived Git file; choose a new variant name: ' + relative)
 scene.render.filepath = str(ROOT / 'renders' / (name + '.png'))
 bpy.context.preferences.filepaths.save_version = 0
 if not args.quick:
