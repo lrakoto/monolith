@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_rebalance.py`, `renders/cathedral-rebalance-study.png`, and `renders/cathedral-rebalance-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_edge.py`, `renders/cathedral-edge-study.png`, and `renders/cathedral-edge-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -145,7 +145,7 @@ worse: a pond that measured correct and read as a flat mint slab, and trunk foli
 
 ## Value and structure passes
 
-Error against the reference went from rms 10.1 to 6.2 across eleven passes, all kept. Some trade a
+Error against the reference went from rms 10.1 to 5.9 across twelve passes, all kept. Some trade a
 little rms for a large visual gain, so these numbers are not a clean ranking; read them with the
 contrast figures beside them:
 
@@ -172,6 +172,12 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **edge** — the worst cell in the map for several passes was the left edge at mid height, and the
+  reference has a tree canopy there in full sun, pale and close to yellow green against near black.
+  Nothing in the scene was that bright. Adding it took that cell from -18 to -4. The backdrop also
+  gains a vertical gradient, since the map wanted it both darker at the top and lighter behind the
+  middle distance, and the trunks widen with height because they had been tapering away below the
+  top of frame and leaving sky in the corners where the reference has solid trunk.
 - **rebalance** — a directional key changes what every surface receives, so several needed
   resetting after it: the treads take it face on and ran twelve over, while the backdrop and the
   middle distance canopy had been leaning on the fill that went away. The water and the pads were
