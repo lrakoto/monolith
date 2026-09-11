@@ -2,7 +2,9 @@
 
 blender --background --factory-startup study.blend --python tools/probe_frame_cells.py -- 10,0 10,8 11,0
 
-Pass cells as row,col after a bare --. Use this instead of deriving positions by hand: builders lay out
+Pass cells as row,col after a bare --. Render hidden objects are skipped: ray_cast
+honours hide_viewport but not hide_render, so without that it reports geometry that is not
+in the picture at all. Use this instead of deriving positions by hand: builders lay out
 in working units and multiply by three at the end, so hand computed placements land three times out.
 """
 import bpy, sys
@@ -21,7 +23,11 @@ for r,c in cells:
     top=tl.lerp(tr,u); bot=bl.lerp(br,u)
     target=top.lerp(bot,v)
     d=(target-origin).normalized()
-    hit,loc,nor,idx,obj,mat=scene.ray_cast(dg,origin,d)
+    start=origin.copy();hit=False
+    for _ in range(24):
+        hit,loc,nor,idx,obj,mat=scene.ray_cast(dg,start,d)
+        if not hit or not obj.hide_render:break
+        start=loc+d*.01
     if hit:
         print('r%-2d c%-2d  hit %-28s at (%7.1f,%7.1f,%7.1f)  dist %6.0f'
               %(r,c,obj.name[:28],loc.x,loc.y,loc.z,(loc-origin).length))

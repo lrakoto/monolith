@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_separation.py`, `renders/cathedral-separation-study.png`, and `renders/cathedral-separation-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_tone.py`, `renders/cathedral-tone-study.png`, and `renders/cathedral-tone-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -172,6 +172,10 @@ before reading these numbers as a ranking:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **tone** — the trunks came down again, the last surfaces the map had running bright. The tower
+  was left alone: its cells read high because it covers more of them than the reference's tower
+  does, not because its surface is brighter. Measured directly, our tower surface is already
+  brighter than the reference's, and darkening it dropped p95 from 77 to 62.
 - **separation** — every crown had sat directly on the terrain, making the bank one shell at one
   height. Crowns now ride trunks of differing height, which is what produces the gaps that read as
   separate trees. That opened the bank onto bare ground, so an understory fills underneath and the
