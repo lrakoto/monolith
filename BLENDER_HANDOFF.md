@@ -95,6 +95,30 @@ rewrite history or delete the archive without explicit direction. Stage exact so
 since ignore rules do not protect changes to already tracked outputs. The initial Sprays archive
 was already pushed in `76758fd` before this correction (four PNGs and one Blender file).
 
+## Irregular canopy pass — 2026-09-11
+
+Lova liked the fuller crown and asked to continue. The next focused variant is `hero-canopy`,
+now the runner default. It keeps the approved crown placement, camera, lights and lowered ground
+cover, while broadening the branch groups, changing their density, varying the hanging trails and
+correlating neighbouring leaf tones. `build_crown(..., layered=False)` preserves the previous
+hero-crown version; `layered=True` produces this pass. No change has been spread across the forest.
+
+Run `tools/render_cathedral_study.py -- --variant hero-canopy` through Blender. Local-only outputs
+are `renders/cathedral-hero-canopy-study.png` and `.blend`. The render is 1200px, 64 samples,
+2m40s. `tools/compare_sprays.py -- --variant hero-canopy --baseline hero-crown` makes the local
+comparison image: reference / previous hero crown / irregular canopy. Whole-frame RMS is 4.937
+versus 4.995 before; this is a small change, not proof of improved realism. The silhouette is wider
+and has more shadow gaps; the individual leaves remain too crisp and uniformly sized compared
+with the reference. That is a useful next topic for visual feedback.
+
+The initial output name collided with historical `cathedral-canopy-study.*`. Both historical files
+were restored from HEAD after preserving the new result under `hero-canopy`; the historical blend
+was verified against its committed LFS SHA256. The new blend's embedded render path was corrected.
+The runner now refuses any tracked output filename. To reproduce an archived profile, supply a
+unique `--output-name`, e.g. `--variant sprays --output-name cathedral-sprays-rebuild`.
+An actual Blender invocation verified the overwrite guard refused the archived name and left its
+checksum unchanged. The 24 repository tests pass with one skip, and all three study scripts parse.
+
 ## Fuller shoreline crown experiment — 2026-09-11
 
 Continue the maintained runner with `-- --variant hero-crown`. It loads Lace, hides the same 34
