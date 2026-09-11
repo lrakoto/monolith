@@ -11,7 +11,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
 
-Run `git log --oneline -5` and `git status --short` in the worktree before assuming its state. The study is being archived on `codex/forest-cathedral`; check branch status and its upstream before assuming what is committed. Do not clean untracked files or assume the main checkout contains the study. The unrelated main-checkout `b/` directory belongs to other work. The worktree also contains earlier website edits and preview configuration; this Blender task is not permission to publish those. The `/private/tmp` path is not durable archival storage; preserve or migrate the full study with explicit scope before cleaning it.
+Run `git log --oneline -5` and `git status --short` in the worktree before assuming its state. The study archive was committed and pushed as `f46b7bd` on `origin/codex/forest-cathedral`; GitHub checks passed and all 19 Blender files uploaded through Git LFS. Check current branch status before assuming later work is committed. Do not clean untracked files or assume the main checkout contains the study. The unrelated main-checkout `b/` directory belongs to other work. The worktree also contains earlier website edits and preview configuration; this Blender task is not permission to publish those. The `/private/tmp` path is not durable archival storage; preserve or migrate the full study with explicit scope before cleaning it.
 
 ## What the user is asking for
 
@@ -35,12 +35,12 @@ Python scripts build the entire editable scene in Blender and render with Cycles
 From `/private/tmp/monolith-cathedral`:
 
 ```sh
-/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 --python tools/render_cathedral_light.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 --python tools/render_cathedral_branches.py
 ```
 
 Blender 5.2.1 LTS is installed. CPU rendering works; Metal previously stalled while waiting for kernels. Sandboxed Blender previously crashed before executing the script, so background render commands have needed the normal `require_escalated` execution path. Do not bypass approval review or kill the user's GUI Blender. Poll the exact process/session started for this task, using waits of at most 30–60 seconds and concise progress updates.
 
-The current simplified studies use 1000 × 1000, 48 Cycles samples, denoising, AgX, and 8 CPU threads; renders take roughly a minute on this machine. Earlier detailed 1600px renders took several minutes. More samples improve noise, not proportions or modeling.
+The current branch study uses 1200 × 1200, 64 Cycles samples, denoising, AgX, and 8 CPU threads; its full render took about 2m40s, and the separate close-up about 1m18s. Earlier simple studies used 1000px/48 samples, and earlier detailed 1600px renders took several minutes. More samples improve noise, not proportions or modeling.
 
 Create a separately named builder/PNG/blend for each new user-visible pass. Preserve earlier accepted studies. Edit with exact asserted anchors, inspect the resulting render, and only then describe what improved. Temporary patch scripts are not authoritative; the `tools/render_cathedral_*.py` files are.
 
@@ -61,7 +61,7 @@ Final camera: `(0, -720, 108)`, 35.518mm lens, upward tilt 0.226 radians. Tower 
 - The world uses a darker camera-visible background while retaining brighter environment illumination. This prevents bright gaps from outlining every distant shape.
 - Terrain noise tapering to zero at the pond removed flat shallow patches. Keep the pond small in frame.
 - The architecture study replaces the earlier flat 305 treatment with a real Boolean recess; a dark text surface sits inside the recess to retain legibility. The entrance is also cut into the monument. Ray checks verify actual mesh depth independently of overlays. Apply booleans before beveling and delete only the cutters created by the current operation. This remains a composition study, not a finished realism render.
-- Current foliage remains simplified clustered meshes. The canopy study reduces repetition using seven asymmetric connected crown families and a separate random generator that preserves planting positions. Inspect this latest pass before choosing the next refinement; it remains a composition study rather than finished foliage.
+- Current near foliage includes real leaf and small branch geometry over seven supporting crown families; distant crowns remain simple. Rounded supporting forms are still visible. Inspect the latest branch study and its close-up before the next refinement; this is not yet finished realistic foliage.
 
 ## Verification and delivery
 
@@ -78,7 +78,7 @@ Keep Lova's authorship block in the existing repository locations exactly as wri
 
 ## Agreed next passes
 
-The user approved the proposed sequence: forest mass refinement, architectural refinement (recessed 305, entrance, restrained stair variation), atmospheric refinement, then selective foliage realism. The stands study was reviewed positively. The architecture study was reviewed positively. Atmospheric refinement is now the generated pass; inspect its visual result and incorporate user feedback before moving into selective foliage realism. Keep the camera and proportions steady unless new feedback reopens them.
+The user approved the proposed sequence: forest mass refinement, architectural refinement (recessed 305, entrance, restrained stair variation), atmospheric refinement, then selective foliage realism. The stands study was reviewed positively. The architecture study was reviewed positively. The atmospheric/backdrop and first foliage passes were also reviewed positively. The latest delivered visual is the branch study. Start there; do not restart an earlier atmospheric pass. A useful next refinement is reducing the remaining rounded support shapes, guided by a fresh comparison with the reference and the user’s feedback. Keep the camera and proportions steady unless new feedback reopens them.
 
 ## Latest reference comparison
 
@@ -96,4 +96,4 @@ The branch study retains the accepted camera, architecture, planting positions, 
 
 ## Repository archive and Blender files
 
-The user requested committing and pushing the accumulated work to `codex/forest-cathedral`. All `.blend` files use Git LFS; install Git LFS and run `git lfs pull` after cloning if they appear as pointer files. PNGs, scene builders, and handoff notes are ordinary Git files. Prior passes are preserved. The Cathedral preview workflow is manual and excludes `renders/`, tools, and the handoff from uploads. An archive push is not a production deployment. The main checkout contains a mirrored copy of these agent notes for discoverability.
+The accumulated work was committed and pushed to `codex/forest-cathedral` as `f46b7bd`; the GitHub checks workflow completed successfully. All `.blend` files use Git LFS; install Git LFS and run `git lfs pull` after cloning if they appear as pointer files. PNGs, scene builders, and handoff notes are ordinary Git files. Prior passes are preserved. The Cathedral preview workflow is manual and excludes `renders/`, tools, and the handoff from uploads. An archive push is not a production deployment. The main checkout contains a mirrored copy of these agent notes for discoverability.
