@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_shade.py`, `renders/cathedral-shade-study.png`, and `renders/cathedral-shade-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill, taper, scale, shade; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_lace.py`, `renders/cathedral-lace-study.png`, and `renders/cathedral-lace-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill, taper, scale, shade, lace; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -246,6 +246,12 @@ contrast figures beside them:
   so the upper right bank comes up about a dozen where the reference has it in deep shade. Tightening
   the lit tier there recovered half. Kept because canopy character is visible across the whole frame
   and a fifth of a point of rms is not.
+- **lace** — the crown templates had not been touched since the branch study: a few large lobes
+  packed close, which closes the silhouette. The reference's crowns are lacy, so the templates now
+  carry many more, smaller lobes spread wider, with stronger displacement. The canopy stops reading
+  as cauliflower and starts reading as forest. Opening the crowns lets background through and drops
+  the mean by most of a point, so the tone comes back up to meet it; rms and mean absolute error
+  both hold at their best while the median and contrast improve.
 - **shade** — that residual is then closed. Raycasting the bright cells put them within a few dozen
   units of the `near bank opening` fill again, so it comes down a second time. rms returns to 5.0
   with the larger crowns kept and mean absolute error reaches 4.1, the best of the run. That fill
@@ -436,9 +442,9 @@ The open items, in the order they look worth taking:
 - **Contrast is about four over**, entirely through the shadows: p5 sits at 27 against 32. Every
   global lever for that has been tried and the results are recorded in "Lessons from those passes".
   A local one might still exist.
-- **The canopy is rounder than the reference's**, which is lacier and more broken at its edges even
-  after the crown and scale passes. That is a crown template question rather than a placement or
-  material one, and the templates have not been touched since the branch study.
+- The canopy templates were opened up in the lace pass and now read much closer. What is still
+  visibly different is the very edge of each crown, which the reference breaks into individual
+  sprays rather than a continuous fuzzy outline.
 - The stair treads stop reading about sixty percent up; the reference keeps them to the top.
 
 ## Historical: backdrop pass reference comparison

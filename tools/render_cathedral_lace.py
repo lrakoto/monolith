@@ -228,7 +228,7 @@ box('remote forest backdrop',(0,1450,1500),(5000,2,4000),backdrop)
 # asymmetric connected crowns avoid the repeated radial shapes of the first blockout.
 # use a separate generator so template changes do not move the established forest.
 shape_rng=random.Random(3051707)
-canopy_material=mat('blockout canopy',(.0064,.0154,.0081),(.0382,.0635,.0273),1,.2)
+canopy_material=mat('blockout canopy',(.0072,.0173,.0091),(.043,.0714,.0307),1,.2)
 crown_meshes=[]
 for family in range(7):
  mesh=bpy.data.meshes.new('asymmetric crown family %02d'%family);bm=bmesh.new()
@@ -252,14 +252,14 @@ core=bpy.data.objects.new('simplified canopy template',crown_meshes[0]);scene.co
 import bisect
 leaf_rng=random.Random(3052026)
 leaf_materials=[]
-for j,color in enumerate([(.0129,.031,.012),(.0229,.047,.0139),(.037,.0619,.0199),(.0509,.0759,.0261)]):
+for j,color in enumerate([(.0145,.0348,.0135),(.0257,.0528,.0156),(.0416,.0696,.0224),(.0572,.0853,.0293)]):
  material=bpy.data.materials.new('leaf tone %d'%j);material.use_nodes=True
  shader=material.node_tree.nodes.get('Principled BSDF')
  shader.inputs['Base Color'].default_value=(*color,1);shader.inputs['Roughness'].default_value=.42
  shader.inputs['Subsurface Weight'].default_value=.035
  leaf_materials.append(material)
 near_leaf_materials=[]
-for j,color in enumerate([(.0406,.0826,.0364),(.0665,.1155,.0441),(.1015,.1505,.0595),(.1386,.1876,.0756)]):
+for j,color in enumerate([(.0447,.0909,.04),(.0732,.1271,.0485),(.1117,.1656,.0655),(.1525,.2064,.0832)]):
  material=bpy.data.materials.new('near leaf tone %d'%j);material.use_nodes=True
  shader=material.node_tree.nodes.get('Principled BSDF')
  shader.inputs['Base Color'].default_value=(*color,1);shader.inputs['Roughness'].default_value=.38
