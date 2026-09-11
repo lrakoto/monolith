@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_layers.py`, `renders/cathedral-layers-study.png`, and `renders/cathedral-layers-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_softkey.py`, `renders/cathedral-softkey-study.png`, and `renders/cathedral-softkey-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -148,8 +148,8 @@ worse: a pond that measured correct and read as a flat mint slab, and trunk foli
 
 ## Value and structure passes
 
-Error against the reference went from rms 10.1 to 5.9 across thirteen passes, with contrast from
-50.7 through a low of 30.5 back to 48.0 against the reference's 46.1, all kept. Some trade a
+Error against the reference went from rms 10.1 to 5.0 across twenty five passes, with contrast from
+50.7 through a low of 30.5 back to 49.5 against the reference's 46.1, all kept. Some trade a
 little rms for a large visual gain, so these numbers are not a clean ranking; read them with the
 contrast figures beside them:
 
@@ -176,6 +176,14 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **softkey** — with p95 on the reference and p5 five under, all of the excess contrast was shadow
+  depth. Everything tried for that floor earlier failed for a specific reason worth recording: haze
+  lifts the darks and veils the highlights equally, raising dark albedo lifts the midtones instead,
+  and more bounces change nothing because those areas are not light starved. The sun's angular size
+  is the lever that works: a wide disc softens the terminator and opens what sits just inside it,
+  which is where the darkest twentieth lives. At 24 degrees p95 holds and at 42 contrast lands, so
+  30 is where both come closest. Far wider than a real sun, which is fair here: this key stands in
+  for light coming down through a forest canopy, a broad source.
 - **layers** — the banks stopped at y 345 and the distant silhouettes began at 480, so nothing
   occupied the depth either side of the monument and the forest jumped straight from planting to
   backdrop. The reference reads deep there because its forest recedes continuously with haze
