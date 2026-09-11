@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_softkey.py`, `renders/cathedral-softkey-study.png`, and `renders/cathedral-softkey-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_vines.py`, `renders/cathedral-vines-study.png`, and `renders/cathedral-vines-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -176,6 +176,11 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **vines** — the trunks were speckled with clumps where the reference drapes them in continuous
+  hanging curtains. Clumps give a ragged silhouette but never the vertical run, so the vines are
+  real geometry: thin tapered strands hung off the sampled trunk profile, drifting as they fall,
+  with small leaves down their length. Density and leaf size decide whether this reads as a curtain
+  or as beads on a string, the same distinction as the trunk clumps and the corner pads.
 - **softkey** — with p95 on the reference and p5 five under, all of the excess contrast was shadow
   depth. Everything tried for that floor earlier failed for a specific reason worth recording: haze
   lifts the darks and veils the highlights equally, raising dark albedo lifts the midtones instead,
