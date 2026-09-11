@@ -86,6 +86,81 @@ produced, as standing permission. Ask, as below, unless told otherwise in your o
 
 Lova explicitly prefers short, continual check-ins with visual evidence. Work in focused passes, explain what the next pass is testing, inspect the actual result, and send a render PNG/JPG, screenshot, or browser preview as appropriate. These updates give both user and agent shared context and support efficient decisions. Preserve prior versions for comparison and incorporate feedback before broadening a pass. Keep this workflow when another agent takes over; do not replace visual updates with text-only claims or silently bundle several major changes into one result. For this offline Blender work, show the actual render and link its editable `.blend`.
 
+## Render storage policy — 2026-09-11
+
+Lova questioned uploading every render. New generated PNG/JPG and Blender study outputs stay
+local on Hitch_07; push source, configuration and notes only. `.gitignore` now excludes new
+outputs under `renders/`. Existing tracked artifacts remain tracked and in Git history; do not
+rewrite history or delete the archive without explicit direction. Stage exact source/note paths,
+since ignore rules do not protect changes to already tracked outputs. The initial Sprays archive
+was already pushed in `76758fd` before this correction (four PNGs and one Blender file).
+
+## Fuller shoreline crown experiment — 2026-09-11
+
+Continue the maintained runner with `-- --variant hero-crown`. It loads Lace, hides the same 34
+right-bank shoreline stands used in the Sprays test, and replaces them with one connected crown.
+`tools/cathedral_crown.py` supplies the mesh: eleven unequal branch systems carry small cupped
+leaves and irregular hanging trails. Geometry is shared within this one specimen, with 222,530
+vertices and 171,079 faces. It is a focused test, not a replacement for the entire forest.
+
+Placement is final Blender coordinates `(240, 54, 66)`, scale `(99, 75, 87)`. Camera, monument,
+lights, world and foliage materials are inherited unchanged. The 98 original `canopy lobe`
+objects in working X 55–115, Y -18–18, Z < 24 are reduced to 32 percent and lowered by 36 percent
+of their old Z scale, along with their fine-leaf partners. This retains ground cover under the
+hanging growth; fully hiding these clumps exposed a bare bank. `--retain-understory` keeps the
+old foreground clumps to reproduce the first composition. Originals remain in the Lace source.
+
+Do not use `cathedral-crown-study.*` for this work: that name belongs to an earlier archived pass.
+New local-only outputs are `renders/cathedral-hero-crown-study.png` and `.blend`.
+The first preview is `renders/cathedral-crown-quick.png`; the cleared-ground trial is
+`renders/cathedral-hero-crown-quick.png`. The final full render retains low ground cover instead.
+Run `tools/compare_sprays.py -- --variant hero-crown` through Blender to create a local
+reference / Lace / new-crown crop at `renders/cathedral-hero-crown-comparison.png`.
+
+The full 1200px/64-sample render saved successfully in 2m46s. Cell RMS is 4.995 versus Lace
+5.019, effectively unchanged; mean luminance is 45.261 versus 45.022 (reference 45.894).
+Visually the crown has fuller volume and hanging growth, but is still rounder and more uniformly
+speckled than the reference. Next consider broader shadow pockets, a less regular outline and
+more variation in leaf density. This is waiting for visual feedback, not approved for wider rollout.
+All 24 repository tests ran successfully with one skip; the three study tools parse.
+
+## Focused foliage experiment — 2026-09-11
+
+Lova approved changing the iteration approach: preserve camera/proportions, test a representative
+foliage patch, compare visually, and only then extend a successful treatment. The Lace scene is
+still the comparison baseline; the new Sprays experiment is not yet approved for wider use.
+
+`tools/render_cathedral_study.py` loads `renders/cathedral-lace-study.blend` and applies a named
+variant, avoiding another copy of the full scene builder. Keep that source blend available through
+Git LFS. It offers `baseline`, `sprays-flat`, and `sprays`; run with Blender's `--python` option,
+then `-- --variant sprays`. Add `--quick` for 16 samples without saving a blend. Both modes default
+to 1200px because this test concerns foliage structure. The normal run uses 64 samples and writes
+`renders/cathedral-sprays-study.png` and `renders/cathedral-sprays-study.blend`.
+
+Only the 34 positive-X `shoreline stand` objects and their matching leaf objects are replaced.
+Their original geometry remains hidden in the saved experiment. Seven shared mesh families contain
+connected woody scaffolds, twigs and cupped leaves; there is no opaque supporting crown shell.
+Object placement, camera, architecture, other planting, materials and lights are inherited from Lace.
+The runner asserts the expected target count and unchanged camera transform/lens.
+
+The first quick test made overly flat shelves. `sprays-flat` retains that configuration and
+`renders/cathedral-sprays-flat-quick.png` retains its preview. The second version spreads branches
+through several heights and uses more leaders. It opens the silhouette but still reads too fern-like;
+do not describe the experiment as finished realistic foliage or automatically spread it over the forest.
+
+`tools/compare_sprays.py` runs under Blender and writes `renders/cathedral-sprays-comparison.png`:
+reference on the left, Lace in the middle, Sprays on the right. It compares the same normalized
+lower-right region at the final camera and prints whole-frame cell RMS as a regression check.
+The source reference is a browser capture, so this is a visual guide rather than an exact pixel target.
+
+Full render verification: 1200px, 64 samples, saved successfully in 2m47s. Whole-frame cell RMS
+was 5.250 versus Lace's 5.019; mean luminance was 44.863 versus 45.022 (reference 45.894).
+The crop shows the new sprays are more open but too sparse and horizontally layered, while many
+unchanged foreground clumps still dominate the patch. This is an experimental asset, not a visual
+win to promote. A better next test is one fuller, deliberately shaped crown with drooping edge
+growth, keeping its overall footprint and checking its silhouette before distributing it.
+Repository verification: 24 tests ran, passed with one skip; both new Python tools parsed.
+
 ## How the work is produced
 
 Python scripts build the entire editable scene in Blender and render with Cycles. These are real 3D renders, not generated image edits. Blender runs as a separate background process; the user's open Blender window does not automatically update. Deliver both PNG and `.blend` links. Do not claim the visible Blender UI was used.
@@ -457,8 +532,9 @@ Keep Lova's authorship block in the existing repository locations exactly as wri
 
 ## Where to pick up
 
-Start from `tools/render_cathedral_shade.py`, the latest builder, and measure before changing
-anything: rms 5.0 against the reference, mean absolute error 4.1, mean 45.6 against 45.9, p95 77.3
+Use `tools/render_cathedral_study.py` for the focused foliage experiment described above.
+The unchanged comparison baseline is `tools/render_cathedral_lace.py`; Shade is historical.
+The following recorded Shade measurements are context, not measurements of Sprays: rms 5.0 against the reference, mean absolute error 4.1, mean 45.6 against 45.9, p95 77.3
 against 78.2, contrast 50.2 against 46.1. Keep the camera and proportions steady unless the user
 reopens them.
 
