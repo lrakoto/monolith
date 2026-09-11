@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_litbanks.py`, `renders/cathedral-litbanks-study.png`, and `renders/cathedral-litbanks-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_emergent.py`, `renders/cathedral-emergent-study.png`, and `renders/cathedral-emergent-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -173,6 +173,16 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **emergent** — lit tone had only ever been given to the near field, but a forest catches light on
+  whatever stands proud of its neighbours at any distance, and the reference's middle distance
+  canopy is bright. Crowns riding high on their trunks are that emergent layer, which the
+  separation pass had already made identifiable. The threshold matters: at twelve units above
+  terrain it catches most of the bank and lifts the whole right side over, at nineteen it catches
+  the few that should be lit.
+  The bottom right corner was open water catching the lit bank's reflection; in the reference it is
+  dark shoreline growth reaching in toward camera, which is now modelled. Watch where new geometry
+  lands in the near/far material rules: the first attempt put that growth in crown_specs, where the
+  near field rule gave it the brightest materials in the scene, the exact opposite of the intent.
 - **litbanks** — the reference lights its right bank and near field hard while keeping the left
   dark, and crowds its bottom left corner with pads until it is the brightest cell in the frame at
   78. Matching all three brings contrast onto the reference exactly. Two things learned here: the
