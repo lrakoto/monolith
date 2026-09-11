@@ -130,6 +130,9 @@ tools. They run under blender because it has numpy and can read PNGs without any
 - `tools/probe_frame_cells.py` — raycasts chosen cells and reports what geometry is behind them
   in world coordinates. Use it before placing anything; see the units lesson below.
 
+The reference itself is committed at `reference/midjourney-index2.png`; see the README beside
+it for provenance. The tools take it as their first argument and do nothing without it.
+
 The working loop is a quick render at 600px/16 samples through `CATHEDRAL_QUICK=<path>`, which
 takes about 24 seconds against 2m45 for the full pass, then the diff map, then a full render only
 once the numbers and the image both look right. The reference itself is a browser capture of the
