@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_edge.py`, `renders/cathedral-edge-study.png`, and `renders/cathedral-edge-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_litbanks.py`, `renders/cathedral-litbanks-study.png`, and `renders/cathedral-litbanks-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -145,7 +145,8 @@ worse: a pond that measured correct and read as a flat mint slab, and trunk foli
 
 ## Value and structure passes
 
-Error against the reference went from rms 10.1 to 5.9 across twelve passes, all kept. Some trade a
+Error against the reference went from rms 10.1 to 5.9 across thirteen passes, with contrast from
+50.7 through a low of 30.5 back to 48.0 against the reference's 46.1, all kept. Some trade a
 little rms for a large visual gain, so these numbers are not a clean ranking; read them with the
 contrast figures beside them:
 
@@ -172,6 +173,13 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **litbanks** — the reference lights its right bank and near field hard while keeping the left
+  dark, and crowds its bottom left corner with pads until it is the brightest cell in the frame at
+  78. Matching all three brings contrast onto the reference exactly. Two things learned here: the
+  lit stands were bare crown shells with no leaf geometry, so they read as smooth blobs sitting in
+  granular foliage, which looked far worse than the colour did; and a pad cluster has to be sized
+  to the cells it should cover, since at the bottom of frame the pond is only about 86 working
+  units half width and a wider scatter spills into cells the reference keeps dark.
 - **edge** — the worst cell in the map for several passes was the left edge at mid height, and the
   reference has a tree canopy there in full sun, pale and close to yellow green against near black.
   Nothing in the scene was that bright. Adding it took that cell from -18 to -4. The backdrop also
