@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_columns.py`, `renders/cathedral-columns-study.png`, and `renders/cathedral-columns-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_lamps.py`, `renders/cathedral-lamps-study.png`, and `renders/cathedral-lamps-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -176,6 +176,14 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **lamps** — the stairs had never been looked at closely. Twenty four lamps a side with a hood
+  about three pixels wide read as a dotted line; the reference has nine or so, each a clear warm bar
+  on a post. Scaled up they are still modest fittings against a staircase 174 metres wide.
+  The treads also vanished into a smooth ramp above the lower third, where the reference keeps its
+  step lines all the way up. What reads at that distance is the darker riser under each nosing, so
+  the faces turned toward camera darken by normal and the line survives the pixel averaging. That
+  darkening is what brings the ascent down in value now, so the level trim doing that job came back
+  off; stacking both took the stair to flat black.
 - **columns** — raising the whole bark range to get the vertical streaks reading again had lifted
   the trunks off near black, which is where the reference keeps them. Contrast for a feature like
   that belongs in the ramp span, not the level: narrowing the span gives the streaks without
