@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_pads.py`, `renders/cathedral-pads-study.png`, and `renders/cathedral-pads-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_wall.py`, `renders/cathedral-wall-study.png`, and `renders/cathedral-wall-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -173,6 +173,12 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **wall** — the plinth was a clean untextured slab where the reference's is coursed. For banding
+  the lateral stretch has to be small and the vertical one large: at 2.6 the bands came out finer
+  than the surface grain and read as noise, at 7.5 they read as courses.
+  Widening the wall was tried for the worst remaining cell and reverted. That cell is dark because
+  bank foliage stands in front of the wall rather than beside it, so more width never reaches it
+  and only lifted cells further out that were already right.
 - **pads** — the corner cluster measured right and looked wrong: at that size the pads overlapped
   into one green sheet, where the reference's corner is just as bright but is plainly separate pads
   with dark water between them. More and smaller gets both, and they are a pale sage rather than
