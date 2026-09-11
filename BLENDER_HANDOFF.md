@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_scale.py`, `renders/cathedral-scale-study.png`, and `renders/cathedral-scale-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill, taper, scale; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_shade.py`, `renders/cathedral-shade-study.png`, and `renders/cathedral-shade-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps, cling, columns, lamps, layers, softkey, vines, spill, taper, scale, shade; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -236,7 +236,11 @@ contrast figures beside them:
   It costs rms, 5.0 to 5.2, and the cost is all in one place: larger crowns occlude each other less,
   so the upper right bank comes up about a dozen where the reference has it in deep shade. Tightening
   the lit tier there recovered half. Kept because canopy character is visible across the whole frame
-  and a fifth of a point of rms is not, but the right bank brightness is a known residual.
+  and a fifth of a point of rms is not.
+- **shade** — that residual is then closed. Raycasting the bright cells put them within a few dozen
+  units of the `near bank opening` fill again, so it comes down a second time. rms returns to 5.0
+  with the larger crowns kept and mean absolute error reaches 4.1, the best of the run. That fill
+  has now been the cause twice: check it first when the right bank runs bright.
 - **taper** — the trunk widening added in the edge pass is linear in height, so it arrives far too
   early and leaves the trunk bulging at mid frame. Cropping both there shows ours filling about two
   thirds of the cell against the reference's two fifths: the trunk is not too dark there, it is too
