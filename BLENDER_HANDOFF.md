@@ -171,9 +171,18 @@ Six full renders went into this without converging, so the findings are here rat
 - The height falloff already in the material was set from generated z .27 upward, but a ray into the
   upper middle only reaches about .26 of the box, so it has never engaged at all.
 
-The shape of a fix is probably: cut the albedo, then restore the level through the lit surfaces
-rather than through exposure or environment, so the sky stays dark while the mass comes back. That
-is a broad rebalance of the foliage tiers and worth a session of its own.
+That shape was then tried properly and **it should not be tried again**. Varying the scattering
+albedo by height, full strength near the ground where it lifts the shadows and cut to a quarter up
+where it reads as sky, works on every number that had been wrong: the 30 to 40 band goes from 35.5
+to 43.1 percent, the median from 42.2 to 39.9 against the reference's 39.6, and p5 and p95 both hold.
+
+Then look at the render. **The two colossal trunks disappear.** The haze glow behind them is what
+silhouettes them, and without it they merge into the dark background entirely. They are the subject
+of the reference and the whole point of the composition, so no histogram is worth that.
+
+The upper frame reading as luminous haze rather than distant forest is therefore a known, measured,
+and currently accepted difference. Any future attempt has to keep enough background luminance behind
+the trunks to silhouette them: the glow is doing two jobs, and only one of them is wrong.
 
 **Things tried against the reference and discarded**, so they are not tried again:
 - Thinning the bank in front of the plinth to let the wall through. It made that cell darker, not
