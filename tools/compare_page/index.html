@@ -1,0 +1,107 @@
+<meta charset="utf-8">
+<title>Cathedral render comparison</title>
+<style>
+  [hidden]{display:none!important}
+  :root{--bg:#111;--fg:#e8e8e8;--dim:#888;--line:#2a2a2a}
+  body{background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,sans-serif;margin:0;padding:24px}
+  h1{font-size:15px;font-weight:600;margin:0 0 4px}
+  p.sub{color:var(--dim);margin:0 0 20px}
+  .bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  button{background:#1c1c1c;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 13px;font:inherit;cursor:pointer}
+  button[aria-pressed="true"]{background:#2f4f3f;border-color:#4a7a60}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  figure{margin:0}
+  figcaption{color:var(--dim);margin-bottom:6px;font-size:13px}
+  img{width:100%;display:block;border:1px solid var(--line);border-radius:4px;background:#000}
+  .single{max-width:1000px;margin:0 auto}
+  .single img{width:100%}
+  .hint{color:var(--dim);font-size:12px;margin-top:16px}
+</style>
+<h1>Cathedral — branch study vs value pass</h1>
+<p class="sub">Rendered 1200×1200, 64 samples, Cycles CPU. Served from the Hitch_07 drive.</p>
+<div class="bar">
+  <button id="b-side" aria-pressed="true">Side by side</button>
+  <button id="b-flip" aria-pressed="false">Flip (click image)</button>
+</div>
+<div id="side" class="grid">
+  <figure><figcaption>Branch study — previous baseline</figcaption><img src="renders/cathedral-branch-study.png" alt="branch study"></figure>
+  <figure><figcaption>Value pass — brighter pond, lowered fill</figcaption><img src="renders/cathedral-value-study.png" alt="value pass"></figure>
+  <figure><figcaption>Mass pass — darker forest, occluded sky</figcaption><img src="renders/cathedral-mass-study.png" alt="mass pass"></figure>
+  <figure><figcaption>Shore pass — dark water, pads, lit shoreline</figcaption><img src="renders/cathedral-shore-study.png" alt="shore pass"></figure>
+  <figure><figcaption>Trunk pass — vine streaks, broken silhouette</figcaption><img src="renders/cathedral-trunk-study.png" alt="trunk pass"></figure>
+  <figure><figcaption>Plinth pass — flanking wall and cornice</figcaption><img src="renders/cathedral-plinth-study.png" alt="plinth pass"></figure>
+  <figure><figcaption>Foreground pass — lit near banks, pale pads</figcaption><img src="renders/cathedral-foreground-study.png" alt="foreground pass"></figure>
+  <figure><figcaption>Crown pass — granular canopy, fuzzy edges</figcaption><img src="renders/cathedral-crown-study.png" alt="crown pass"></figure>
+  <figure><figcaption>Separation — crowns lifted onto trunks</figcaption><img src="renders/cathedral-separation-study.png" alt="separation"></figure>
+  <figure><figcaption>Tone — trunks and backdrop down</figcaption><img src="renders/cathedral-tone-study.png" alt="tone"></figure>
+  <figure><figcaption>Highlights — directional key restores contrast</figcaption><img src="renders/cathedral-highlight-study.png" alt="highlights"></figure>
+  <figure><figcaption>Rebalance — surfaces reset under the key</figcaption><img src="renders/cathedral-rebalance-study.png" alt="rebalance"></figure>
+  <figure><figcaption>Edge — backdrop gradient, sunstruck left tree</figcaption><img src="renders/cathedral-edge-study.png" alt="edge"></figure>
+  <figure><figcaption>Lit banks — right stand lit, left corner crowded</figcaption><img src="renders/cathedral-litbanks-study.png" alt="lit banks"></figure>
+  <figure><figcaption>Emergent — lit canopy tops, dark right shoreline</figcaption><img src="renders/cathedral-emergent-study.png" alt="emergent"></figure>
+  <figure><figcaption>Pads — distinct pale pads, water between</figcaption><img src="renders/cathedral-pads-study.png" alt="pads"></figure>
+  <figure><figcaption>Wall — coursed plinth stone</figcaption><img src="renders/cathedral-wall-study.png" alt="wall"></figure>
+  <figure><figcaption>Sunside — key azimuth corrected</figcaption><img src="renders/cathedral-sunside-study.png" alt="sunside"></figure>
+  <figure><figcaption>Gradient — right bank lit at the waterline</figcaption><img src="renders/cathedral-gradient-study.png" alt="gradient"></figure>
+  <figure><figcaption>Gaps — wider stand heights, tower eased</figcaption><img src="renders/cathedral-gaps-study.png" alt="gaps"></figure>
+  <figure><figcaption>Cling — trunk foliage on the trunk, not beside it</figcaption><img src="renders/cathedral-cling-study.png" alt="cling"></figure>
+  <figure><figcaption>Columns — bark back to near black</figcaption><img src="renders/cathedral-columns-study.png" alt="columns"></figure>
+  <figure><figcaption>Lamps — real lanterns, treads reading further up</figcaption><img src="renders/cathedral-lamps-study.png" alt="lamps"></figure>
+  <figure><figcaption>Layers — middle distance filled in</figcaption><img src="renders/cathedral-layers-study.png" alt="layers"></figure>
+  <figure><figcaption>Soft key — open shadows</figcaption><img src="renders/cathedral-softkey-study.png" alt="soft key"></figure>
+  <figure><figcaption>Vines — hanging curtains on the trunks</figcaption><img src="renders/cathedral-vines-study.png" alt="vines"></figure>
+  <figure><figcaption>Spill — stray fill and growth pulled back</figcaption><img src="renders/cathedral-spill-study.png" alt="spill"></figure>
+  <figure><figcaption>Taper — trunk widening made progressive</figcaption><img src="renders/cathedral-taper-study.png" alt="taper"></figure>
+  <figure><figcaption>Scale — larger crowns, finer canopy texture</figcaption><img src="renders/cathedral-scale-study.png" alt="scale"></figure>
+  <figure><figcaption>Shade — right bank back into shadow</figcaption><img src="renders/cathedral-shade-study.png" alt="shade"></figure>
+  <figure><figcaption>Lace — crowns broken open at the edge</figcaption><img src="renders/cathedral-lace-study.png" alt="lace"></figure>
+  <figure><figcaption>Presentation — 1800px, 200 samples</figcaption><img src="renders/cathedral-presentation.png" alt="presentation"></figure>
+  <figure><figcaption>Reference (Midjourney, index 2)</figcaption><img src="reference.png" alt="reference"></figure>
+</div>
+<div id="flip" class="single" hidden>
+  <figcaption id="flipcap" style="color:#888;margin-bottom:6px">Branch study — click to flip</figcaption>
+  <img id="flipimg" src="renders/cathedral-branch-study.png" alt="flip view">
+</div>
+<p class="hint">Flip mode swaps the two in place, which makes the value change easier to judge than a side-by-side.</p>
+<script>
+  const bSide=document.getElementById('b-side'),bFlip=document.getElementById('b-flip');
+  const side=document.getElementById('side'),flip=document.getElementById('flip');
+  const img=document.getElementById('flipimg'),cap=document.getElementById('flipcap');
+  const shots=[['renders/cathedral-branch-study.png','Branch study — click to flip'],
+               ['renders/cathedral-value-study.png','Value pass — click to flip'],
+               ['renders/cathedral-mass-study.png','Mass pass — click to flip'],
+               ['renders/cathedral-shore-study.png','Shore pass — click to flip'],
+               ['renders/cathedral-trunk-study.png','Trunk pass — click to flip'],
+               ['renders/cathedral-plinth-study.png','Plinth pass — click to flip'],
+               ['renders/cathedral-foreground-study.png','Foreground pass — click to flip'],
+               ['renders/cathedral-crown-study.png','Crown pass — click to flip'],
+               ['renders/cathedral-separation-study.png','Separation — click to flip'],
+               ['renders/cathedral-tone-study.png','Tone — click to flip'],
+               ['renders/cathedral-highlight-study.png','Highlights — click to flip'],
+               ['renders/cathedral-rebalance-study.png','Rebalance — click to flip'],
+               ['renders/cathedral-edge-study.png','Edge — click to flip'],
+               ['renders/cathedral-litbanks-study.png','Lit banks — click to flip'],
+               ['renders/cathedral-emergent-study.png','Emergent — click to flip'],
+               ['renders/cathedral-pads-study.png','Pads — click to flip'],
+               ['renders/cathedral-wall-study.png','Wall — click to flip'],
+               ['renders/cathedral-sunside-study.png','Sunside — click to flip'],
+               ['renders/cathedral-gradient-study.png','Gradient — click to flip'],
+               ['renders/cathedral-gaps-study.png','Gaps — click to flip'],
+               ['renders/cathedral-cling-study.png','Cling — click to flip'],
+               ['renders/cathedral-columns-study.png','Columns — click to flip'],
+               ['renders/cathedral-lamps-study.png','Lamps — click to flip'],
+               ['renders/cathedral-layers-study.png','Layers — click to flip'],
+               ['renders/cathedral-softkey-study.png','Soft key — click to flip'],
+               ['renders/cathedral-vines-study.png','Vines — click to flip'],
+               ['renders/cathedral-spill-study.png','Spill — click to flip'],
+               ['renders/cathedral-taper-study.png','Taper — click to flip'],
+               ['renders/cathedral-scale-study.png','Scale — click to flip'],
+               ['renders/cathedral-shade-study.png','Shade — click to flip'],
+               ['renders/cathedral-lace-study.png','Lace — click to flip'],
+               ['reference.png','REFERENCE — click to flip']];
+  let i=0;
+  function mode(isFlip){side.hidden=isFlip;flip.hidden=!isFlip;
+    bSide.setAttribute('aria-pressed',String(!isFlip));bFlip.setAttribute('aria-pressed',String(isFlip));}
+  bSide.onclick=()=>mode(false); bFlip.onclick=()=>mode(true);
+  img.onclick=()=>{i=(i+1)%shots.length;img.src=shots[i][0];cap.textContent=shots[i][1];};
+</script>

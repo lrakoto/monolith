@@ -78,6 +78,12 @@ Latest accepted direction: farther camera, two main trunks, uneven forest banks 
 
 ## User preference: continual visual check-ins
 
+**The default is to check in, and it has not changed.** A later session ran long autonomous
+stretches, twenty five passes without asking, and committed and pushed throughout. That was granted
+explicitly and for that session only: Lova said to keep going without checking in and that they
+would look in after a few hours. Do not read the size of that run, or the commit history it
+produced, as standing permission. Ask, as below, unless told otherwise in your own session.
+
 Lova explicitly prefers short, continual check-ins with visual evidence. Work in focused passes, explain what the next pass is testing, inspect the actual result, and send a render PNG/JPG, screenshot, or browser preview as appropriate. These updates give both user and agent shared context and support efficient decisions. Preserve prior versions for comparison and incorporate feedback before broadening a pass. Keep this workflow when another agent takes over; do not replace visual updates with text-only claims or silently bundle several major changes into one result. For this offline Blender work, show the actual render and link its editable `.blend`.
 
 ## How the work is produced
@@ -87,8 +93,25 @@ Python scripts build the entire editable scene in Blender and render with Cycles
 From `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`:
 
 ```sh
-/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 --python tools/render_cathedral_branches.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 \
+  --python tools/render_cathedral_lace.py
 ```
+
+That is the current builder; each pass has its own, and the newest one is named at the top of this
+file. A full pass is about 2m45 at 1200px and 64 samples on eight CPU threads.
+
+Two environment variables shorten the loop while iterating:
+
+```sh
+CATHEDRAL_QUICK=/tmp/q.png CATHEDRAL_QUICK_RES=1200 <blender ...>
+```
+
+`CATHEDRAL_QUICK` redirects the render and skips saving a blend, and drops to 16 samples; with
+`CATHEDRAL_QUICK_RES` left unset it also drops to 600px and takes about 24 seconds. Set the
+resolution to 1200 whenever the question is about texture rather than value, because frequency
+cannot be judged at 600 at all. **Confirm anything under about 0.2 rms with a full render**: at 16
+samples the noise is worth about that much, and two passes were built on differences that turned
+out not to exist.
 
 `renders/cathedral-presentation.png` is a 1800px, 200 sample version of the latest pass for showing
 the work; it took about 14 minutes on CPU and measures the same as the study render at rms 5.0. The
@@ -101,7 +124,7 @@ still exits 0. Pass an absolute path or check where the file actually landed.
 
 Blender 5.2.1 LTS is installed. CPU rendering works; Metal previously stalled while waiting for kernels. Sandboxed Blender previously crashed before executing the script, so background render commands have needed the normal `require_escalated` execution path. Do not bypass approval review or kill the user's GUI Blender. Poll the exact process/session started for this task, using waits of at most 30–60 seconds and concise progress updates.
 
-The current branch study uses 1200 × 1200, 64 Cycles samples, denoising, AgX, and 8 CPU threads; its full render took about 2m40s, and the separate close-up about 1m18s. Earlier simple studies used 1000px/48 samples, and earlier detailed 1600px renders took several minutes. More samples improve noise, not proportions or modeling.
+Every pass renders at 1200 × 1200, 64 Cycles samples, denoising, AgX and 8 CPU threads. More samples improve noise, not proportions or modeling.
 
 Create a separately named builder/PNG/blend for each new user-visible pass. Preserve earlier accepted studies. Edit with exact asserted anchors, inspect the resulting render, and only then describe what improved. Temporary patch scripts are not authoritative; the `tools/render_cathedral_*.py` files are.
 
@@ -141,6 +164,10 @@ tools. They run under blender because it has numpy and can read PNGs without any
   ours spreads across 30 to 50, and that our tower holds three times its share above 100.
 - `tools/probe_frame_cells.py` — raycasts chosen cells and reports what geometry is behind them
   in world coordinates. Use it before placing anything; see the units lesson below.
+- `tools/compare_page/serve.sh` — serves every pass and the reference as one page on
+  http://127.0.0.1:5199/, symlinking `renders/` in so it always shows what is there now. Its flip
+  mode is the useful one: side by side lets the eye adapt to each image separately, so a global
+  value change reads as "both look about the same", while swapping in place makes it obvious.
 
 The reference itself is committed at `reference/midjourney-index2.png`; see the README beside
 it for provenance. The tools take it as their first argument and do nothing without it.
