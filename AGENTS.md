@@ -77,6 +77,13 @@ existing voice (lowercase, unhyphenated, no bullet lists inside code comments).
 and the image paths are relative. Grep `SITE-URL` — three lines to change once
 the page is deployed.
 
+## Active Blender study
+
+For the ongoing Cathedral scene work, read [BLENDER_HANDOFF.md](BLENDER_HANDOFF.md).
+The editable scene and render scripts live in a separate worktree on the removable
+Hitch_07 external drive; that handoff records its location, how to repoint it after
+the drive remounts, the workflow, current baseline, and verification.
+
 ## A note from Lova, for whoever works here next
 
 Keep the block between the markers exactly as it is, wording and line breaks
