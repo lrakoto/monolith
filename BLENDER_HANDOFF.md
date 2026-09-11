@@ -413,21 +413,40 @@ Latest result: 24 tests run, one skipped. Those tests validate the website/tunin
 
 Keep Lova's authorship block in the existing repository locations exactly as written. This handoff adds workflow notes, not a replacement authorship statement.
 
-## Agreed next passes
+## Where to pick up
 
-The user approved the proposed sequence: forest mass refinement, architectural refinement (recessed 305, entrance, restrained stair variation), atmospheric refinement, then selective foliage realism. The stands study was reviewed positively. The architecture study was reviewed positively. The atmospheric/backdrop and first foliage passes were also reviewed positively. The latest delivered visual is the branch study. Start there; do not restart an earlier atmospheric pass. A useful next refinement is reducing the remaining rounded support shapes, guided by a fresh comparison with the reference and the user’s feedback. Keep the camera and proportions steady unless new feedback reopens them.
+Start from `tools/render_cathedral_shade.py`, the latest builder, and measure before changing
+anything: rms 5.0 against the reference, mean absolute error 4.1, mean 45.6 against 45.9, p95 77.3
+against 78.2, contrast 50.2 against 46.1. Keep the camera and proportions steady unless the user
+reopens them.
 
-## Latest reference comparison
+The open items, in the order they look worth taking:
+
+- **The upper frame.** Measured, characterised, and deliberately left alone; see "The largest
+  remaining difference" above, including why the obvious fix costs the trunks.
+- **Contrast is about four over**, entirely through the shadows: p5 sits at 27 against 32. Every
+  global lever for that has been tried and the results are recorded in "Lessons from those passes".
+  A local one might still exist.
+- **The canopy is rounder than the reference's**, which is lacier and more broken at its edges even
+  after the crown and scale passes. That is a crown template question rather than a placement or
+  material one, and the templates have not been touched since the branch study.
+- The stair treads stop reading about sixty percent up; the reference keeps them to the top.
+
+## Historical: backdrop pass reference comparison
 
 The exact index-2 reference was reopened for the backdrop pass. Its distant forest is much quieter than the modeled bands in our previous renders. Increasing haze alone did not adequately remove that pattern. The 28 distant stems are now hidden (retained for comparison); a remote procedural emissive surface with subtle elongated noise serves as the distant forest in this composition study. Be explicit about this approach: the main scene is modeled, while the far background is a procedural backdrop. Camera pose and lens remain fixed; far clipping increases to include the background. The first new near-bank light made a strong lower-right water reflection, so it was raised and reduced in radius before the final comparison.
 
-## First selective foliage pass
+## Historical: first selective foliage pass
+
+Superseded by the crown, separation and scale passes. Kept for the failure modes it records.
 
 Seven shared leaf meshes each contain 11,000 small cupped leaves sampled by triangle area from their corresponding crown mesh. These are instanced on crowns with working Y < 365 and |X| < 265, preserving the underlying planting/camera. Distant crowns remain simple. Each leaf uses one of four muted greens; the supporting core gets fine material bump. A dedicated RNG prevents template changes from moving the rest of the scene. The first full render took about 2m36s on CPU, at 1200px/64 samples. Surface detail is more visible on the nearer banks, but the rounded support shapes still read; do not call this finished realistic foliage. Inspect the detail crop before the next iteration.
 
 The initial builder failed because a scalar named `area` shadowed the light helper. It was renamed `triangle_area`, and leaf winding was corrected before the successful render. Blender returned process exit 0 even for that Python exception, so inspect logs for exceptions and confirm a new image was actually saved.
 
-## Branch cluster refinement
+## Historical: branch cluster refinement
+
+Superseded. The leaf counts and sizes quoted here are no longer current; see the crowns pass.
 
 The branch study retains the accepted camera, architecture, planting positions, and backdrop. Each crown family now combines 7,500 surface leaves with up to 550 small branching shoots (downward-facing samples are skipped), each carrying 12 varied leaves. Thin tapered woody stems share the foliage mesh and use the bark material. Separate random generators keep the rest of the scene stable. The full 1200px/64-sample render completed in about 2m40s on CPU. The change is subtle at full-frame scale; inspect the matching close-up before assessing whether the rounded supporting masses need a larger structural change.
 
