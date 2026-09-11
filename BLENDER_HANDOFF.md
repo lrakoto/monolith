@@ -90,6 +90,15 @@ From `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`:
 /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 --python tools/render_cathedral_branches.py
 ```
 
+`renders/cathedral-presentation.png` is a 1800px, 200 sample version of the latest pass for showing
+the work; it took about 14 minutes on CPU and measures the same as the study render at rms 5.0. The
+extra resolution is worth having for judging the canopy, which shows its lobe structure far more
+plainly there than at 1200.
+
+A filepath beginning `//` in Blender is relative to the blend file, not the working directory. The
+blend files live in `renders/`, so `//renders/x.png` writes `renders/renders/x.png` and the render
+still exits 0. Pass an absolute path or check where the file actually landed.
+
 Blender 5.2.1 LTS is installed. CPU rendering works; Metal previously stalled while waiting for kernels. Sandboxed Blender previously crashed before executing the script, so background render commands have needed the normal `require_escalated` execution path. Do not bypass approval review or kill the user's GUI Blender. Poll the exact process/session started for this task, using waits of at most 30–60 seconds and concise progress updates.
 
 The current branch study uses 1200 × 1200, 64 Cycles samples, denoising, AgX, and 8 CPU threads; its full render took about 2m40s, and the separate close-up about 1m18s. Earlier simple studies used 1000px/48 samples, and earlier detailed 1600px renders took several minutes. More samples improve noise, not proportions or modeling.
