@@ -141,3 +141,17 @@ A builder naming collision initially shadowed the `area()` light helper with a t
 Each family retains 7,500 surface leaves and adds up to 550 tapered woody shoots with 12 leaves each, skipping downward-facing samples. Leaf directions vary around each shoot, extending the canopy edges without moving the established planting. Shared meshes retain the four leaf tones and add the bark material for stems. Camera, architecture, lights, and backdrop are preserved.
 
 The 1200px/64-sample full render took about 2m40s on CPU. `tools/render_cathedral_branch_detail.py` renders the matching close-up from the same camera without overwriting the saved blend.
+
+
+## Focused branch-spray test — 2026-09-11
+
+`cathedral-sprays-study.png` and `.blend` are an isolated experiment based on Lace, not its
+replacement. `../tools/render_cathedral_study.py -- --variant sprays` runs under Blender and
+replaces only 34 right shoreline crowns. Camera, architecture, lighting and other planting remain
+from the saved Lace scene. The `baseline` variant reloads Lace unchanged; `sprays-flat` preserves
+the first, overly flat branch distribution. `--quick` renders 16 samples without saving a blend.
+
+`cathedral-sprays-comparison.png` shows reference / Lace / Sprays from left to right, made by
+`../tools/compare_sprays.py`. The full 1200px/64-sample render took 2m47s. The result opens the
+crowns but is too sparse and horizontally layered; whole-frame cell RMS worsened from 5.019 to
+5.250. Keep Lace as baseline while reviewing this test. See BLENDER_HANDOFF.md for the next hypothesis.
