@@ -147,6 +147,34 @@ a tenth of rms and a couple of points of any percentile, which is the same size 
 chased at this stage. Two whole passes were built and discarded on differences that turned out not
 to exist at 64 samples. Confirm anything under about 0.2 rms with a full render before believing it.
 
+## The largest remaining difference
+
+`tools/compare_band_map.py` shows where a given luminance band is over or under represented. Run on
+the 40 to 50 band it puts almost the entire excess in the upper middle of the frame: our cells there
+are 100 percent inside that band and the reference's are at zero. Cropping the reference explains
+it. **It has no open sky.** Behind the monument is a dark wall of distant forest under faint vertical
+streaking, with the tower bright against it. Ours is luminous haze sitting at about 45, and
+attribution says the volume supplies that, not the backdrop.
+
+Six full renders went into this without converging, so the findings are here rather than the fix:
+
+- Cutting the volume's scattering albedo does fix the band: 40 to 50 goes from 30 percent to 13.9
+  against the reference's 15.3, and 30 to 40 from 35 to 41.7. But it drops the whole frame by six,
+  because that glow was carrying much of the level.
+- Restoring the level with exposure undoes the gain exactly, pushing the same pixels back up into
+  40 to 50. Exposure cannot separate the sky from the mass.
+- Restoring it with the environment lifts the shadows but blows p95 to 85 against 78, because the
+  environment lights the tower and the water along with everything else.
+- **Thinning the haze density brightens the frame rather than darkening it**, by about five. The
+  volume both scatters and attenuates, so less of it means less glow but also less extinction, and
+  the distance comes through stronger. This is worth knowing before reaching for density again.
+- The height falloff already in the material was set from generated z .27 upward, but a ray into the
+  upper middle only reaches about .26 of the box, so it has never engaged at all.
+
+The shape of a fix is probably: cut the albedo, then restore the level through the lit surfaces
+rather than through exposure or environment, so the sky stays dark while the mass comes back. That
+is a broad rebalance of the foliage tiers and worth a session of its own.
+
 **Things tried against the reference and discarded**, so they are not tried again:
 - Thinning the bank in front of the plinth to let the wall through. It made that cell darker, not
   lighter: what stands behind the foliage there is not the wall. Four attempts on that one cell now,
