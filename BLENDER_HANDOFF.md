@@ -5,13 +5,65 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 ## Where work lives
 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
-- Active study worktree: `/private/tmp/monolith-cathedral`, branch `codex/forest-cathedral`.
+- Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Latest generated pass (awaiting user review): `tools/render_cathedral_branches.py`, `renders/cathedral-branch-study.png`, and `renders/cathedral-branch-study.blend`. Shared crown templates now include small woody shoots with varied leaf directions. `tools/render_cathedral_branch_detail.py` produces the matching `renders/cathedral-branch-detail.png`.
+- Current latest pass: `tools/render_cathedral_trunk.py`, `renders/cathedral-trunk-study.png`, and `renders/cathedral-trunk-study.blend`. The chain to it is branches, then value, mass, shore, trunk; each has its own builder and PNG/blend pair and they are all kept.
+- Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
 
-Run `git log --oneline -5` and `git status --short` in the worktree before assuming its state. The study archive was committed and pushed as `f46b7bd` on `origin/codex/forest-cathedral`; GitHub checks passed and all 19 Blender files uploaded through Git LFS. Check current branch status before assuming later work is committed. Do not clean untracked files or assume the main checkout contains the study. The unrelated main-checkout `b/` directory belongs to other work. The worktree also contains earlier website edits and preview configuration; this Blender task is not permission to publish those. The `/private/tmp` path is not durable archival storage; preserve or migrate the full study with explicit scope before cleaning it.
+Run `git log --oneline -5` and `git status --short` in the worktree before assuming its state. The study archive was committed and pushed as `f46b7bd` on `origin/codex/forest-cathedral`; GitHub checks passed and all 19 Blender files uploaded through Git LFS. Check current branch status before assuming later work is committed. Do not clean untracked files or assume the main checkout contains the study. The unrelated main-checkout `b/` directory belongs to other work. The worktree also contains earlier website edits and preview configuration; this Blender task is not permission to publish those. The study was moved off `/private/tmp` to the external drive on 2026-09-10 because that path is not durable archival storage.
+
+## Drive location and repointing
+
+The study lives on the removable `Hitch_07` drive. Git's bookkeeping for the
+worktree does not: `.git/worktrees/monolith-cathedral` stays in the main
+repository on the internal drive, and only the checkout is on the external
+drive. So the registration survives an unmount; it is the path that can move.
+
+Before doing anything, confirm the drive is actually mounted:
+
+```sh
+ls -d /Volumes/Hitch_07/Blender/Data/monolith-cathedral
+```
+
+If that fails, the drive is unplugged or asleep. Stop and ask rather than
+recreating the study somewhere else — the renders and `.blend` files exist only
+here and on `origin/codex/forest-cathedral`.
+
+macOS usually remounts this volume at the same `/Volumes/Hitch_07`. If a stale
+mount is present it can instead appear as `/Volumes/Hitch_07 1`, which makes the
+recorded path wrong without anything reporting an error. When the path differs,
+repoint git from the main repository:
+
+```sh
+cd /Users/victoriarajaonarivony/Documents/monolith
+git worktree unlock "/Volumes/Hitch_07/Blender/Data/monolith-cathedral"
+git worktree repair "<actual mounted path>/Blender/Data/monolith-cathedral"
+git worktree lock --reason "on the Hitch_07 external drive" "<actual mounted path>/Blender/Data/monolith-cathedral"
+```
+
+Then update the paths in this file so the next agent reads the truth.
+
+Two settings exist because of the drive and should not be undone:
+
+- The worktree is **locked**. `git worktree prune` would otherwise deregister it
+  whenever the drive is unmounted, because the path does not resolve. Unlock
+  only to move it, and lock it again afterwards.
+- `core.fileMode` is `false` for this worktree only, set through
+  `extensions.worktreeConfig` in `.git/config.worktree`. The drive is exFAT and
+  mounts `noowners`, so every file reads as `rwx` and git otherwise reports all
+  173 tracked files as modified with no content change. The main checkout keeps
+  `core.fileMode=true`; do not set this repository-wide.
+
+`git worktree move` cannot move a worktree onto this drive — it uses `rename()`
+and fails with "Cross-device link". Copy with `rsync -a`, run
+`git worktree repair` against the new path, then delete the source once
+`rsync -rcn` reports no differences.
+
+exFAT is case-insensitive, like the internal volume, so that changes nothing
+here. Symlinks do work on this mount; `CLAUDE.md -> AGENTS.md` survived the move
+intact. Renders write to the drive normally.
 
 ## What the user is asking for
 
@@ -32,7 +84,7 @@ Lova explicitly prefers short, continual check-ins with visual evidence. Work in
 
 Python scripts build the entire editable scene in Blender and render with Cycles. These are real 3D renders, not generated image edits. Blender runs as a separate background process; the user's open Blender window does not automatically update. Deliver both PNG and `.blend` links. Do not claim the visible Blender UI was used.
 
-From `/private/tmp/monolith-cathedral`:
+From `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`:
 
 ```sh
 /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 8 --python tools/render_cathedral_branches.py
@@ -62,6 +114,70 @@ Final camera: `(0, -720, 108)`, 35.518mm lens, upward tilt 0.226 radians. Tower 
 - Terrain noise tapering to zero at the pond removed flat shallow patches. Keep the pond small in frame.
 - The architecture study replaces the earlier flat 305 treatment with a real Boolean recess; a dark text surface sits inside the recess to retain legibility. The entrance is also cut into the monument. Ray checks verify actual mesh depth independently of overlays. Apply booleans before beveling and delete only the cutters created by the current operation. This remains a composition study, not a finished realism render.
 - Current near foliage includes real leaf and small branch geometry over seven supporting crown families; distant crowns remain simple. Rounded supporting forms are still visible. Inspect the latest branch study and its close-up before the next refinement; this is not yet finished realistic foliage.
+
+## Measuring against the reference
+
+Judging "closer to the reference" by eye alone was costing passes, so there are now four small
+tools. They run under blender because it has numpy and can read PNGs without any extra install.
+
+- `tools/compare_diff_map.py` — the important one. Splits both images into a twelve by twelve
+  grid and prints the per cell difference plus an rms, so the answer is *where* we are wrong
+  rather than just whether we are bright. It found in one run what five rounds of scalar tuning
+  had missed, and it immediately contradicted a scalar reading that said the pond was fine.
+- `tools/compare_value_stats.py` — histogram shape: mean, percentiles, contrast, region bands.
+  Useful once you know where to look. On its own it hides local error by averaging it away.
+- `tools/compare_crop.py` — magnified crop of one region for texture comparison.
+- `tools/probe_frame_cells.py` — raycasts chosen cells and reports what geometry is behind them
+  in world coordinates. Use it before placing anything; see the units lesson below.
+
+The working loop is a quick render at 600px/16 samples through `CATHEDRAL_QUICK=<path>`, which
+takes about 24 seconds against 2m45 for the full pass, then the diff map, then a full render only
+once the numbers and the image both look right. The reference itself is a browser capture of the
+midjourney page, so it carries a few percent of jpeg and display profile error; the gaps that
+matter here are much larger than that, but do not chase its last digit.
+
+**rms is a guide, not the verdict.** Two separate passes scored better while visibly getting
+worse: a pond that measured correct and read as a flat mint slab, and trunk foliage that scored
+8.3 while reading as balls floating off the silhouette. Always look at the render as well.
+
+## Value and structure passes
+
+Error against the reference went from rms 10.1 to 8.3 across four passes, all kept:
+
+- **value** — first attempt at the dark reference look, by lowering the fill lights. Wrong: it
+  made the frame dimmer and flatter without making it darker, and cost the foliage its modelling.
+  Only the brighter pond survived. Kept for comparison; do not build on it.
+- **mass** — the one that worked. The upper frame was bright because the haze was *scattering the
+  key light*, not because of geometry, the backdrop or the world background; all three of those
+  together moved almost nothing. Dropping the volume scattering albedo from .46 to .24 moved more
+  than everything else combined, and keeps extinction so depth separation survives.
+- **shore** — the water was far too bright, the lily pads too few, small and dark, and the
+  shoreline stands missing. The reference's brightest foreground is crowded pale pads near camera.
+- **trunk** — bark darkened and given fine vertical vine streaking, and the silhouette broken by
+  about 620 small clinging clumps per trunk.
+
+## Lessons from those passes
+
+- Exposure cannot fix this. Matching the reference mean by lowering exposure collapses the
+  highlights with it: at -0.5 stops the mean was right and p95 fell from 78 to 61. The reference
+  is dark *and* contrasty, which is a question of how much of the frame is mass, not of exposure.
+- There is no local light in this scene. Every point light here is broad by construction, and
+  three separate attempts to brighten one corner spilled across the whole frame and made things
+  worse. Regional corrections belong in a **material**, which cannot spill. The lit shoreline
+  stands carry their own lighter material and that is also what the reference shows.
+- A light near the water mirrors into the pond and produces a hot spot; this is recorded twice now.
+- Builders lay out in working units and multiply locations by three at the end. Positions worked
+  out from the final frame therefore land three times too far out, silently doing nothing. Use
+  `tools/probe_frame_cells.py` to get real coordinates instead of deriving them.
+- Texture frequency has to be judged at full resolution. Noise pushed above the pixel rate averages
+  to a flat surface, so a trunk can come out completely featureless; at the 600px preview fifty
+  streaks read coarse and a hundred read as nothing, while at 1200 fifty is about right.
+- Prefer Generated texture coordinates over Object where a feature count matters. Object
+  coordinates carry the source mesh's own units, so the multiplier is guesswork.
+- Free floating crown blobs were rejected once before and were re-created twice here: once as
+  overhanging canopy in mid sky, once as trunk foliage. Both times the fix was the same, small and
+  dense reads as a fringe, large and sparse reads as balls. Mass that reaches a frame edge or hugs
+  a surface works; mass hanging in open air does not.
 
 ## Verification and delivery
 
