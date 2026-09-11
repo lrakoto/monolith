@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_trunk.py`, `renders/cathedral-trunk-study.png`, and `renders/cathedral-trunk-study.blend`. The chain to it is branches, then value, mass, shore, trunk; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_plinth.py`, `renders/cathedral-plinth-study.png`, and `renders/cathedral-plinth-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -142,7 +142,7 @@ worse: a pond that measured correct and read as a flat mint slab, and trunk foli
 
 ## Value and structure passes
 
-Error against the reference went from rms 10.1 to 8.3 across four passes, all kept:
+Error against the reference went from rms 10.1 to 7.9 across five passes, all kept:
 
 - **value** — first attempt at the dark reference look, by lowering the fill lights. Wrong: it
   made the frame dimmer and flatter without making it darker, and cost the foliage its modelling.
@@ -155,6 +155,9 @@ Error against the reference went from rms 10.1 to 8.3 across four passes, all ke
   shoreline stands missing. The reference's brightest foreground is crowded pale pads near camera.
 - **trunk** — bark darkened and given fine vertical vine streaking, and the silhouette broken by
   about 620 small clinging clumps per trunk.
+- **plinth** — a broad flanking wall and cornice either side of the tower, about four times its
+  width, with planting lapping over both ends. Built as two segments rather than one wall so it
+  cannot reach into the entrance recess cut between y 329 and 341.
 
 ## Lessons from those passes
 
