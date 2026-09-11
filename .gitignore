@@ -6,3 +6,11 @@ __pycache__/
 # not the worker
 .wrangler/
 node_modules/
+
+# study outputs stay on Hitch_07; previously tracked archive files remain in history.
+/renders/*.png
+/renders/*.jpg
+/renders/*.jpeg
+/renders/*.blend
+/renders/*.blend1
+._*

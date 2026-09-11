@@ -14,8 +14,9 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 args = argparse.ArgumentParser()
-args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays'), default='sprays')
+args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown'), default='sprays')
 args.add_argument('--quick', action='store_true')
+args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
 args.add_argument('--resolution', type=int, default=1200)
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
@@ -120,7 +121,36 @@ def make_sprays(family, materials):
     return mesh
 
 
-if args.variant != 'baseline':
+if args.variant == 'hero-crown':
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_crown import build_crown
+    targets = [o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0]
+    assert len(targets) == 34
+    materials = bpy.data.objects['shoreline foliage 009'].data.materials
+    for old in targets:
+        old.hide_render = True
+        bpy.data.objects['shoreline foliage ' + old.name.rsplit(' ', 1)[1]].hide_render = True
+    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials))
+    scene.collection.objects.link(crown)
+    if not args.retain_understory:
+        cleared = []
+        for original in list(scene.objects):
+            x, y, z = (v / 3 for v in original.location)
+            if original.name.startswith('canopy lobe ') and 55 < x < 115 and -18 < y < 18 and z < 24:
+                # low ground cover hides the bare bank without masking the hanging crown edge.
+                original.location.z -= original.scale.z * .36
+                original.scale *= .32
+                leaves = bpy.data.objects.get('fine foliage ' + original.name.rsplit(' ', 1)[1])
+                if leaves:
+                    leaves.location = original.location.copy()
+                    leaves.scale = original.scale.copy()
+                cleared.append(original.name)
+        print('Lowered overlapping foreground clumps:', len(cleared), flush=True)
+    crown.location = (240, 54, 66)
+    crown.scale = (99, 75, 87)
+    print('One fuller crown replaces the same 34 shoreline stands; scene camera unchanged', flush=True)
+
+if args.variant in ('sprays', 'sprays-flat'):
     targets = sorted((o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0), key=lambda o: o.name)
     assert len(targets) == 34, len(targets)
     templates = {}

@@ -1,8 +1,12 @@
 import bpy
 import numpy as np
 from pathlib import Path
+import argparse, sys
+parser=argparse.ArgumentParser()
+parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown'))
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 root=Path(__file__).resolve().parents[1]
-files=[root/'reference/midjourney-index2.png', root/'renders/cathedral-lace-study.png', root/'renders/cathedral-sprays-study.png']
+files=[root/'reference/midjourney-index2.png', root/'renders/cathedral-lace-study.png', root/('renders/cathedral-'+args.variant+'-study.png')]
 patches=[]
 for path in files:
     image=bpy.data.images.load(str(path));image.colorspace_settings.name='Non-Color'
@@ -20,5 +24,5 @@ for path in files:
     print(path.name, 'cell RMS',round(float(np.sqrt(((cells-reference)**2).mean())),3),'mean',round(float(lum.mean()),3),flush=True)
 out=np.concatenate(patches,axis=1)
 im=bpy.data.images.new('reference | lace | branch sprays',out.shape[1],out.shape[0],alpha=False)
-im.pixels.foreach_set(out[::-1].ravel());im.filepath_raw=str(root/'renders/cathedral-sprays-comparison.png');im.file_format='PNG';im.save()
+im.pixels.foreach_set(out[::-1].ravel());im.filepath_raw=str(root/('renders/cathedral-'+args.variant+'-comparison.png'));im.file_format='PNG';im.save()
 print('Saved comparison',flush=True)

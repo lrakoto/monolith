@@ -155,3 +155,14 @@ the first, overly flat branch distribution. `--quick` renders 16 samples without
 `../tools/compare_sprays.py`. The full 1200px/64-sample render took 2m47s. The result opens the
 crowns but is too sparse and horizontally layered; whole-frame cell RMS worsened from 5.019 to
 5.250. Keep Lace as baseline while reviewing this test. See BLENDER_HANDOFF.md for the next hypothesis.
+
+
+## Fuller shoreline crown — local outputs, 2026-09-11
+
+`cathedral-hero-crown-study.png` and `.blend` are deliberately ignored and remain on Hitch_07.
+Rebuild through Blender with `tools/render_cathedral_study.py -- --variant hero-crown`. The new
+`tools/cathedral_crown.py` builds one fuller specimen with eleven branch systems and hanging
+growth; camera and lighting are unchanged. It replaces the same 34 shoreline stands and lowers
+98 overlapping clumps to keep ground cover without hiding the crown edge. Use `--retain-understory`
+to keep the original foreground. Comparison: `tools/compare_sprays.py -- --variant hero-crown`.
+No render or Blender output from this pass should be staged or pushed.
