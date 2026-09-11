@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_gradient.py`, `renders/cathedral-gradient-study.png`, and `renders/cathedral-gradient-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_gaps.py`, `renders/cathedral-gaps-study.png`, and `renders/cathedral-gaps-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns, separation, tone, highlights, rebalance, edge, litbanks, emergent, pads, wall, sunside, gradient, gaps; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -127,6 +127,9 @@ tools. They run under blender because it has numpy and can read PNGs without any
 - `tools/compare_value_stats.py` — histogram shape: mean, percentiles, contrast, region bands.
   Useful once you know where to look. On its own it hides local error by averaging it away.
 - `tools/compare_crop.py` — magnified crop of one region for texture comparison.
+- `tools/compare_histogram.py` — how the luminance is distributed band by band. The other two miss
+  shape entirely. This is what showed that half the reference sits in a narrow 30 to 40 band while
+  ours spreads across 30 to 50, and that our tower holds three times its share above 100.
 - `tools/probe_frame_cells.py` — raycasts chosen cells and reports what geometry is behind them
   in world coordinates. Use it before placing anything; see the units lesson below.
 
@@ -173,6 +176,14 @@ contrast figures beside them:
   masses too, so their outline was never it. What they have is granularity at about five percent of
   a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
   Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
+- **gaps** — cell averages were matching to about four levels while the median still ran four
+  high, so the darks missing were inside the cells rather than across them. Wider stand heights and
+  a thinner understory help a little, and the tower comes down while the lit canopy comes up, which
+  moves pixels between bands rather than shifting the frame. The residual is tonal shape rather
+  than placement: we hold five percent more pixels below 30 and eighteen percent more in 40 to 50,
+  where the reference concentrates in 30 to 40. Some of that is a path traced render against a
+  generated image, and chasing it with a global tone curve would soften the render rather than
+  match it. Worth knowing before spending renders on it.
 - **gradient** — the reference's right bank reads 36 up the slope and 50 to 63 at the waterline;
   ours did the reverse, because the key lights tops. So the stand at the water takes more of the
   brightest tier and the emergent rule stops lighting crowns high on the right. Worth knowing: the
