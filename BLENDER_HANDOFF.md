@@ -7,7 +7,7 @@ Updated 2026-09-10. Read this before continuing the cinematic forest work. This 
 - Main repository: `/Users/victoriarajaonarivony/Documents/monolith`.
 - Active study worktree: `/Volumes/Hitch_07/Blender/Data/monolith-cathedral`, branch `codex/forest-cathedral`. This lives on the removable Hitch_07 drive; see "Drive location and repointing" below before assuming the path resolves.
 - Current reviewed baseline: `tools/render_cathedral_foliage.py`, `renders/cathedral-foliage-study.png`, and `renders/cathedral-foliage-study.blend` in the study worktree.
-- Current latest pass: `tools/render_cathedral_foreground.py`, `renders/cathedral-foreground-study.png`, and `renders/cathedral-foreground-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground; each has its own builder and PNG/blend pair and they are all kept.
+- Current latest pass: `tools/render_cathedral_crowns.py`, `renders/cathedral-crown-study.png`, and `renders/cathedral-crown-study.blend`. The chain to it is branches, then value, mass, shore, trunk, plinth, foreground, crowns; each has its own builder and PNG/blend pair and they are all kept.
 - Earlier branch pass: `tools/render_cathedral_branches.py` with `renders/cathedral-branch-study.png`. `tools/render_cathedral_branch_detail.py` produces the matching close-up.
 - Iteration history and rebuild notes: `renders/README.md` in that worktree.
 - Source meshes: `assets/cathedral/cathedral-trunks.blend`.
@@ -145,7 +145,9 @@ worse: a pond that measured correct and read as a flat mint slab, and trunk foli
 
 ## Value and structure passes
 
-Error against the reference went from rms 10.1 to 6.5 across six passes, all kept:
+Error against the reference went from rms 10.1 to 6.7 across seven passes, all kept. The last of
+them trades a tenth of rms for a large visual gain, which is the right trade and worth knowing
+before reading these numbers as a ranking:
 
 - **value** — first attempt at the dark reference look, by lowering the fill lights. Wrong: it
   made the frame dimmer and flatter without making it darker, and cost the foliage its modelling.
@@ -166,6 +168,10 @@ Error against the reference went from rms 10.1 to 6.5 across six passes, all kep
   also not symmetric here, so the right bank takes a brighter tone again than the left, and the
   bottom left corner gets an explicit cluster of large pads because a uniform scatter never covers
   one corner densely enough. This was the single largest gain after the haze albedo.
+- **crowns** — the blob problem, and the diagnosis had been wrong: the reference crowns are rounded
+  masses too, so their outline was never it. What they have is granularity at about five percent of
+  a crown where ours sat near two, which is one pixel in frame and averages into a smooth shell.
+  Leaves roughly tripled in size, plus a second finer noise octave on the lobes.
 
 ## Lessons from those passes
 
@@ -185,6 +191,12 @@ Error against the reference went from rms 10.1 to 6.5 across six passes, all kep
   streaks read coarse and a hundred read as nothing, while at 1200 fifty is about right.
 - Prefer Generated texture coordinates over Object where a feature count matters. Object
   coordinates carry the source mesh's own units, so the multiplier is guesswork.
+- When a detail layer grows, it takes over the tone of whatever it covers. Tripling the leaf size
+  darkened every crown, because the leaf tones had been set back when a leaf was a single pixel and
+  the shell underneath was what you saw. Near and far leaves now carry separate tones, and the near
+  ones sit in the same range as the sunlit shell they cover rather than four times darker than it.
+- `CATHEDRAL_QUICK_RES` keeps the quick loop at full width for texture work. Value questions can be
+  answered at 600px in 24 seconds; frequency questions cannot be answered there at all.
 - Free floating crown blobs were rejected once before and were re-created twice here: once as
   overhanging canopy in mid sky, once as trunk foliage. Both times the fix was the same, small and
   dense reads as a fringe, large and sparse reads as balls. Mass that reaches a frame edge or hugs
