@@ -142,6 +142,21 @@ once the numbers and the image both look right. The reference itself is a browse
 midjourney page, so it carries a few percent of jpeg and display profile error; the gaps that
 matter here are much larger than that, but do not chase its last digit.
 
+**Quick renders lie about small differences.** At 600px/16 or 1200px/16 the noise is worth roughly
+a tenth of rms and a couple of points of any percentile, which is the same size as the gains being
+chased at this stage. Two whole passes were built and discarded on differences that turned out not
+to exist at 64 samples. Confirm anything under about 0.2 rms with a full render before believing it.
+
+**Things tried against the reference and discarded**, so they are not tried again:
+- Thinning the bank in front of the plinth to let the wall through. It made that cell darker, not
+  lighter: what stands behind the foliage there is not the wall. Four attempts on that one cell now,
+  from three directions, all failed.
+- Brightening the near left bank to match the reference's bright bottom left. Improved its own cell
+  and spilled into four neighbours; rms 5.0 to 5.4.
+- Shifting the lighting budget back toward fill with an exposure trim, to tighten the midtone band.
+  Promising at 16 samples and identical to the existing setup at 64. The fill, key and exposure
+  triple is already at a local optimum.
+
 **rms is a guide, not the verdict.** Two separate passes scored better while visibly getting
 worse: a pond that measured correct and read as a flat mint slab, and trunk foliage that scored
 8.3 while reading as balls floating off the silhouette. Always look at the render as well.
