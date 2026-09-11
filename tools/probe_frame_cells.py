@@ -1,13 +1,14 @@
 """What geometry sits behind a given difference map cell, in world coordinates.
 
-blender --background --factory-startup study.blend --python tools/probe_frame_cells.py
+blender --background --factory-startup study.blend --python tools/probe_frame_cells.py -- 10,0 10,8 11,0
 
-Edit the cells list at the top. Use this instead of deriving positions by hand: builders lay out
+Pass cells as row,col after a bare --. Use this instead of deriving positions by hand: builders lay out
 in working units and multiply by three at the end, so hand computed placements land three times out.
 """
 import bpy, sys
 from mathutils import Vector
-cells=[(9,9),(10,8),(10,0),(10,11),(9,4),(5,5),(11,0),(3,9)]
+args=[a for a in sys.argv[sys.argv.index('--')+1:]] if '--' in sys.argv else []
+cells=[tuple(int(v) for v in a.split(',')) for a in args] or [(9,9),(10,8),(10,0),(11,0)]
 G=12
 scene=bpy.context.scene; cam=scene.camera
 dg=bpy.context.evaluated_depsgraph_get()
