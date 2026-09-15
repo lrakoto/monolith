@@ -14,7 +14,7 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 args = argparse.ArgumentParser()
-args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges'), default='hero-canopy')
+args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'), default='hero-canopy')
 args.add_argument('--quick', action='store_true')
 args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
 args.add_argument('--resolution', type=int, default=1200)
@@ -122,7 +122,7 @@ def make_sprays(family, materials):
     return mesh
 
 
-if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges'):
+if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_crown import build_crown
     targets = [o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0]
@@ -131,7 +131,7 @@ if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig',
     for old in targets:
         old.hide_render = True
         bpy.data.objects['shoreline foliage ' + old.name.rsplit(' ', 1)[1]].hide_render = True
-    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges'), clustered=args.variant == 'hero-sprig'))
+    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'), clustered=args.variant == 'hero-sprig'))
     scene.collection.objects.link(crown)
     if not args.retain_understory:
         cleared = []
@@ -168,7 +168,7 @@ if args.variant in ('sprays', 'sprays-flat'):
         original_leaves.hide_render = True
     print('Replaced 34 right shoreline crowns; camera, lighting and other planting preserved', flush=True)
 
-if args.variant == 'stair-edges':
+if args.variant in ('stair-edges', 'stair-weathered'):
     steps = sorted((o for o in scene.objects if o.name.startswith('tread ')), key=lambda o:o.name)
     assert len(steps) == 150
     edges = {}
@@ -191,6 +191,39 @@ if args.variant == 'stair-edges':
         bevel.segments = 3
         bevel.material = len(step.data.materials)-1
     print('Upper stair bevels broadened; 150 original steps and their transforms preserved', flush=True)
+
+if args.variant == 'stair-weathered':
+    def weather_surface(original, edge):
+        material = original.copy(); material.name = 'weathered ' + original.name
+        nodes, links = material.node_tree.nodes, material.node_tree.links
+        shader = nodes.get('Principled BSDF')
+        incoming = shader.inputs['Base Color'].links[0].from_socket
+        geometry = nodes.new('ShaderNodeNewGeometry')
+        stretch = nodes.new('ShaderNodeVectorMath'); stretch.operation = 'MULTIPLY'
+        stretch.inputs[1].default_value = (.065, .024, .035)
+        links.new(geometry.outputs['Position'], stretch.inputs[0])
+        noise = nodes.new('ShaderNodeTexNoise'); noise.inputs['Scale'].default_value = 1
+        noise.inputs['Detail'].default_value = 2; noise.inputs['Roughness'].default_value = .6
+        links.new(stretch.outputs['Vector'], noise.inputs['Vector'])
+        fade = nodes.new('ShaderNodeMapRange'); fade.clamp = True
+        fade.inputs['From Min'].default_value = .27; fade.inputs['From Max'].default_value = .73
+        fade.inputs['To Min'].default_value = .65 if edge else .85
+        fade.inputs['To Max'].default_value = 1.40 if edge else 1.12
+        links.new(noise.outputs['Fac'], fade.inputs['Value'])
+        mix = nodes.new('ShaderNodeMixRGB'); mix.blend_type = 'MULTIPLY'; mix.inputs[0].default_value = 1
+        links.new(incoming, mix.inputs[1]); links.new(fade.outputs['Result'], mix.inputs[2])
+        links.new(mix.outputs['Color'], shader.inputs['Base Color'])
+        return material
+    weathered = {}
+    wear_rng = random.Random(305915)
+    for step in steps:
+        for index, original in enumerate(list(step.data.materials)):
+            key = (original.name, index > 0)
+            if key not in weathered: weathered[key] = weather_surface(original, index > 0)
+            step.data.materials[index] = weathered[key]
+        bevel = next(m for m in step.modifiers if m.type == 'BEVEL')
+        bevel.width *= wear_rng.uniform(.88, 1.12)
+    print('Added continuous damp-stone variation and restrained edge wear; lighting unchanged', flush=True)
 
 assert scene.camera.matrix_world == camera_matrix
 assert scene.camera.data.lens == camera_lens

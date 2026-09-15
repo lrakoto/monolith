@@ -95,6 +95,37 @@ rewrite history or delete the archive without explicit direction. Stage exact so
 since ignore rules do not protect changes to already tracked outputs. The initial Sprays archive
 was already pushed in `76758fd` before this correction (four PNGs and one Blender file).
 
+## Restrained stair weathering — 2026-09-14
+
+Lova approved the recovered stair definition and asked to commit/push and continue. The prior
+leaf/stair work was pushed as 1aa9625 on codex/forest-cathedral; mirrored notes as 2207590 on
+scene-vegetation. No render files were uploaded. The subsequent local experiment is
+`stair-weathered`, based on stair-edges and the hero-leafcraft crown.
+
+A world-position noise field varies the stone color across adjoining steps, rather than repeating
+one texture on each riser. Base stone multiplies by 0.85–1.12; edge materials by 0.65–1.40.
+The noise is stretched by (0.065, 0.024, 0.035), with detail 2 and roughness 0.6. Existing bevel
+widths vary by a deterministic factor of 0.88–1.12. These are surface/color and modifier changes;
+no new lights or emission, no camera change, and no change to the original step meshes or their
+placement. Do not call the dark surface patches new cast shadows.
+
+Run Blender with `tools/render_cathedral_study.py -- --variant stair-weathered`. Local-only outputs:
+`renders/cathedral-stair-weathered-study.png` and `.blend`. The stair comparison is generated with
+`tools/compare_sprays.py -- --variant stair-weathered --baseline stair-edges`. The output shows
+reference / recovered stair edges / weathered stairs. Earlier variants remain reproducible.
+
+The initial trial used body factors 0.72–1.04 and edges 0.40–1.12. It dimmed the recovered edges
+too much (RMS 4.906 versus 4.836), so the factors above bring the variation back near the previous
+average brightness. The first PNG is preserved locally as `cathedral-stair-weathered-initial.png`.
+
+Corrected full render: 1200px/64 samples, 2m59s. Cell RMS 4.838 versus stair-edges 4.836; mean
+luminance 45.190 versus 45.194, effectively unchanged. The edges retain definition with modest
+variation along the flight. This is a small refinement, not a major reference-match improvement.
+All original step meshes, crown branch geometry, object transforms and camera were verified
+unchanged. Repository tests pass (24 run, one skip). The prior checkpoint was pushed; this new
+weathering source/notes pass remains local and uncommitted for review. A useful next area is
+the monument's overly clean surface rather than further small stair adjustments.
+
 ## Upper stair edges — 2026-09-14
 
 Lova agreed to focus next on upper stair readability. The `stair-edges` variant uses the previous

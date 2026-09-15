@@ -209,3 +209,15 @@ Broader worn-edge bevels are introduced gradually above step 32. Outputs are loc
 Render: 1200px/64 samples, 3m03s; RMS 4.836 versus 4.943. Upper steps now read visibly farther
 up the flight. All original step meshes, crown branches, scene transforms and camera were
 verified unchanged. Future wear/shadow variation should retain the new definition.
+
+
+## Stair weathering — local outputs, 2026-09-14
+
+`stair-weathered` adds continuous damp-stone variation and small bevel-width differences to the
+recovered stair edges. Camera and step meshes remain fixed. The first trial dimmed the edges too
+much; its PNG is retained as `cathedral-stair-weathered-initial.png`. Final body factors are
+0.85–1.12, edge factors 0.65–1.40; final output is `cathedral-stair-weathered-study.*`.
+Render: 1200px/64 samples, 2m59s; RMS 4.838 versus stair-edges 4.836, with nearly identical mean
+brightness. It retains step definition with subtle variation. Compare through Blender using
+`tools/compare_sprays.py -- --variant stair-weathered --baseline stair-edges`. These outputs
+stay local; only the earlier checkpoint was pushed.
