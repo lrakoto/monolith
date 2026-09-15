@@ -221,3 +221,42 @@ Render: 1200px/64 samples, 2m59s; RMS 4.838 versus stair-edges 4.836, with nearl
 brightness. It retains step definition with subtle variation. Compare through Blender using
 `tools/compare_sprays.py -- --variant stair-weathered --baseline stair-edges`. These outputs
 stay local; only the earlier checkpoint was pushed.
+
+
+## Monument limestone — local outputs, 2026-09-14
+
+`monument-stone` inherits stair-weathered and copies only the monument material. It adds subtle
+mottling and vertical weathering at the scale visible from the fixed camera. First trial was too
+blotchy; retained locally as `cathedral-monument-stone-initial.png`. Final render and editable
+scene are `cathedral-monument-stone-study.*`; compare using `tools/compare_sprays.py -- --variant
+monument-stone --baseline stair-weathered` through Blender. Render: 1200px/64 samples, 3m00s.
+RMS 4.840 versus 4.838 previously. The 305 inset/edge shading is a potential next focus.
+Monument topology, original stair meshes, crown branches and scene transforms were verified
+unchanged. Checkpoint bdf68c0/faefb05 was committed locally, not pushed; this new pass is uncommitted.
+
+
+## Limestone 305 inset — local outputs, 2026-09-14
+
+`inscription-stone` retains the carved geometry and replaces the dark basalt inset material
+with the monument limestone. Local output: `cathedral-inscription-stone-study.*`. Compare via
+`tools/compare_sprays.py -- --variant inscription-stone --baseline monument-stone` through Blender.
+The lettering now has a lighter interior with shadowed recess edges. Text geometry/placement and
+the scene geometry are verified unchanged. Render: 1200px/64 samples, 3m02s; RMS 4.824 versus
+4.840 before. This pass remains uncommitted; no new renders or Blender files were uploaded.
+
+
+## Entrance depth and warmth — local outputs, 2026-09-14
+
+`entrance-depth` inherits inscription-stone, darkens the rear panel, redirects the existing warm
+light to the floor, reduces/moves the luminous fixture, and adds two small warm details inside.
+The back panel now sits ahead of the boolean back face; a ray test confirmed its visibility.
+Local outputs: `cathedral-entrance-depth-study.*`; initial panel-placement trial retained as
+`cathedral-entrance-depth-initial.png`. Compare via `tools/compare_sprays.py -- --variant entrance-depth
+--baseline inscription-stone` through Blender. Final render 1200px/64 samples, 3m03s; RMS 4.872
+versus 4.824 previously. The opening reads deeper, but exterior warm spill remains subdued.
+Scene geometry outside the scoped entrance changes is verified unchanged. Keep this local for
+review and assess the full composition before further doorway tweaks.
+
+### Left bank massing — 2026-09-15
+
+`render_cathedral_study.py -- --variant left-bank-masses` retains entrance-depth and adds broad private shade groups on the left bank. Initial base-anchored compression exposed smooth terrain and was rejected; its local outputs are named `cathedral-left-bank-compression-rejected.*`. The corrected pass retains the original planted volume. PNG/blend stay local and ignored. Compare full composition with `compare_sprays.py -- --variant left-bank-masses --baseline entrance-depth`. Camera, architecture, terrain, giant trunks and right bank are preserved.

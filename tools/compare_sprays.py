@@ -3,8 +3,8 @@ import numpy as np
 from pathlib import Path
 import argparse, sys
 parser=argparse.ArgumentParser()
-parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy','hero-leafcraft','hero-sprig','stair-edges','stair-weathered'))
-parser.add_argument('--baseline', choices=('lace','hero-crown','hero-canopy','hero-leafcraft','stair-edges'), default='lace')
+parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy','hero-leafcraft','hero-sprig','stair-edges','stair-weathered','monument-stone','inscription-stone','entrance-depth','left-bank-masses'))
+parser.add_argument('--baseline', choices=('lace','hero-crown','hero-canopy','hero-leafcraft','stair-edges','stair-weathered','monument-stone','inscription-stone','entrance-depth'), default='lace')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 root=Path(__file__).resolve().parents[1]
 files=[root/'reference/midjourney-index2.png', root/('renders/cathedral-'+args.baseline+'-study.png'), root/('renders/cathedral-'+args.variant+'-study.png')]
@@ -14,8 +14,14 @@ for path in files:
     w,h=image.size
     a=np.empty(w*h*4,dtype=np.float32);image.pixels.foreach_get(a)
     a=a.reshape(h,w,4)[::-1]
-    crop=a[int(h*.52):int(h*.89),int(w*.37):int(w*.63)] if args.variant.startswith('stair-') else a[int(h*.68):int(h*.94),int(w*.63):w]
-    ch,cw=(650,457) if args.variant.startswith('stair-') else (400,570)
+    if args.variant in ('inscription-stone','entrance-depth'):
+        crop=a[int(h*.40):int(h*.55),int(w*.39):int(w*.61)]
+    elif args.variant == 'monument-stone':
+        crop=a[int(h*.06):int(h*.55),int(w*.39):int(w*.61)]
+    else:
+        crop=a[int(h*.52):int(h*.89),int(w*.37):int(w*.63)] if args.variant.startswith('stair-') else a[int(h*.68):int(h*.94),int(w*.63):w]
+    ch,cw=(400,587) if args.variant in ('inscription-stone','entrance-depth') else (700,314) if args.variant == 'monument-stone' else (650,457) if args.variant.startswith('stair-') else (400,570)
+    if args.variant == 'left-bank-masses': crop=a; ch=cw=600
     ys=np.linspace(0,crop.shape[0]-1,ch).astype(int)
     xs=np.linspace(0,crop.shape[1]-1,cw).astype(int)
     patches.append(crop[ys[:,None],xs])

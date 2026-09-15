@@ -95,6 +95,126 @@ rewrite history or delete the archive without explicit direction. Stage exact so
 since ignore rules do not protect changes to already tracked outputs. The initial Sprays archive
 was already pushed in `76758fd` before this correction (four PNGs and one Blender file).
 
+## Left bank massing experiment — 2026-09-15
+
+New local variant `left-bank-masses` in `tools/render_cathedral_study.py` inherits the complete entrance-depth treatment. It modifies 1,755 left canopy lobes and their matching fine foliage. Broad positional shade groups use object-level private materials, with two retained light islands. The initial up-to-40% base-anchored crown compression exposed smooth terrain and was rejected after viewing the full render. Its PNG/blend are retained locally as `cathedral-left-bank-compression-rejected.*`. The corrected pass preserves every original crown transform and uses shading only. Terrain, giant trunks and their clinging vegetation are unchanged. Do not claim increased trunk exposure from this corrected pass; that needs a coordinated bank terrain and forest rebuild.
+
+Full output: `renders/cathedral-left-bank-masses-study.png` and `.blend`; both are ignored local files on Hitch_07. Compare using `tools/compare_sprays.py -- --variant left-bank-masses --baseline entrance-depth`, which makes a full-frame reference / previous / new triptych. All other non-left-canopy object transforms and material assignments, camera matrix/lens, monument mesh, 150 stair meshes and right hero crown mesh were verified against entrance-depth. Repository suite passed (24 tests, one skip). No commit, push, or website deployment requested for this pass.
+
+Visual verdict: corrected shading is quieter, but only a modest compositional improvement. Rounded repeating crowns and limited trunk exposure remain. Treat this as an experiment, not an automatically accepted baseline. Corrected render took 7m56s (initial compression 11m20s). Cell RMS 5.074 versus entrance-depth 4.872; mean 44.260 versus 45.157. Do not interpret the darker result as a better reference match on its own. All object transforms, including restored left canopy, were additionally verified identical. Next proposal: reshape a bounded left bank terrain section and its planting together, checking a low-cost blockout before full-quality rendering; preserve camera and architecture.
+
+## Full composition review — 2026-09-15
+
+Lova asked to review the full composition after the entrance pass. No scene changes were made.
+Compared `reference/midjourney-index2.png` with `renders/cathedral-entrance-depth-study.png`.
+A local overview is saved as `renders/cathedral-composition-review.png`: reference left, current
+scene right. It resizes both existing images to 600px for a composition overview; judge fine
+texture and tread detail from the original full-resolution renders.
+
+The architecture/camera are a useful stable baseline. The largest visual gap is now the forest's
+large-scale grouping and distribution of light. Current banks present many similarly readable,
+high-contrast clumps; the reference uses broad dark masses, quiet intervals and selected lit crowns.
+The giant trunks remain visible farther down the reference frame, which strengthens their scale.
+Our high banks hide much of that vertical run. The stair corridor is also cleaner and more regular.
+
+Recommended next focused experiment: the left forest bank. Selectively adjust canopy grouping,
+height/occlusion and shading to reveal more of the giant trunk and create quiet dark areas with
+few lit crowns. Keep camera, monument, trunk transforms, stairs and the right-side test crown fixed.
+Inspect the baseline geometry before lowering groups: avoid exposing bare terrain or floating
+crowns. Do not repeat the failed global height-dependent haze/albedo adjustments documented below.
+Judge the whole frame and the trunk silhouette, not only small crops or global cell RMS.
+
+Later priorities: stronger depth separation behind the monument while retaining trunk silhouette;
+more natural pond reflections/ripples and irregular shoreline; a restrained warm entrance emphasis.
+The reference pond/left shore catches more light, and its entrance warms the nearby facade. Current
+warm lights are very small. These should be separate passes after the bank study, not bundled.
+This review is a proposed direction, not approval to change all of those areas at once.
+
+## Entrance depth / warmth — 2026-09-14
+
+Lova approved a focused entrance pass. `entrance-depth` inherits inscription-stone, keeping the
+opening geometry, camera, monument, inscription, stairs and crown. It darkens the rear panel,
+moves the existing area light deeper to working (0,340,158.5), aims it at (0,332,150), and reduces
+its energy to 55 percent. The existing luminous fixture moves to (0,340.4,159.9), becomes 60 percent
+as wide and uses a copied emission material at 35 percent strength. Two small warm details sit
+at (+/-1.7,340.85,155), sized (0.65,0.06,1.2). Multiply these coordinates by three for Blender.
+
+The original rear panel was behind the boolean's back face. Its center is now working Y 340.99,
+so its front face at 340.93 is visible ahead of the carved back at 341. The warm details are in
+front of that panel. The opening dimensions remain fixed. The panel uses a private dark stone
+material (0.006,0.007,0.006), roughness 0.92. The initial render before moving the panel is kept as
+`renders/cathedral-entrance-depth-initial.png`; it is not the final reviewed output.
+
+Run Blender with `tools/render_cathedral_study.py -- --variant entrance-depth`. Outputs stay local:
+`renders/cathedral-entrance-depth-study.png` and `.blend`. Compare with
+`tools/compare_sprays.py -- --variant entrance-depth --baseline inscription-stone`.
+
+Final render: 1200px/64 samples, 3m03s. RMS 4.872 versus inscription-stone 4.824; mean
+luminance 45.157 versus 45.200. The darker opening with smaller interior warm lights reads deeper
+than the previous lit rear wall. Warm spill onto surrounding stone is still restrained compared
+with the reference; assess the whole composition before another local doorway adjustment.
+A ray check from inside the opening hit the dark rear panel, proving it is now visible. Saved
+scene checks confirmed monument topology, step meshes, inscription parameters, crown geometry,
+camera and non-entrance object transforms unchanged. The permitted changes are the rear panel,
+entrance area light, luminous fixture, and two new interior warm-detail meshes. Tests pass
+(24 run, one skip). The new pass remains local/uncommitted; no render assets were uploaded.
+
+## Limestone inscription inset — 2026-09-14
+
+Lova liked the monument weathering and asked to continue. The next focused profile is
+`inscription-stone`, inheriting monument-stone. The carving already exists in the monument mesh;
+the `305` curve is a thin inset at its back and previously used damp basalt with a front-face
+darkening multiplier. This made the engraving read as dark printed lettering.
+
+The new profile copies the curve datablock and replaces only its material with the monument's
+weathered limestone. No change to text size, placement, extrusion, bevel, monument geometry,
+lighting or camera. The existing recess must supply the depth and edge shading.
+
+Run Blender with `tools/render_cathedral_study.py -- --variant inscription-stone`. Local outputs:
+`renders/cathedral-inscription-stone-study.png` and `.blend`. Compare with
+`tools/compare_sprays.py -- --variant inscription-stone --baseline monument-stone`; the helper
+crops the inscription/entrance region, showing reference / dark inset / limestone inset.
+
+Completed render: 1200px/64 samples, 3m02s. Whole-frame RMS 4.824 versus monument-stone
+4.840; mean luminance 45.200 versus 45.179. The significant result is visual: a lighter inset
+with shadowed edges now reads as carved limestone, closer to the reference's outlined recess.
+The saved-scene check confirmed the text body, size, extrusion, bevel and offset, monument mesh
+and topology, steps, crown branches, object transforms and camera unchanged. Only the inset
+material changes. Comparison generation was briefly blocked by an approval-review usage limit,
+then completed successfully when Lova asked to continue. This pass remains local and uncommitted;
+no render assets were pushed. Repository tests pass (24 run, one skip).
+
+## Monument limestone study — 2026-09-14
+
+Lova asked to commit and continue. The stair-weathering checkpoint was committed locally as
+bdf68c0 (study) and faefb05 (mirrored notes); it was not pushed. The next material-only profile is
+`monument-stone`. It inherits the weathered stairs and hero-leafcraft crown, and copies the
+limestone monument material so other surfaces remain untouched.
+
+The existing fine stone noise gets two world-position color multipliers: soft mottling at scale
+(0.045,0.025,0.018), range 0.88–1.12, and vertical weathering at (0.14,0.04,0.005), range
+0.82–1.18. Both use Noise detail 3 / roughness 0.65 and remap 0.28–0.72. This tests visible
+surface variation at the distant camera without displacement, geometry changes or new lighting.
+
+Run Blender with `tools/render_cathedral_study.py -- --variant monument-stone`. Local outputs:
+`renders/cathedral-monument-stone-study.png` and `.blend`. Compare using
+`tools/compare_sprays.py -- --variant monument-stone --baseline stair-weathered`; this selects a
+monument crop with reference / previous stone / weathered stone. Earlier variants remain intact.
+
+The first test used stronger mottling (0.68–1.32 at uniform scale 0.025), with vertical detail at
+(0.065,0.022,0.004), range 0.85–1.15. It looked too blotchy; its PNG remains locally as
+`cathedral-monument-stone-initial.png`. The refined settings above reduce those patches and
+emphasize finer vertical weathering. The initial full render's RMS was 4.839 versus 4.838 before,
+which shows why whole-frame metrics alone cannot judge the material.
+
+Refined full render: 1200px/64 samples, 3m00s. RMS 4.840 versus 4.838 before, mean luminance
+45.179 versus 45.190. The refined surface has faint vertical marks without the initial blotches.
+Actual saved-scene comparison verified monument mesh/topology, original 150 step meshes, crown
+branches, transforms and camera lens unchanged. Tests pass (24 run, one skip). This new material
+pass remains local and uncommitted. The next useful topic is the 305: it reads darker/flatter than
+the reference despite existing carved geometry; inspect its inset surface and edge shading before
+changing the model or camera.
+
 ## Restrained stair weathering — 2026-09-14
 
 Lova approved the recovered stair definition and asked to commit/push and continue. The prior

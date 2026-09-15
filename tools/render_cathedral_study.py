@@ -14,7 +14,7 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 args = argparse.ArgumentParser()
-args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'), default='hero-canopy')
+args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'), default='hero-canopy')
 args.add_argument('--quick', action='store_true')
 args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
 args.add_argument('--resolution', type=int, default=1200)
@@ -122,7 +122,7 @@ def make_sprays(family, materials):
     return mesh
 
 
-if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'):
+if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_crown import build_crown
     targets = [o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0]
@@ -131,7 +131,7 @@ if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig',
     for old in targets:
         old.hide_render = True
         bpy.data.objects['shoreline foliage ' + old.name.rsplit(' ', 1)[1]].hide_render = True
-    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered'), clustered=args.variant == 'hero-sprig'))
+    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'), clustered=args.variant == 'hero-sprig'))
     scene.collection.objects.link(crown)
     if not args.retain_understory:
         cleared = []
@@ -168,7 +168,7 @@ if args.variant in ('sprays', 'sprays-flat'):
         original_leaves.hide_render = True
     print('Replaced 34 right shoreline crowns; camera, lighting and other planting preserved', flush=True)
 
-if args.variant in ('stair-edges', 'stair-weathered'):
+if args.variant in ('stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'):
     steps = sorted((o for o in scene.objects if o.name.startswith('tread ')), key=lambda o:o.name)
     assert len(steps) == 150
     edges = {}
@@ -192,7 +192,7 @@ if args.variant in ('stair-edges', 'stair-weathered'):
         bevel.material = len(step.data.materials)-1
     print('Upper stair bevels broadened; 150 original steps and their transforms preserved', flush=True)
 
-if args.variant == 'stair-weathered':
+if args.variant in ('stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'):
     def weather_surface(original, edge):
         material = original.copy(); material.name = 'weathered ' + original.name
         nodes, links = material.node_tree.nodes, material.node_tree.links
@@ -224,6 +224,112 @@ if args.variant == 'stair-weathered':
         bevel = next(m for m in step.modifiers if m.type == 'BEVEL')
         bevel.width *= wear_rng.uniform(.88, 1.12)
     print('Added continuous damp-stone variation and restrained edge wear; lighting unchanged', flush=True)
+
+if args.variant in ('monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses'):
+    monument = bpy.data.objects['limestone monument']
+    material = monument.data.materials[0].copy(); material.name = 'weathered monumental limestone'
+    monument.data.materials[0] = material
+    nodes, links = material.node_tree.nodes, material.node_tree.links
+    shader = nodes.get('Principled BSDF')
+    incoming = shader.inputs['Base Color'].links[0].from_socket
+    geometry = nodes.new('ShaderNodeNewGeometry')
+    def stone_pattern(stretch, low, high):
+        vector = nodes.new('ShaderNodeVectorMath'); vector.operation = 'MULTIPLY'
+        vector.inputs[1].default_value = stretch
+        links.new(geometry.outputs['Position'], vector.inputs[0])
+        noise = nodes.new('ShaderNodeTexNoise'); noise.inputs['Scale'].default_value = 1
+        noise.inputs['Detail'].default_value = 3; noise.inputs['Roughness'].default_value = .65
+        links.new(vector.outputs['Vector'], noise.inputs['Vector'])
+        fade = nodes.new('ShaderNodeMapRange'); fade.clamp = True
+        fade.inputs['From Min'].default_value = .28; fade.inputs['From Max'].default_value = .72
+        fade.inputs['To Min'].default_value = low; fade.inputs['To Max'].default_value = high
+        links.new(noise.outputs['Fac'], fade.inputs['Value'])
+        return fade.outputs['Result']
+    # metre-scale weathering must survive the distant camera; fine bump alone cannot do that.
+    mottling = stone_pattern((.045,.025,.018), .88, 1.12)
+    streaks = stone_pattern((.14,.04,.005), .82, 1.18)
+    for variation in (mottling, streaks):
+        mix = nodes.new('ShaderNodeMixRGB'); mix.blend_type = 'MULTIPLY'; mix.inputs[0].default_value = 1
+        links.new(incoming, mix.inputs[1]); links.new(variation, mix.inputs[2]); incoming = mix.outputs['Color']
+    links.new(incoming, shader.inputs['Base Color'])
+    print('Monument material only: broad limestone mottling and vertical weathering; silhouette preserved', flush=True)
+
+if args.variant in ('inscription-stone', 'entrance-depth', 'left-bank-masses'):
+    inscription = bpy.data.objects['305']
+    inscription.data = inscription.data.copy()
+    inscription.data.materials.clear()
+    inscription.data.materials.append(bpy.data.objects['limestone monument'].data.materials[0])
+    print('305 inset uses matching limestone; existing carved geometry and text placement unchanged', flush=True)
+
+if args.variant in ('entrance-depth', 'left-bank-masses'):
+    back = bpy.data.objects['entrance back wall']
+    # the original panel sat behind the boolean back face and could not shade the opening.
+    back.location.y = 340.99*3
+    dark = bpy.data.materials.new('deep entrance stone'); dark.use_nodes = True
+    shader = dark.node_tree.nodes.get('Principled BSDF')
+    shader.inputs['Base Color'].default_value = (.006,.007,.006,1)
+    shader.inputs['Roughness'].default_value = .92
+    back.data.materials.clear(); back.data.materials.append(dark)
+    warmth = bpy.data.objects['entrance warmth']
+    warmth.location = Vector((0,340,158.5))*3
+    warmth.rotation_euler = (Vector((0,332,150))*3-warmth.location).to_track_quat('-Z','Y').to_euler()
+    warmth.data.energy *= .55
+    fixture = bpy.data.objects['recessed entrance light']
+    fixture.location = Vector((0,340.4,159.9))*3
+    fixture.scale.x *= .6
+    glow = fixture.data.materials[0].copy(); glow.name = 'subdued interior glow'
+    for node in glow.node_tree.nodes:
+        if node.type == 'EMISSION':node.inputs['Strength'].default_value *= .35
+        elif node.type == 'BSDF_PRINCIPLED':node.inputs['Emission Strength'].default_value *= .35
+    fixture.data.materials.clear(); fixture.data.materials.append(glow)
+    # small rear lights provide depth cues while the floor receives the main warm light.
+    for side in (-1,1):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=Vector((side*1.7,340.85,155))*3)
+        panel = bpy.context.object; panel.name = 'deep entrance warm detail %d' % side
+        panel.dimensions = Vector((.65,.06,1.2))*3; panel.data.materials.append(glow)
+    print('Entrance light moved deeper and aimed toward threshold; opening geometry unchanged', flush=True)
+
+if args.variant == 'left-bank-masses':
+    # compressed crowns exposed smooth terrain even with their bases anchored. retain the
+    # planted volume here; broader trunk exposure needs a coordinated terrain and forest pass.
+    shaded_materials = {}
+    changed = []
+    def shade_object(obj, factor):
+        bucket = round(factor * 12) / 12
+        for slot in obj.material_slots:
+            original = slot.material
+            if original is None: continue
+            key = (original.name, bucket)
+            if key not in shaded_materials:
+                material = original.copy()
+                material.name = 'left bank shade %.2f ' % bucket + original.name
+                nodes, links = material.node_tree.nodes, material.node_tree.links
+                shader = next((n for n in nodes if n.type == 'BSDF_PRINCIPLED'), None)
+                if shader:
+                    color = shader.inputs['Base Color']
+                    multiply = nodes.new('ShaderNodeMixRGB'); multiply.blend_type = 'MULTIPLY'
+                    multiply.inputs[0].default_value = 1
+                    multiply.inputs[2].default_value = (bucket, bucket, bucket, 1)
+                    if color.is_linked: links.new(color.links[0].from_socket, multiply.inputs[1])
+                    else: multiply.inputs[1].default_value = color.default_value
+                    links.new(multiply.outputs[0], color)
+                shaded_materials[key] = material
+            slot.link = 'OBJECT'; slot.material = shaded_materials[key]
+
+    for obj in list(scene.objects):
+        if not obj.name.startswith('canopy lobe '): continue
+        x, y, z = (v / 3 for v in obj.location)
+        if not (-300 < x < -43 and -5 < y < 320): continue
+        falloff = math.exp(-((x+130)/105)**4 - ((y-140)/180)**4)
+        # a low shoulder and a distant crown remain the light anchors between shaded stands.
+        island = max(math.exp(-((x+105)/24)**2-((y-65)/30)**2),
+                     math.exp(-((x+70)/24)**2-((y-275)/35)**2))
+        shade_object(obj, 1 - .65 * falloff * (1-.85*island))
+        leaves = bpy.data.objects.get('fine foliage ' + obj.name.rsplit(' ',1)[1])
+        if leaves: shade_object(leaves, 1 - .65 * falloff * (1-.85*island))
+        changed.append(obj.name)
+    assert len(changed) > 100, len(changed)
+    print('Left bank crowns regrouped:', len(changed), 'private shade materials:', len(shaded_materials), flush=True)
 
 assert scene.camera.matrix_world == camera_matrix
 assert scene.camera.data.lens == camera_lens
