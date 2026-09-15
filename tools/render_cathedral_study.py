@@ -14,7 +14,7 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 args = argparse.ArgumentParser()
-args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'), default='hero-canopy')
+args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'), default='hero-canopy')
 args.add_argument('--quick', action='store_true')
 args.add_argument('--samples', type=int, choices=(16,32,64,128), default=64, help='sample budget for a saved composition study')
 args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
@@ -123,7 +123,7 @@ def make_sprays(family, materials):
     return mesh
 
 
-if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'):
+if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_crown import build_crown
     targets = [o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0]
@@ -132,7 +132,7 @@ if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig',
     for old in targets:
         old.hide_render = True
         bpy.data.objects['shoreline foliage ' + old.name.rsplit(' ', 1)[1]].hide_render = True
-    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'), clustered=args.variant == 'hero-sprig'))
+    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'), clustered=args.variant == 'hero-sprig'))
     scene.collection.objects.link(crown)
     if not args.retain_understory:
         cleared = []
@@ -169,7 +169,7 @@ if args.variant in ('sprays', 'sprays-flat'):
         original_leaves.hide_render = True
     print('Replaced 34 right shoreline crowns; camera, lighting and other planting preserved', flush=True)
 
-if args.variant in ('stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'):
+if args.variant in ('stair-edges', 'stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     steps = sorted((o for o in scene.objects if o.name.startswith('tread ')), key=lambda o:o.name)
     assert len(steps) == 150
     edges = {}
@@ -193,7 +193,7 @@ if args.variant in ('stair-edges', 'stair-weathered', 'monument-stone', 'inscrip
         bevel.material = len(step.data.materials)-1
     print('Upper stair bevels broadened; 150 original steps and their transforms preserved', flush=True)
 
-if args.variant in ('stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'):
+if args.variant in ('stair-weathered', 'monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     def weather_surface(original, edge):
         material = original.copy(); material.name = 'weathered ' + original.name
         nodes, links = material.node_tree.nodes, material.node_tree.links
@@ -226,7 +226,7 @@ if args.variant in ('stair-weathered', 'monument-stone', 'inscription-stone', 'e
         bevel.width *= wear_rng.uniform(.88, 1.12)
     print('Added continuous damp-stone variation and restrained edge wear; lighting unchanged', flush=True)
 
-if args.variant in ('monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'):
+if args.variant in ('monument-stone', 'inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     monument = bpy.data.objects['limestone monument']
     material = monument.data.materials[0].copy(); material.name = 'weathered monumental limestone'
     monument.data.materials[0] = material
@@ -255,14 +255,14 @@ if args.variant in ('monument-stone', 'inscription-stone', 'entrance-depth', 'le
     links.new(incoming, shader.inputs['Base Color'])
     print('Monument material only: broad limestone mottling and vertical weathering; silhouette preserved', flush=True)
 
-if args.variant in ('inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour'):
+if args.variant in ('inscription-stone', 'entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     inscription = bpy.data.objects['305']
     inscription.data = inscription.data.copy()
     inscription.data.materials.clear()
     inscription.data.materials.append(bpy.data.objects['limestone monument'].data.materials[0])
     print('305 inset uses matching limestone; existing carved geometry and text placement unchanged', flush=True)
 
-if args.variant in ('entrance-depth', 'left-bank-masses', 'left-bank-contour'):
+if args.variant in ('entrance-depth', 'left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     back = bpy.data.objects['entrance back wall']
     # the original panel sat behind the boolean back face and could not shade the opening.
     back.location.y = 340.99*3
@@ -290,7 +290,7 @@ if args.variant in ('entrance-depth', 'left-bank-masses', 'left-bank-contour'):
         panel.dimensions = Vector((.65,.06,1.2))*3; panel.data.materials.append(glow)
     print('Entrance light moved deeper and aimed toward threshold; opening geometry unchanged', flush=True)
 
-if args.variant in ('left-bank-masses', 'left-bank-contour'):
+if args.variant in ('left-bank-masses', 'left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     # compressed crowns exposed smooth terrain even with their bases anchored. retain the
     # planted volume here; broader trunk exposure needs a coordinated terrain and forest pass.
     shaded_materials = {}
@@ -332,14 +332,24 @@ if args.variant in ('left-bank-masses', 'left-bank-contour'):
     assert len(changed) > 100, len(changed)
     print('Left bank crowns regrouped:', len(changed), 'private shade materials:', len(shaded_materials), flush=True)
 
-if args.variant == 'left-bank-contour':
+if args.variant in ('left-bank-contour', 'right-bank-contour', 'canopy-groups'):
     # lower the ground and the entire planted volume together. compressing individual
     # crowns exposed bare terrain; this broad saddle keeps their overlap and root contact.
     def bank_drop(x, y):
-        if x >= -45 or not 10 < y < 320: return 0
-        edge = max(0, min(1, (-x-45)/55))
-        edge = edge*edge*(3-2*edge)
-        return 55 * edge * math.exp(-((x+150)/100)**4) * math.sin(math.pi*(y-10)/310)**2
+        if x < -45 and 10 < y < 320:
+            edge = max(0, min(1, (-x-45)/55))
+            edge = edge*edge*(3-2*edge)
+            return 55 * edge * math.exp(-((x+150)/100)**4) * math.sin(math.pi*(y-10)/310)**2
+        # the second trunk sits farther back. keep its bank higher than the left and leave
+        # the near shore intact so the bright crown retains its planted foreground setting.
+        if args.variant in ('right-bank-contour', 'canopy-groups') and x > 65 and 85 < y < 395:
+            edge = max(0, min(1, (x-65)/55))
+            edge = edge*edge*(3-2*edge)
+            # the outer bank must keep covering the trunk mesh's cut lower edge.
+            outer = max(0, min(1, (245-x)/65))
+            outer = outer*outer*(3-2*outer)
+            return 32 * edge * outer * math.exp(-((x-195)/110)**4) * math.sin(math.pi*(y-85)/310)**2
+        return 0
 
     terrain = bpy.data.objects['simple forest banks']
     terrain.data = terrain.data.copy()
@@ -363,8 +373,31 @@ if args.variant == 'left-bank-contour':
                 obj.location.z -= drop*3
                 moved_plants += 1
     assert moved_vertices > 100 and moved_plants > 100
-    print('Left bank saddle:', moved_vertices, 'terrain vertices;', moved_plants,
-          'plant objects translated with terrain; maximum drop 165 world units', flush=True)
+    print('Bank contour:', args.variant, moved_vertices, 'terrain vertices;', moved_plants,
+          'plant objects translated with terrain; left max 165, right max 96 world units', flush=True)
+
+if args.variant == 'canopy-groups':
+    # expanding uneven crown groups keeps the existing cover; shrinking the old rounded
+    # masses exposed smooth ground. retain heights so the new trunk exposure survives.
+    grouped = 0
+    for crown in list(scene.objects):
+        if not crown.name.startswith('canopy lobe '): continue
+        x,y,z = (v/3 for v in crown.location)
+        if not (65 < abs(x) < 235 and 35 < y < 300): continue
+        leaves = bpy.data.objects.get('fine foliage '+crown.name.rsplit(' ',1)[1])
+        # a few old numeric names collide; only transform an actual colocated leaf layer.
+        if leaves is None or (leaves.location-crown.location).length > .001: continue
+        radius = max(crown.scale.x,crown.scale.y)/3
+        if radius < 4 or abs(x)-radius*1.7 < 42: continue
+        patch = .5+.5*math.sin(x*.046+y*.027)*math.cos(y*.037-x*.014)
+        width = 1.15+.50*patch
+        depth = 1.04+.12*(1-patch)
+        for obj in (crown,leaves):
+            obj.scale.x *= width
+            obj.scale.y *= depth
+        grouped += 1
+    assert grouped > 100, grouped
+    print('Widened connected canopy groups:', grouped, 'paired crowns; original heights and ground retained',flush=True)
 
 assert scene.camera.matrix_world == camera_matrix
 assert scene.camera.data.lens == camera_lens

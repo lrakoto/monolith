@@ -268,3 +268,11 @@ review and assess the full composition before further doorway tweaks.
 ### Left bank contour full quality — 2026-09-15
 
 The approved contour composition is preserved at 1200px/64 samples in local `cathedral-left-bank-contour-full.png` and `.blend`. Rebuild with `render_cathedral_study.py -- --variant left-bank-contour --resolution 1200 --samples 64 --output-name cathedral-left-bank-contour-full`. Compare using `compare_sprays.py -- --variant left-bank-contour --baseline left-bank-masses --render-name cathedral-left-bank-contour-full`; the 700px preview remains separate.
+
+### Right bank contour preview — 2026-09-15
+
+`render_cathedral_study.py -- --variant right-bank-contour --resolution 700 --samples 16` keeps the accepted left contour and lowers a shallower part of the far right bank with its planting. Outer taper preserves cover over the giant trunk base; initial outer-edge exposure was rejected and saved locally as `cathedral-right-bank-outer-edge-rejected.*`. Compare with `compare_sprays.py -- --variant right-bank-contour --baseline-name cathedral-left-bank-contour-full`. All render outputs remain ignored/local.
+
+### Canopy grouping shape test — 2026-09-15
+
+`render_cathedral_study.py -- --variant canopy-groups --resolution 700 --samples 16` widens 1,684 crown/leaf pairs into overlapping groups while preserving heights, terrain, architecture and the shoreline hero tree. Compare against `cathedral-right-bank-contour-study` using `compare_sprays.py -- --variant canopy-groups --baseline-name cathedral-right-bank-contour-study`. All images/blends remain local and ignored.
