@@ -95,6 +95,81 @@ rewrite history or delete the archive without explicit direction. Stage exact so
 since ignore rules do not protect changes to already tracked outputs. The initial Sprays archive
 was already pushed in `76758fd` before this correction (four PNGs and one Blender file).
 
+## Upper stair edges — 2026-09-14
+
+Lova agreed to focus next on upper stair readability. The `stair-edges` variant uses the previous
+hero-leafcraft crown, not the inconclusive grouped-spray experiment. It retains all 150 step meshes,
+transforms, camera and overall proportions. The camera is below the upper tread surfaces, making
+the risers and nosings important to the visible step rhythm.
+
+The existing bevel grows from 0.035 to 0.20 builder units over steps 33–87, then stays constant.
+At the scene's factor-of-three scale the maximum bevel width is 0.60 metres. Bevels use three
+segments and a private worn-edge material: the basalt color ramp is multiplied by 1.8, and the
+front-face multiplier rises from 0.44 to 0.80 for bevel faces only. This tests local edge definition
+without new lights, emission, a camera change, or changing the underlying step dimensions.
+
+Run `tools/render_cathedral_study.py -- --variant stair-edges` through Blender. Local-only outputs
+are `renders/cathedral-stair-edges-study.png` and `.blend`. The comparison helper automatically
+crops the stairs for this variant: `tools/compare_sprays.py -- --variant stair-edges --baseline
+hero-leafcraft` (put the command on one line). It shows reference / previous scene / stair edges.
+
+Full render completed at 1200px/64 samples in 3m03s. Cell RMS 4.836 versus leafcraft 4.943;
+mean luminance 45.194 versus 45.085. The useful evidence is visual: step lines are now visible
+much farther up instead of dissolving into a smooth ramp. The very top remains subdued, and
+the steps are more regular than the reference. Possible later refinement is subtle worn-edge
+variation and uneven shadowing while preserving the recovered definition. Do not change the
+camera to solve that. Actual saved-scene verification confirmed all 150 original step meshes,
+woody crown geometry, object placements/visibility and camera lens are identical; only stair
+bevel modifiers and their dedicated materials differ. Tests pass (24 run, one skip).
+
+## Grouped leaf sprays — 2026-09-14
+
+Lova liked the leaf-shape pass and asked to continue. The next focused profile is `hero-sprig`,
+which retains the leafcraft geometry and materials while moving the same leaves into three
+irregular growth sprays along each existing twig. This tests whether spaces between sprays and
+more exposed inner stems help the crown read as branching foliage rather than an even coating.
+The crown mesh remains 309,452 vertices / 267,664 faces; no extra leaf geometry is introduced.
+
+Rebuild with Blender: `tools/render_cathedral_study.py -- --variant hero-sprig`.
+Local-only outputs are `renders/cathedral-hero-sprig-study.png` and `.blend`. Compare through
+`tools/compare_sprays.py -- --variant hero-sprig --baseline hero-leafcraft`.
+The `clustered` argument in `build_crown` defaults false, preserving the previous profiles.
+An actual comparison of saved blends verified identical woody branch geometry, all object
+placements/visibility and camera lens. Keep the wider forest unchanged until visual review.
+
+Full render: 1200px / 64 samples, 2m53s. Cell RMS 4.974 versus leafcraft 4.943; mean luminance
+45.155 versus 45.085. The changes are small and the image does not show a clear win. Keep leafcraft
+as the working crown choice for now, retain this experiment for comparison, and avoid more tiny
+leaf-placement iterations. The recommended next focused task is upper stair tread readability:
+the reference retains tread detail up to the entrance, while our upper flight reads as a ramp.
+Keep camera and overall architecture proportions fixed. Repository tests pass (24 run, one skip).
+
+## Leaf shape and surface pass — 2026-09-14
+
+Hitch_07 remounted at the expected path, the worktree remained clean at 832450a, and all required
+inputs were accessible. The new focused variant is `hero-leafcraft`, based on hero-canopy.
+It replaces the diamond leaf outlines with eight-sided tapered outlines, varied proportions,
+independently sampled size variation and softer folds. Leaf faces are smooth shaded, and copied
+leaf materials use roughness 0.62 rather than changing shared materials elsewhere in the scene.
+A separate detail RNG preserves the original branch layout and leaf attachment sequence.
+
+Use Blender with `tools/render_cathedral_study.py -- --variant hero-leafcraft`; local-only outputs
+are `renders/cathedral-hero-leafcraft-study.png` and `.blend`. Compare with the last pass using
+`tools/compare_sprays.py -- --variant hero-leafcraft --baseline hero-canopy`. Earlier variants
+still use the original shape and materials. The runner default remains hero-canopy until review.
+
+Verification against the two saved blends confirmed identical woody branch geometry, all object
+placements/visibility, and camera lens. Only the crown's leaf geometry and its private leaf
+materials change. The full mesh has 309,452 vertices / 267,664 faces, so assess visual improvement
+against this increased cost before applying it more widely. No new assets should be pushed.
+
+Full render: 1200px, 64 samples, 2m59s. Whole-frame cell RMS 4.943 versus hero-canopy 4.937;
+mean luminance 45.085 versus 45.078. These values are effectively unchanged. Visually the leaf
+shapes are less uniform, but the difference is subtle at the fixed camera and costs nearly twice
+the crown face count. Do not automatically promote or distribute it. Further work should consider
+branch overlap and shadowed clusters before adding more leaf geometry. All 24 repository tests
+pass with one skip, and the three Python study tools parse.
+
 ## Irregular canopy pass — 2026-09-11
 
 Lova liked the fuller crown and asked to continue. The next focused variant is `hero-canopy`,
