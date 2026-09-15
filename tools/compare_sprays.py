@@ -3,11 +3,15 @@ import numpy as np
 from pathlib import Path
 import argparse, sys
 parser=argparse.ArgumentParser()
-parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy','hero-leafcraft','hero-sprig','stair-edges','stair-weathered','monument-stone','inscription-stone','entrance-depth','left-bank-masses'))
-parser.add_argument('--baseline', choices=('lace','hero-crown','hero-canopy','hero-leafcraft','stair-edges','stair-weathered','monument-stone','inscription-stone','entrance-depth'), default='lace')
+parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy','hero-leafcraft','hero-sprig','stair-edges','stair-weathered','monument-stone','inscription-stone','entrance-depth','left-bank-masses','left-bank-contour'))
+parser.add_argument('--baseline', choices=('lace','hero-crown','hero-canopy','hero-leafcraft','stair-edges','stair-weathered','monument-stone','inscription-stone','entrance-depth','left-bank-masses'), default='lace')
+parser.add_argument('--render-name', help='filename stem of a separately named render; also names its comparison')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 root=Path(__file__).resolve().parents[1]
-files=[root/'reference/midjourney-index2.png', root/('renders/cathedral-'+args.baseline+'-study.png'), root/('renders/cathedral-'+args.variant+'-study.png')]
+render_name=args.render_name or 'cathedral-'+args.variant+'-study'
+assert Path(render_name).name == render_name, 'render name must be a filename stem'
+comparison_name=(args.render_name or 'cathedral-'+args.variant)+'-comparison'
+files=[root/'reference/midjourney-index2.png', root/('renders/cathedral-'+args.baseline+'-study.png'), root/('renders/'+render_name+'.png')]
 patches=[]
 for path in files:
     image=bpy.data.images.load(str(path));image.colorspace_settings.name='Non-Color'
@@ -21,7 +25,7 @@ for path in files:
     else:
         crop=a[int(h*.52):int(h*.89),int(w*.37):int(w*.63)] if args.variant.startswith('stair-') else a[int(h*.68):int(h*.94),int(w*.63):w]
     ch,cw=(400,587) if args.variant in ('inscription-stone','entrance-depth') else (700,314) if args.variant == 'monument-stone' else (650,457) if args.variant.startswith('stair-') else (400,570)
-    if args.variant == 'left-bank-masses': crop=a; ch=cw=600
+    if args.variant in ('left-bank-masses','left-bank-contour'): crop=a; ch=cw=600
     ys=np.linspace(0,crop.shape[0]-1,ch).astype(int)
     xs=np.linspace(0,crop.shape[1]-1,cw).astype(int)
     patches.append(crop[ys[:,None],xs])
@@ -31,6 +35,6 @@ for path in files:
     if len(patches)==1:reference=cells
     print(path.name, 'cell RMS',round(float(np.sqrt(((cells-reference)**2).mean())),3),'mean',round(float(lum.mean()),3),flush=True)
 out=np.concatenate(patches,axis=1)
-im=bpy.data.images.new('reference | lace | branch sprays',out.shape[1],out.shape[0],alpha=False)
-im.pixels.foreach_set(out[::-1].ravel());im.filepath_raw=str(root/('renders/cathedral-'+args.variant+'-comparison.png'));im.file_format='PNG';im.save()
+im=bpy.data.images.new('reference | baseline | study',out.shape[1],out.shape[0],alpha=False)
+im.pixels.foreach_set(out[::-1].ravel());im.filepath_raw=str(root/('renders/'+comparison_name+'.png'));im.file_format='PNG';im.save()
 print('Saved comparison',flush=True)

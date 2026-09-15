@@ -260,3 +260,11 @@ review and assess the full composition before further doorway tweaks.
 ### Left bank massing — 2026-09-15
 
 `render_cathedral_study.py -- --variant left-bank-masses` retains entrance-depth and adds broad private shade groups on the left bank. Initial base-anchored compression exposed smooth terrain and was rejected; its local outputs are named `cathedral-left-bank-compression-rejected.*`. The corrected pass retains the original planted volume. PNG/blend stay local and ignored. Compare full composition with `compare_sprays.py -- --variant left-bank-masses --baseline entrance-depth`. Camera, architecture, terrain, giant trunks and right bank are preserved.
+
+### Coordinated left bank contour — 2026-09-15
+
+`render_cathedral_study.py -- --variant left-bank-contour --resolution 700 --samples 16` makes a saved composition preview with terrain and planting translated together, exposing more of the fixed giant left trunk. Local PNG/blend and full-frame comparison remain ignored. Camera, monument, stairs and right bank are preserved. Use `compare_sprays.py -- --variant left-bank-contour --baseline left-bank-masses`; review shape at this resolution, not fine foliage.
+
+### Left bank contour full quality — 2026-09-15
+
+The approved contour composition is preserved at 1200px/64 samples in local `cathedral-left-bank-contour-full.png` and `.blend`. Rebuild with `render_cathedral_study.py -- --variant left-bank-contour --resolution 1200 --samples 64 --output-name cathedral-left-bank-contour-full`. Compare using `compare_sprays.py -- --variant left-bank-contour --baseline left-bank-masses --render-name cathedral-left-bank-contour-full`; the 700px preview remains separate.
