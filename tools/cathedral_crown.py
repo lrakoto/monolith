@@ -5,8 +5,9 @@ import bpy
 from mathutils import Vector
 
 
-def build_crown(materials, layered=False):
+def build_crown(materials, layered=False, natural=False, clustered=False):
     rng = random.Random(305911)
+    detail_rng = random.Random(305914)
     verts, faces, tones = [], [], []
 
     def basis(axis):
@@ -40,6 +41,18 @@ def build_crown(materials, layered=False):
         side = normal.cross(forward).normalized()
         normal = forward.cross(side).normalized()
         offset = len(verts)
+        if natural:
+            # a separate stream keeps every branch and leaf attachment fixed across the comparison.
+            length *= max(.42, min(1.65, detail_rng.lognormvariate(-.12, .38)))
+            width = length * detail_rng.uniform(.16, .31)
+            fold = length * detail_rng.uniform(.025, .10)
+            skew = detail_rng.uniform(-.16, .16)
+            for t, w in [(0,0),(.20,-.64),(.48,-1),(.78,-.62),(1,0),(.78,.62),(.48,1),(.20,.64)]:
+                verts.append(tuple(point + forward*length*t + side*(width*w+skew*length*t*(1-t))))
+            verts.append(tuple(point+forward*length*.48+normal*fold))
+            for k in range(8):
+                faces.append((offset+k,offset+(k+1)%8,offset+8));tones.append(tone)
+            return
         verts.extend(tuple(v) for v in (point, point+forward*length*.45-side*length*.25,
                      point+forward*length, point+forward*length*.45+side*length*.25,
                      point+forward*length*.45+normal*length*.09))
@@ -75,6 +88,10 @@ def build_crown(materials, layered=False):
             axis=(end-start).normalized();side,up=basis(axis)
             for k in range(28):
                 t=rng.uniform(.38,1.08)
+                if clustered:
+                    # move the same leaves into growth sprays, leaving the inner woody stems legible.
+                    jitter = (t-.73)*.18
+                    t = (.60,.86,1.07)[k % 3] + jitter
                 angle=k*2.39996+rng.uniform(-.4,.4)
                 radial=side*math.cos(angle)+up*math.sin(angle)
                 point=start.lerp(end,t)+radial*rng.uniform(.009,.033)
@@ -96,7 +113,14 @@ def build_crown(materials, layered=False):
                     prior=point
     mesh=bpy.data.meshes.new('full shoreline crown with hanging sprays')
     mesh.from_pydata(verts,[],faces);mesh.update()
-    for material in materials:mesh.materials.append(material)
-    for polygon,tone in zip(mesh.polygons,tones):polygon.material_index=tone
+    for index, material in enumerate(materials):
+        if natural and index < 4:
+            material = material.copy()
+            material.name = 'soft leaf surface %d' % index
+            material.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value = .62
+        mesh.materials.append(material)
+    for polygon,tone in zip(mesh.polygons,tones):
+        polygon.material_index=tone
+        if natural and tone < 4:polygon.use_smooth=True
     print('Hero crown:',len(verts),'vertices;',len(faces),'faces',flush=True)
     return mesh

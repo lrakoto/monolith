@@ -177,3 +177,35 @@ crown using `tools/compare_sprays.py -- --variant hero-canopy --baseline hero-cr
 Historical `cathedral-canopy-study.*` is a different archived pass, restored and verified after
 an initial naming collision. The runner now rejects tracked output paths; `--output-name` permits
 rebuilding historical profiles under new local filenames.
+
+
+## Leaf shape / surface test — local outputs, 2026-09-14
+
+`hero-leafcraft` preserves the hero-canopy branch geometry and placement, using varied tapered
+leaf outlines, size/proportion variation, smooth leaf shading and roughness 0.62. The PNG and
+Blender outputs stay local as `cathedral-hero-leafcraft-study.*`. Compare with
+`tools/compare_sprays.py -- --variant hero-leafcraft --baseline hero-canopy` through Blender.
+Full render: 1200px, 64 samples, 2m59s. RMS 4.943 versus 4.937 previously, effectively unchanged.
+The visual difference is subtle and face count increases from 138,592 to 267,664; assess that
+tradeoff before wider use. Source and handoff changes are uncommitted pending review.
+
+
+## Grouped leaf sprays — local outputs, 2026-09-14
+
+Run the `hero-sprig` variant for the same leaves gathered into three growth sprays per twig.
+`cathedral-hero-sprig-study.*` and its comparison remain local. Camera, woody geometry and scene
+placement are verified unchanged; no extra geometry was added. Render: 1200px/64 samples, 2m53s.
+RMS 4.974 versus leafcraft 4.943. The visual difference is subtle, with no clear win; retain
+leafcraft for now and consider upper stair tread readability next. Compare through Blender with
+`tools/compare_sprays.py -- --variant hero-sprig --baseline hero-leafcraft`.
+
+
+## Upper stair edge definition — local outputs, 2026-09-14
+
+`stair-edges` uses the hero-leafcraft crown and retains the original staircase dimensions.
+Broader worn-edge bevels are introduced gradually above step 32. Outputs are local-only
+`cathedral-stair-edges-study.*`; comparison uses `tools/compare_sprays.py -- --variant stair-edges
+--baseline hero-leafcraft` through Blender, with a stair crop rather than foliage.
+Render: 1200px/64 samples, 3m03s; RMS 4.836 versus 4.943. Upper steps now read visibly farther
+up the flight. All original step meshes, crown branches, scene transforms and camera were
+verified unchanged. Future wear/shadow variation should retain the new definition.

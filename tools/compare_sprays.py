@@ -3,8 +3,8 @@ import numpy as np
 from pathlib import Path
 import argparse, sys
 parser=argparse.ArgumentParser()
-parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy'))
-parser.add_argument('--baseline', choices=('lace','hero-crown'), default='lace')
+parser.add_argument('--variant', default='sprays', choices=('sprays','hero-crown','hero-canopy','hero-leafcraft','hero-sprig','stair-edges'))
+parser.add_argument('--baseline', choices=('lace','hero-crown','hero-canopy','hero-leafcraft'), default='lace')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 root=Path(__file__).resolve().parents[1]
 files=[root/'reference/midjourney-index2.png', root/('renders/cathedral-'+args.baseline+'-study.png'), root/('renders/cathedral-'+args.variant+'-study.png')]
@@ -14,9 +14,10 @@ for path in files:
     w,h=image.size
     a=np.empty(w*h*4,dtype=np.float32);image.pixels.foreach_get(a)
     a=a.reshape(h,w,4)[::-1]
-    crop=a[int(h*.68):int(h*.94),int(w*.63):w]
-    ys=np.linspace(0,crop.shape[0]-1,400).astype(int)
-    xs=np.linspace(0,crop.shape[1]-1,570).astype(int)
+    crop=a[int(h*.52):int(h*.89),int(w*.37):int(w*.63)] if args.variant == 'stair-edges' else a[int(h*.68):int(h*.94),int(w*.63):w]
+    ch,cw=(650,457) if args.variant == 'stair-edges' else (400,570)
+    ys=np.linspace(0,crop.shape[0]-1,ch).astype(int)
+    xs=np.linspace(0,crop.shape[1]-1,cw).astype(int)
     patches.append(crop[ys[:,None],xs])
     lum=(a[:,:,:3]@np.array([.2126,.7152,.0722]))*255
     bounds=np.linspace(0,h,13).astype(int);xb=np.linspace(0,w,13).astype(int)

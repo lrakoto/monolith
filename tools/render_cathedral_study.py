@@ -14,7 +14,7 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 args = argparse.ArgumentParser()
-args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy'), default='hero-canopy')
+args.add_argument('--variant', choices=('baseline', 'sprays-flat', 'sprays', 'hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges'), default='hero-canopy')
 args.add_argument('--quick', action='store_true')
 args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
 args.add_argument('--resolution', type=int, default=1200)
@@ -122,7 +122,7 @@ def make_sprays(family, materials):
     return mesh
 
 
-if args.variant in ('hero-crown', 'hero-canopy'):
+if args.variant in ('hero-crown', 'hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges'):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_crown import build_crown
     targets = [o for o in scene.objects if o.name.startswith('shoreline stand ') and o.location.x > 0]
@@ -131,7 +131,7 @@ if args.variant in ('hero-crown', 'hero-canopy'):
     for old in targets:
         old.hide_render = True
         bpy.data.objects['shoreline foliage ' + old.name.rsplit(' ', 1)[1]].hide_render = True
-    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant == 'hero-canopy'))
+    crown = bpy.data.objects.new('fuller right shoreline crown', build_crown(materials, layered=args.variant in ('hero-canopy', 'hero-leafcraft', 'hero-sprig', 'stair-edges'), natural=args.variant in ('hero-leafcraft', 'hero-sprig', 'stair-edges'), clustered=args.variant == 'hero-sprig'))
     scene.collection.objects.link(crown)
     if not args.retain_understory:
         cleared = []
@@ -167,6 +167,30 @@ if args.variant in ('sprays', 'sprays-flat'):
         old.hide_render = True
         original_leaves.hide_render = True
     print('Replaced 34 right shoreline crowns; camera, lighting and other planting preserved', flush=True)
+
+if args.variant == 'stair-edges':
+    steps = sorted((o for o in scene.objects if o.name.startswith('tread ')), key=lambda o:o.name)
+    assert len(steps) == 150
+    edges = {}
+    for index, step in enumerate(steps):
+        strength = max(0, min(1, (index-32)/55))
+        if not strength: continue
+        material = step.data.materials[0]
+        if material.name not in edges:
+            edge = material.copy(); edge.name = 'worn nosing ' + material.name
+            ramp = next(n for n in edge.node_tree.nodes if n.type == 'VALTORGB')
+            for element in ramp.color_ramp.elements:
+                color = element.color[:]
+                element.color = (*[v*1.8 for v in color[:3]], 1)
+            fade = next(n for n in edge.node_tree.nodes if n.type == 'MAP_RANGE')
+            fade.inputs['To Min'].default_value = .80
+            edges[material.name] = edge
+        step.data.materials.append(edges[material.name])
+        bevel = next(m for m in step.modifiers if m.type == 'BEVEL')
+        bevel.width = .035 + strength*.165
+        bevel.segments = 3
+        bevel.material = len(step.data.materials)-1
+    print('Upper stair bevels broadened; 150 original steps and their transforms preserved', flush=True)
 
 assert scene.camera.matrix_world == camera_matrix
 assert scene.camera.data.lens == camera_lens
