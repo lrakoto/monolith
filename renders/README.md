@@ -276,3 +276,39 @@ The approved contour composition is preserved at 1200px/64 samples in local `cat
 ### Canopy grouping shape test — 2026-09-15
 
 `render_cathedral_study.py -- --variant canopy-groups --resolution 700 --samples 16` widens 1,684 crown/leaf pairs into overlapping groups while preserving heights, terrain, architecture and the shoreline hero tree. Compare against `cathedral-right-bank-contour-study` using `compare_sprays.py -- --variant canopy-groups --baseline-name cathedral-right-bank-contour-study`. All images/blends remain local and ignored.
+
+### Lower camera / water proximity — 2026-09-15
+
+`render_cathedral_study.py -- --variant canopy-groups --camera-height 72 --resolution 700 --samples 16 --output-name cathedral-water-camera-study` lowers camera z108 to72 without changing lens, tilt or geometry. The new camera flag requires a separate output name. Compare using `compare_sprays.py -- --variant canopy-groups --baseline-name cathedral-canopy-groups-study --render-name cathedral-water-camera-study`. PNG/blend remain local/ignored; this is a composition preview.
+
+### Farther camera / longer lens — 2026-09-15
+
+`render_cathedral_study.py -- --variant canopy-groups --camera-height 72 --camera-compression 1.25 --camera-waterline .89 --resolution 700 --samples 16 --output-name cathedral-compressed-camera-study` tests 25% more camera-to-monument distance and focal length, retaining the lower viewpoint and solving pitch for less foreground water. Local PNG/blend remain ignored. Compare against `cathedral-water-camera-study` using the comparison tool --baseline-name and --render-name options.
+
+### Camera framing refinement — 2026-09-16
+
+`render_cathedral_study.py -- --variant canopy-groups --camera-height 72 --camera-compression 1.25 --camera-lens 47 --camera-waterline .89 --resolution 700 --samples 16 --output-name cathedral-camera-framing-study` retains camera position/geometry, brings the tower top to8% and keeps stair foot at89%. Local PNG/blend plus comparison remain ignored. Stair/monument proportions still differ from reference.
+
+### Connected ascent and lighting passes — 2026-09-16
+
+Camera stays at z72/y-1147.5, lens47, waterline.89. New --ascent-lift70 extends all150 risers to landing520 while preserving monument summit1350, with terrain/planting and entrance assemblies moved consistently. Candidate `cathedral-ascent-proportion-study`. --canopy-shadows adds two shadow-only canopy flags (`cathedral-canopy-shadow-study`); --entrance-wash tests a soft warm entrance facade light (`cathedral-warm-ascent-study`). Use the two new helper modules `cathedral_ascent.py` and `cathedral_forest_light.py` through the maintained runner. All candidate PNG/blends remain local and ignored.
+
+Final full-quality candidate: `cathedral-ascent-lighting-full`,1200px/64samples, adds --ascent-lift70 --canopy-shadows --entrance-wash --entrance-wash-power27000 --entrance-wash-size75 to the lens47 camera recipe. Keep the initial9000W/size30 warm preview as a diagnostic comparison; it produced a small hotspot. Use spaced CLI flags as shown in BLENDER_HANDOFF.md.
+
+### Pond reflection study — 2026-09-17
+
+After verifying the remounted full-quality scene, `--pond-roughness .18` tests clearer surface reflections over the ascent-lighting recipe, with all other water properties unchanged. Local candidate `cathedral-pond-reflection-study`,700px/16samples. Previous water roughness remains.30 by default; do not replace the full-quality baseline before visual review.
+
+Pond roughness.18 was reviewed but not promoted: stronger amber lamp streaks distract without resolving shoreline texture. Keep the softer.30 water in `cathedral-ascent-lighting-full` as the working candidate. All experiment outputs are preserved locally.
+
+### Foreground shoreline — 2026-09-17
+
+`--shore-colonies` adds953 floating leaves in six broad foreground groups, preserving250 old pads hidden (`cathedral-shore-colonies-study`,700/16). `--shore-gathered` tightens the groups asymmetrically into926 leaves and adds one downward left foreground area light (`cathedral-shore-gathered-full`,1200/64). Both extend the ascent-lighting-full recipe, preserve camera/architecture/water roughness, and keep all PNG/blend outputs local and ignored. See handoff for review decision.
+
+Review: reject the added foreground light in gathered-full (broad pale water reflection). Retain the tighter planting using `--shore-gathered --shore-no-light`; corrected `cathedral-shore-natural-study` rendered900px/32samples and passed visual/scene review. Existing camera, geometry, lights and water settings are preserved. Full1200/64 rerender of the correction remains available for a later checkpoint.
+
+### Hillside foliage detail — 2026-09-17
+
+The maintained runner accepts `--canopy-detail support|fine|broken|dense` via `cathedral_canopy_detail.py`, added to the shoreline-natural recipe. `cathedral-canopy-support-study` completed700/16 with subtle material-only changes; `cathedral-canopy-fine-study` saved a blend but its dense render was terminated(exit137,noPNG). `cathedral-canopy-fine-light-study` completed700/16 but exposes too much rounded support. The third `cathedral-canopy-broken-study` restores leaf area, removes support specular and warps upper shell/leaf geometry together at900/32. See handoff for the final review decision. Avoid concurrent Blender scene validation while rendering heavier foliage. All new render artifacts stay local/ignored.
+
+Final canopy review: broken completed900/32 in5m59s and passed isolation checks. Less rounded outline but overly angular ridges; keep diagnostic only. Working scene remains cathedral-shore-natural-study. Final triptych is cathedral-canopy-broken-study-comparison.png. Next experiment should target a few visible crowns with actual branch/leaf geometry before extending across the forest.

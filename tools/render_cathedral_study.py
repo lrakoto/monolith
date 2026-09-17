@@ -20,6 +20,20 @@ args.add_argument('--samples', type=int, choices=(16,32,64,128), default=64, hel
 args.add_argument('--retain-understory', action='store_true', help='keep the original clumps in front of the hero crown')
 args.add_argument('--resolution', type=int, default=1200)
 args.add_argument('--output-name', help='unique filename stem when rebuilding an archived variant')
+args.add_argument('--camera-height', type=float, help='absolute world height for a camera-only composition study')
+args.add_argument('--camera-compression', type=float, default=1, help='multiply monument distance and focal length together')
+args.add_argument('--camera-waterline', type=float, help='top-down frame fraction for the stair foot; adjusts camera pitch')
+args.add_argument('--camera-lens', type=float, help='explicit focal length after distance compensation')
+args.add_argument('--ascent-lift', type=float, default=0, help='raise the landing and stair rise, preserving the monument top')
+args.add_argument('--canopy-shadows', action='store_true', help='test broad shadow-only overhead canopy flags')
+args.add_argument('--entrance-wash', action='store_true', help='soft warm facade lighting at the top of the ascent')
+args.add_argument('--entrance-wash-power', type=float, default=9000)
+args.add_argument('--entrance-wash-size', type=float, default=30)
+args.add_argument('--pond-roughness', type=float, help='isolated water reflection study; preserves pond color and geometry')
+args.add_argument('--shore-colonies', action='store_true', help='cluster foreground floating leaves for the distant camera')
+args.add_argument('--shore-gathered', action='store_true', help='denser asymmetric colonies with selective foreground light')
+args.add_argument('--shore-no-light', action='store_true', help='retain gathered planting without the experimental foreground light')
+args.add_argument('--canopy-detail', choices=('support','fine','broken','dense'), help='recess crown shells, optionally split broad surface leaves')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
 assert source.exists(), source
@@ -399,8 +413,90 @@ if args.variant == 'canopy-groups':
     assert grouped > 100, grouped
     print('Widened connected canopy groups:', grouped, 'paired crowns; original heights and ground retained',flush=True)
 
+if args.canopy_detail:
+    assert args.output_name
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_canopy_detail import refine_canopy
+    refine_canopy(scene, fine=args.canopy_detail != 'support', broken=args.canopy_detail == 'broken', dense=args.canopy_detail == 'dense')
+
+if args.ascent_lift:
+    assert args.output_name and 0 < args.ascent_lift <= 150
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_ascent import raise_ascent
+    raise_ascent(scene, args.ascent_lift)
+
+if args.canopy_shadows:
+    assert args.output_name
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_forest_light import add_canopy_shadows
+    add_canopy_shadows(scene)
+
+if args.entrance_wash:
+    assert args.output_name
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_forest_light import add_entrance_wash
+    add_entrance_wash(scene, args.ascent_lift, args.entrance_wash_power, args.entrance_wash_size)
+
+if args.pond_roughness is not None:
+    assert args.output_name and 0 <= args.pond_roughness <= 1
+    pond = bpy.data.objects['pond']
+    material = pond.data.materials[0].copy(); material.name = 'pond reflection study'
+    pond.data.materials[0] = material
+    shader = material.node_tree.nodes.get('Principled BSDF')
+    previous = shader.inputs['Roughness'].default_value
+    shader.inputs['Roughness'].default_value = args.pond_roughness
+    print('Pond roughness:',previous,'->',args.pond_roughness,'; color, transmission and ripple bump preserved',flush=True)
+
+if args.shore_colonies or args.shore_gathered:
+    assert args.output_name
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_shore import add_leaf_colonies
+    add_leaf_colonies(scene, gathered=args.shore_gathered)
+    if args.shore_gathered and not args.shore_no_light:
+        from cathedral_shore import add_shore_light
+        add_shore_light(scene)
+
 assert scene.camera.matrix_world == camera_matrix
 assert scene.camera.data.lens == camera_lens
+if args.camera_height is not None:
+    assert math.isfinite(args.camera_height) and args.camera_height > 0, 'camera height must be positive and finite'
+    # isolate water-level perspective from focal length and pitch; named outputs preserve
+    # the accepted composition when testing a lower viewpoint.
+    assert args.output_name, 'camera experiments require a separate output name'
+    original_height = scene.camera.location.z
+    scene.camera.location.z = args.camera_height
+    bpy.context.view_layer.update()
+    expected = camera_matrix.copy(); expected.translation.z = args.camera_height
+    assert scene.camera.matrix_world == expected
+    print('Camera height:', original_height, '->', args.camera_height, '; lens, pitch and horizontal position unchanged', flush=True)
+if args.camera_compression != 1 or args.camera_waterline is not None or args.camera_lens is not None:
+    assert args.output_name, 'camera experiments require a separate output name'
+    assert math.isfinite(args.camera_compression) and args.camera_compression > 0
+    camera = scene.camera
+    assert abs(camera.location.x) < .001 and abs(camera.rotation_euler.y) < .001 and abs(camera.rotation_euler.z) < .001
+    # the facade is at world y990. measure the dolly relative to it, rather than
+    # multiplying distance to the pond, so the lens compensation has a defined subject.
+    camera.location.y = 990-(990-camera.location.y)*args.camera_compression
+    camera.data.lens *= args.camera_compression
+    if args.camera_lens is not None:
+        assert math.isfinite(args.camera_lens) and args.camera_lens > 0
+        camera.data.lens = args.camera_lens
+    if args.camera_waterline is not None:
+        assert 0 < args.camera_waterline < 1
+        assert camera.location.y < 0
+        # square composition, horizontal sensor fit: solve pitch at the stair foot.
+        pitch = math.atan((args.camera_waterline-.5)*camera.data.sensor_width/camera.data.lens)-math.atan2(camera.location.z,-camera.location.y)
+        camera.rotation_euler.x = math.pi/2+pitch
+    bpy.context.view_layer.update()
+    from bpy_extras.object_utils import world_to_camera_view
+    for label, point in [('tower top',(0,990,1350)),('tower base',(0,990,450+args.ascent_lift)),('stair foot',(0,0,0))]:
+        fraction = 1-world_to_camera_view(scene,camera,Vector(point)).y
+        print(label, 'top-down frame fraction', round(fraction,5), flush=True)
+        if label == 'stair foot' and args.camera_waterline is not None:
+            assert abs(fraction-args.camera_waterline)<.001
+    print('Compressed camera:', tuple(camera.location), 'lens', camera.data.lens,
+          'pitch degrees', math.degrees(camera.rotation_euler.x-math.pi/2), flush=True)
+
 scene.render.resolution_x = scene.render.resolution_y = args.resolution
 scene.render.resolution_percentage = 100
 scene.cycles.samples = 16 if args.quick else args.samples
