@@ -324,3 +324,16 @@ Final review: retain cathedral-branch-patch-both as the current900/32 working ca
 Mounted drive and saved branch-patch-both scene verified. `--branch-patch upper` keeps the original48 targets and adds24 across upper silhouette anchors(.30,.40)/(.72,.43). New selection ignores camera-invisible/hidden surfaces and handles unpaired plinth planting with separate branching objects at original transforms. Candidate cathedral-branch-patch-upper uses900/32 and the unchanged camera/ascent/lighting/shoreline recipe; see handoff for review outcome. Source changes and all new outputs remain local after checkpoint6192f8b.
 
 Upper-edge review: completed900/32 in10m30s, retained as current working candidate.24 added targets include11 unpaired plinth plantings with new leaf objects; original48 patches/camera/lights and all unrelated scene data preserved. The equal-quality crop comparison shows a less bulbous upper silhouette. All work after6192f8b remains local/uncommitted.
+
+### Bank patch expansion — 2026-09-17
+
+Local commit92c2a3b (main handoff b9a69aa) precedes these passes; not pushed. `--branch-patch bank-left` retains72 plus16 visible left-bank crowns, `banks` adds16 more on the right. Left preview700/16 completed6m33s and passed scene-isolation checks. Both-bank preview and a matching-quality final render are the next checks. All assets stay local; see handoff for final retained candidate.
+
+Final bank review: both preview700/16 completed7m28s; matching-quality cathedral-branch-banks-study900/32 completed14m52s. Retain104 total replacements,32 more than upper. Isolation checks passed, full comparison reviewed, older scenes preserved. The additional leaf structure is a local improvement; many round crowns remain. Before much wider replacement, evaluate a lighter distant branch template to control render cost. New work remains uncommitted after92c2a3b/b9a69aa; no push performed.
+
+
+## Distant crown efficiency and bounded expansion — 2026-09-17
+
+`cathedral-branch-banks-lean-study` preserves104 targets and all leaf attachments with a lighter distant mesh:140496 triangles versus277184. Default full geometry is unchanged, verified against the saved scene. Same900px/32sample render completed8m38s versus the prior14m52s. Equal-quality images are visually close; this is the working candidate. Rebuild with the banks-study recipe plus `--branch-detail lean` and a unique output name. Scene checks preserve camera, all transforms/material slots/lights and the full-detail shoreline hero.
+
+`--branch-patch banks-extended` adds32 targets for136 total. `cathedral-branch-extended-lean-study` completed900px/32samples in10m29s; isolation checks passed. Its upper-right patch is darker/softer at preview size. `cathedral-branch-extended-right-detail` uses the same saved scene at2400px/64samples with top-down crop(.57,.38,.73,.53), completed4m54s. Fine branches are visible, but the dense crown mass needs more varied shape/separation. Keep this expansion as an experiment, not the baseline. The detail blend has border/crop enabled. All new media are local/ignored; no render job is still running.

@@ -1,14 +1,18 @@
 """One deliberately shaped shoreline crown, in normalized local coordinates."""
 import math
 import random
+import hashlib
+import struct
 import bpy
 from mathutils import Vector
 
 
-def build_crown(materials, layered=False, natural=False, clustered=False):
+def build_crown(materials, layered=False, natural=False, clustered=False, distant=False):
     rng = random.Random(305911)
     detail_rng = random.Random(305914)
     verts, faces, tones = [], [], []
+    layout=hashlib.sha256()
+    leaf_count=0
 
     def basis(axis):
         side = axis.cross(Vector((0, 0, 1)))
@@ -18,18 +22,22 @@ def build_crown(materials, layered=False, natural=False, clustered=False):
         return side, axis.cross(side).normalized()
 
     def branch(a, b, width):
+        layout.update(struct.pack('!7d',*a,*b,width))
+        sides=3 if distant else 5
         axis = (b-a).normalized()
         side, up = basis(axis)
         offset = len(verts)
         for point, radius in ((a, width), (b, width*.45)):
-            for k in range(5):
-                angle = k*math.tau/5
+            for k in range(sides):
+                angle = k*math.tau/sides
                 verts.append(tuple(point + radius*(side*math.cos(angle)+up*math.sin(angle))))
-        for k in range(5):
-            faces.append((offset+k, offset+(k+1)%5, offset+5+(k+1)%5, offset+5+k))
+        for k in range(sides):
+            faces.append((offset+k, offset+(k+1)%sides, offset+sides+(k+1)%sides, offset+sides+k))
             tones.append(4)
 
     def leaf(point, forward, length, tone):
+        nonlocal leaf_count
+        leaf_count+=1
         forward.normalize()
         normal = Vector((rng.uniform(-.9,.9), rng.uniform(-.9,.9), rng.uniform(.3,1)))
         if layered:
@@ -47,11 +55,15 @@ def build_crown(materials, layered=False, natural=False, clustered=False):
             width = length * detail_rng.uniform(.16, .31)
             fold = length * detail_rng.uniform(.025, .10)
             skew = detail_rng.uniform(-.16, .16)
-            for t, w in [(0,0),(.20,-.64),(.48,-1),(.78,-.62),(1,0),(.78,.62),(.48,1),(.20,.64)]:
+            layout.update(struct.pack('!13d',*point,*forward,*normal,length,width,fold,skew))
+            # distant leaves retain every attachment and their folded surface. widening
+            # the four-point rim preserves the old eight-point leaf's projected area.
+            rim=[(0,0),(.48,-1.2096),(1,0),(.48,1.2096)] if distant else [(0,0),(.20,-.64),(.48,-1),(.78,-.62),(1,0),(.78,.62),(.48,1),(.20,.64)]
+            for t,w in rim:
                 verts.append(tuple(point + forward*length*t + side*(width*w+skew*length*t*(1-t))))
             verts.append(tuple(point+forward*length*.48+normal*fold))
-            for k in range(8):
-                faces.append((offset+k,offset+(k+1)%8,offset+8));tones.append(tone)
+            for k in range(len(rim)):
+                faces.append((offset+k,offset+(k+1)%len(rim),offset+len(rim)));tones.append(tone)
             return
         verts.extend(tuple(v) for v in (point, point+forward*length*.45-side*length*.25,
                      point+forward*length, point+forward*length*.45+side*length*.25,
@@ -111,8 +123,10 @@ def build_crown(materials, layered=False, natural=False, clustered=False):
                         forward=Vector((rng.uniform(-1,1),rng.uniform(-.6,.6),rng.uniform(-.8,.1)))
                         leaf(point,forward,rng.uniform(.016,.036)*(1-t*.4),rng.randrange(4))
                     prior=point
-    mesh=bpy.data.meshes.new('full shoreline crown with hanging sprays')
+    mesh=bpy.data.meshes.new('distant folded-leaf crown' if distant else 'full shoreline crown with hanging sprays')
     mesh.from_pydata(verts,[],faces);mesh.update()
+    mesh['layout_hash']=layout.hexdigest();mesh['leaf_count']=leaf_count
+    mesh['detail_mode']='lean' if distant else 'full'
     for index, material in enumerate(materials):
         if natural and index < 4:
             material = material.copy()

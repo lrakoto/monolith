@@ -34,8 +34,9 @@ args.add_argument('--shore-colonies', action='store_true', help='cluster foregro
 args.add_argument('--shore-gathered', action='store_true', help='denser asymmetric colonies with selective foreground light')
 args.add_argument('--shore-no-light', action='store_true', help='retain gathered planting without the experimental foreground light')
 args.add_argument('--canopy-detail', choices=('support','fine','broken','dense'), help='recess crown shells, optionally split broad surface leaves')
-args.add_argument('--branch-patch', choices=('left','both','upper'), help='replace a small visible hillside patch with actual branching crowns')
+args.add_argument('--branch-patch', choices=('left','both','upper','bank-left','banks','banks-extended'), help='replace a small visible hillside patch with actual branching crowns')
 args.add_argument('--render-crop', nargs=4, type=float, metavar=('X0','Y0','X1','Y1'), help='normalized top-down detail render without changing the camera')
+args.add_argument('--branch-detail', choices=('full','lean'), default='full', help='lower-cost folded leaves for distant replacement crowns only')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
 assert source.exists(), source
@@ -503,7 +504,7 @@ if args.branch_patch:
     assert args.output_name
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_branch_patch import replace_visible_patch
-    replace_visible_patch(scene, spread=args.branch_patch in ('both','upper'), upper=args.branch_patch == 'upper')
+    replace_visible_patch(scene, spread=args.branch_patch != 'left', upper=args.branch_patch in ('upper','bank-left','banks','banks-extended'), banks='both' if args.branch_patch in ('banks','banks-extended') else 'left' if args.branch_patch=='bank-left' else None, detail=args.branch_detail, extended=args.branch_patch=='banks-extended')
 
 scene.render.resolution_x = scene.render.resolution_y = args.resolution
 scene.render.resolution_percentage = 100

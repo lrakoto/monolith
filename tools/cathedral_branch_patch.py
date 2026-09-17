@@ -4,19 +4,22 @@ from mathutils import Vector
 from cathedral_crown import build_crown
 
 
-def replace_visible_patch(scene, spread=False, upper=False):
+def replace_visible_patch(scene, spread=False, upper=False, banks=None, detail='full', extended=False):
     camera=scene.camera
     bpy.context.view_layer.update()
     depsgraph=bpy.context.evaluated_depsgraph_get()
     selected={}
     anchors=[(.33,.48)] if not spread else [(.33,.48),(.67,.53)]
     if upper:anchors += [(.30,.40),(.72,.43)]
+    if banks:anchors += [(.24,.63)]
+    if banks=='both':anchors += [(.76,.64)]
+    if extended:anchors += [(.35,.55),(.64,.46)]
     per_patch=12 if not spread else 24
     # choose actual frontmost crowns through the final camera, not hidden trees whose
     # centres happen to project into the same area. keep all surrounding planting.
     for patch_index,(ax,ay) in enumerate(anchors):
         upper_patch=upper and patch_index>=2
-        wanted=12 if upper_patch else per_patch
+        wanted=16 if banks and patch_index>=4 else 12 if upper_patch else per_patch
         found=0
         offsets=sorted(((i*.012,j*.014) for i in range(-5,6) for j in range(-5,6)),key=lambda p:p[0]*p[0]+p[1]*p[1])
         for dx,dy in offsets:
@@ -42,7 +45,7 @@ def replace_visible_patch(scene, spread=False, upper=False):
             if found==wanted:break
         assert found==wanted,(found,wanted)
     first=next(iter(selected.values()))[1]
-    mesh=build_crown([slot.material for slot in first.material_slots],layered=True,natural=True)
+    mesh=build_crown([slot.material for slot in first.material_slots],layered=True,natural=True,distant=detail=='lean')
     paired=[(c,l) for c,l in selected.values() if l is not None]
     added=[]
     for crown,leaves in selected.values():
