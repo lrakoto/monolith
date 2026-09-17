@@ -7,7 +7,7 @@ import bpy
 from mathutils import Vector
 
 
-def build_crown(materials, layered=False, natural=False, clustered=False, distant=False):
+def build_crown(materials, layered=False, natural=False, clustered=False, distant=False, tiered=False, shoot_density=1.0):
     rng = random.Random(305911)
     detail_rng = random.Random(305914)
     verts, faces, tones = [], [], []
@@ -85,13 +85,19 @@ def build_crown(materials, layered=False, natural=False, clustered=False, distan
                   ((.26,.46,.25),(.44,.30,.26)), ((-.44,-.40,-.14),(.38,.29,.19)),
                   ((.01,-.40,-.02),(.37,.31,.24)), ((.57,-.29,-.20),(.31,.29,.19)),
                   ((.08,-.02,-.20),(.35,.34,.22))]
+    if tiered:
+        # flatten individual branch fans and stagger their heights rather than adding
+        # leaves. the older crown piles overlapping round groups into one dark mass.
+        lifts=(.02,-.08,.06,-.06,.03,.10,-.04,-.06,.08,-.02,-.08)
+        groups=[((x,y,z+lifts[i]),(rx*1.06,ry*.94,rz*.62))
+                for i,((x,y,z),(rx,ry,rz)) in enumerate(groups)]
     root = Vector((.08,.05,-.82));fork = Vector((-.08,.08,-.30))
     branch(root, fork, .028)
     for index,(location,radii) in enumerate(groups):
         center=Vector(location)
         elbow=fork.lerp(center,.55)+Vector((0,.06,-.05))
         branch(fork,elbow,.014);branch(elbow,center,.008)
-        for j in range([100,150,130,90,65,120,110,95,80,55,70][index] if layered else 120):
+        for j in range(max(1,round(([100,150,130,90,65,120,110,95,80,55,70][index] if layered else 120)*shoot_density))):
             direction=Vector((rng.gauss(0,1),rng.gauss(0,1),rng.gauss(0,1))).normalized()
             radius=rng.uniform(.35,1)**.5
             end=center+Vector(tuple(direction[k]*radii[k]*radius for k in range(3)))
@@ -111,7 +117,7 @@ def build_crown(materials, layered=False, natural=False, clustered=False, distan
                 leaf(point,forward,rng.uniform(.024,.048),rng.randrange(4))
         # uneven curtains connect the lit crown to the shaded bank without a continuous skirt.
         if center.y < .15:
-            for trail in range([6,11,5,8,4,7,7,12,7,10,5][index] if layered else 9):
+            for trail in range(max(1,round(([6,11,5,8,4,7,7,12,7,10,5][index] if layered else 9)*min(1.0,shoot_density*2.5)))):
                 start=center+Vector((rng.uniform(-radii[0],radii[0]),-radii[1]*rng.uniform(.5,.9),-radii[2]*.2))
                 length=rng.uniform(.18,.58)
                 prior=start
@@ -127,6 +133,7 @@ def build_crown(materials, layered=False, natural=False, clustered=False, distan
     mesh.from_pydata(verts,[],faces);mesh.update()
     mesh['layout_hash']=layout.hexdigest();mesh['leaf_count']=leaf_count
     mesh['detail_mode']='lean' if distant else 'full'
+    mesh['tiered']=tiered
     for index, material in enumerate(materials):
         if natural and index < 4:
             material = material.copy()

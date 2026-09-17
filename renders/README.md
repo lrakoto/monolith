@@ -337,3 +337,43 @@ Final bank review: both preview700/16 completed7m28s; matching-quality cathedral
 `cathedral-branch-banks-lean-study` preserves104 targets and all leaf attachments with a lighter distant mesh:140496 triangles versus277184. Default full geometry is unchanged, verified against the saved scene. Same900px/32sample render completed8m38s versus the prior14m52s. Equal-quality images are visually close; this is the working candidate. Rebuild with the banks-study recipe plus `--branch-detail lean` and a unique output name. Scene checks preserve camera, all transforms/material slots/lights and the full-detail shoreline hero.
 
 `--branch-patch banks-extended` adds32 targets for136 total. `cathedral-branch-extended-lean-study` completed900px/32samples in10m29s; isolation checks passed. Its upper-right patch is darker/softer at preview size. `cathedral-branch-extended-right-detail` uses the same saved scene at2400px/64samples with top-down crop(.57,.38,.73,.53), completed4m54s. Fine branches are visible, but the dense crown mass needs more varied shape/separation. Keep this expansion as an experiment, not the baseline. The detail blend has border/crop enabled. All new media are local/ignored; no render job is still running.
+
+
+## Tiered branch trial after pushed checkpoint — 2026-09-17
+
+Source/notes checkpoint e73e3bc pushed successfully; media stayed local. New opt-in `--branch-tiered` affects only32 additions in banks-extended. Flattened branch groups and staggered heights preserve leaf counts, transforms, materials, camera, lights and original104 targets. `cathedral-branch-tiered-crop` rendered900px/32samples through(.20,.34,.80,.70),8m31s. Isolation checks passed; matching cathedral-branch-tiered-comparison.png inspected. Difference is small and does not resolve the rounded broader canopy. Keep as experiment, retain banks-lean-study baseline. Next direction proposed: connected irregular hillside canopy masses with deliberate gaps and ridges; seek visual direction check before broadening. No render is running. Crop blend has border enabled.
+
+
+## Connected left canopy landform — 2026-09-17
+
+User approved larger connected canopy forms. `--canopy-landform` on the104-crown banks-lean recipe adds two oblique ridges and a shallow saddle, moving1203 terrain vertices and3195 vegetation objects together. Shore and stair margins stay anchored. `cathedral-canopy-landform-left` completed900px/32samples in8m49s. Full image and matching left crop inspected; retain as a first landform candidate with a modest improvement in uneven sweep around the trunk and no obvious terrain/base exposure. Rounded crown texture remains unfinished. Scene isolation checks pass; architecture, camera, lights/materials and other objects unchanged. Previous banks-lean scene retained. No render running; new source/notes uncommitted, media local/ignored.
+
+
+## Asymmetric banks and coverage correction — 2026-09-17
+
+Added --canopy-landform-strength1.45 and --canopy-landform-both (use spaced flags). Both-preview700px/16samples completed4m05s; both-study900px/32samples6m15s revealed an undesirable straight transition near the right trunk base. Clamping right displacement to nonnegative retains existing coverage between raised ridges. Covered-study900px/32samples completed6m49s and is the retained candidate. Isolation checks pass:1745 terrain vertices and4475 plants move vertically, right plants never move down, camera/architecture/materials/lights preserved. Rounded crown texture remains unresolved.
+
+Optional --canopy-root-extension test (rooted-study900px/32samples,7m48s) extended96 lower trunk vertices, preserving upper geometry and generated bark mapping. Its visual effect is tiny; surface probes along the remaining transition hit foliage below the trunk, not an established open gap. Do not promote the root extension or claim it definitively fixes that edge. Current candidate remains cathedral-canopy-landform-covered-study. All scenes/comparisons remain local/ignored. No render running. Source/notes uncommitted after checkpoint e73e3bc.
+
+
+## Interlocking smaller-tree experiment — 2026-09-17
+
+New tools/cathedral_thicket.py and --canopy-thicket select12 paired visible crowns after landform placement, retaining the accepted104 earlier replacements. Each mesh combines seven smaller branching trees built with shoot_density.12,168826 vertices/129983 faces. Default crown geometry is verified exactly unchanged. Preview700px/16samples5m33s; matching study900px/32samples9m21s. Isolation checks pass; visual effect small because prominent rounded silhouettes also include unpaired plinth planting objects.
+
+--thicket-plinth adds8 of those, creates replacement objects with original transforms, and hides their archived supports. Plinth-study900px/32samples9m20s shows excess wall exposure. --thicket-fitted matches their old local mesh bounds, fitted-study900px/32samples8m17s. Only those8 meshes change; bounds agree within.0001 and all other data/materials/transforms/camera/lights remain fixed. Matching crop shows a finer, more open silhouette but still a small wall gap: bounds do not guarantee dense coverage. User approved the more open, irregular structure. Fitted-study is now the approved baseline; retain the small wall opening rather than automatically filling it. Covered-study remains the prior comparison. Four renders complete, none running, media local/ignored and source uncommitted.
+
+Rebuild fitted candidate with the covered-study recipe plus --canopy-thicket --thicket-plinth --thicket-fitted and a unique output name. Keep --branch-patch banks --branch-detail lean --canopy-landform --canopy-landform-strength1.45 --canopy-landform-both (use spaced flags); no root extension or tiered experiment.
+
+
+## Right and lower-left thicket continuation — 2026-09-17
+
+User approved the open irregular structure. --thicket-right preserves20 accepted replacements and adds12 paired plus3 unpaired visible right-bank crowns. Initial expectation of8 unpaired failed before rendering; actual bounded selection found3. Right-preview700px/16samples completed6m24s and passed isolation. --thicket-lower adds12 paired lower-left crowns, bringing the total to47. Banks-study900px/32samples completed10m24s; full image and matching lower-left comparison show finer structure and retained openness without obvious bare ground. Isolation proves all original20 thickets and104 earlier branch targets, camera/architecture/landforms/transforms/lights/unrelated materials preserved. Retain cathedral-canopy-thicket-banks-study as the next working candidate; fitted-study is the previous user-approved comparison.
+
+Cathedral-canopy-thicket-banks-detail is the same scene rendered at2400px/64samples through(.22,.55,.39,.73),407x432 pixels,6m06s. Fine branches and overlapping smaller crowns are visible; old rounded crowns remain nearby. Detail blend has border enabled. Full render uses banks-study. Rebuild with the fitted-study recipe plus --thicket-right --thicket-lower. No root extension or tiered experiment. Three successful renders completed, none still running. Source/notes uncommitted; all media local/ignored.
+
+
+## Transition patches and memory test — 2026-09-17
+
+--thicket-fill right adds16 paired lower-right crowns; fill-right-preview700px/16samples completed9m26s and passed isolation. --thicket-fill both adds16 middle-left crowns as well, preserving47 prior thickets and104 earlier branch targets. Transitions-study900px/32samples completed22m17s with79 thickets; matching full/crop review retained the open structure without obvious bare ground. Isolation passed for32 additions only.
+
+Host has8GB RAM and showed about15GB system-wide swap usage during the unusually slow render. New --canopy-leaf-thinning removes every third leaf fan from only generated distant replacement meshes, keeps all branches and other leaf positions, compacts unused vertices and frees their unused source meshes in this newly generated scene. Foreground hero and archived blends stay untouched. Unique replacement-mesh faces1044665 to718113 (31.3% reduction), affecting183 objects. Light-study900px/32samples completed9m07s. One observed run pair, not a controlled benchmark. Full/crop images look very close at900px; geometry digests verify exact retained faces/material indices/smoothing, texture bounds and all scene transforms/materials/lights/camera preserved. Retain cathedral-canopy-thicket-light-study as the working candidate. High-resolution thinning quality remains to be checked against unthinned transitions-study before final export decisions. Three successful renders; none running. New source/notes uncommitted; media local/ignored.

@@ -37,6 +37,18 @@ args.add_argument('--canopy-detail', choices=('support','fine','broken','dense')
 args.add_argument('--branch-patch', choices=('left','both','upper','bank-left','banks','banks-extended'), help='replace a small visible hillside patch with actual branching crowns')
 args.add_argument('--render-crop', nargs=4, type=float, metavar=('X0','Y0','X1','Y1'), help='normalized top-down detail render without changing the camera')
 args.add_argument('--branch-detail', choices=('full','lean'), default='full', help='lower-cost folded leaves for distant replacement crowns only')
+args.add_argument('--branch-tiered', action='store_true', help='stagger branch fans on the32 extended-patch crowns only')
+args.add_argument('--canopy-landform', action='store_true', help='connected left forest ridges and saddle with planted ground preserved')
+args.add_argument('--canopy-landform-strength', type=float, default=1.0, help='ridge and valley depth multiplier')
+args.add_argument('--canopy-landform-both', action='store_true', help='add a separately shaped distant right bank')
+args.add_argument('--canopy-root-extension', action='store_true', help='bury the finite right trunk base beneath the forest bank')
+args.add_argument('--canopy-thicket', action='store_true', help='replace12 rounded crowns with interlocking smaller branching trees')
+args.add_argument('--thicket-plinth', action='store_true', help='also replace8 prominent unpaired planting crowns')
+args.add_argument('--thicket-fitted', action='store_true', help='retain the original outer dimensions of unpaired planting replacements')
+args.add_argument('--thicket-right', action='store_true', help='extend the approved thicket structure to15 right-bank crowns')
+args.add_argument('--thicket-lower', action='store_true', help='continue the finer thickets through12 lower-left crowns')
+args.add_argument('--thicket-fill', choices=('right','both'), help='continue thickets through lower-right and middle-left transition patches')
+args.add_argument('--canopy-leaf-thinning', action='store_true', help='remove one in three distant leaves without moving retained geometry')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
 assert source.exists(), source
@@ -504,7 +516,27 @@ if args.branch_patch:
     assert args.output_name
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_branch_patch import replace_visible_patch
-    replace_visible_patch(scene, spread=args.branch_patch != 'left', upper=args.branch_patch in ('upper','bank-left','banks','banks-extended'), banks='both' if args.branch_patch in ('banks','banks-extended') else 'left' if args.branch_patch=='bank-left' else None, detail=args.branch_detail, extended=args.branch_patch=='banks-extended')
+    replace_visible_patch(scene, spread=args.branch_patch != 'left', upper=args.branch_patch in ('upper','bank-left','banks','banks-extended'), banks='both' if args.branch_patch in ('banks','banks-extended') else 'left' if args.branch_patch=='bank-left' else None, detail=args.branch_detail, extended=args.branch_patch=='banks-extended', tiered=args.branch_tiered)
+
+if args.canopy_landform:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_canopy_landform import reshape_left_bank
+    reshape_left_bank(scene, strength=args.canopy_landform_strength, both=args.canopy_landform_both)
+
+if args.canopy_root_extension:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_root_extension import extend_right_root
+    extend_right_root(scene)
+
+if args.canopy_thicket:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_thicket import replace_thicket
+    replace_thicket(scene, plinth=args.thicket_plinth, fitted=args.thicket_fitted, right=args.thicket_right, lower=args.thicket_lower, fill=args.thicket_fill)
+
+if args.canopy_leaf_thinning:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_leaf_thinning import thin_distant_leaves
+    thin_distant_leaves(scene)
 
 scene.render.resolution_x = scene.render.resolution_y = args.resolution
 scene.render.resolution_percentage = 100
