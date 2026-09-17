@@ -34,6 +34,8 @@ args.add_argument('--shore-colonies', action='store_true', help='cluster foregro
 args.add_argument('--shore-gathered', action='store_true', help='denser asymmetric colonies with selective foreground light')
 args.add_argument('--shore-no-light', action='store_true', help='retain gathered planting without the experimental foreground light')
 args.add_argument('--canopy-detail', choices=('support','fine','broken','dense'), help='recess crown shells, optionally split broad surface leaves')
+args.add_argument('--branch-patch', choices=('left','both'), help='replace a small visible hillside patch with actual branching crowns')
+args.add_argument('--render-crop', nargs=4, type=float, metavar=('X0','Y0','X1','Y1'), help='normalized top-down detail render without changing the camera')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
 assert source.exists(), source
@@ -497,8 +499,21 @@ if args.camera_compression != 1 or args.camera_waterline is not None or args.cam
     print('Compressed camera:', tuple(camera.location), 'lens', camera.data.lens,
           'pitch degrees', math.degrees(camera.rotation_euler.x-math.pi/2), flush=True)
 
+if args.branch_patch:
+    assert args.output_name
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_branch_patch import replace_visible_patch
+    replace_visible_patch(scene, spread=args.branch_patch == 'both')
+
 scene.render.resolution_x = scene.render.resolution_y = args.resolution
 scene.render.resolution_percentage = 100
+if args.render_crop:
+    assert args.output_name
+    x0,y0,x1,y1=args.render_crop
+    assert 0<=x0<x1<=1 and 0<=y0<y1<=1
+    scene.render.use_border=True;scene.render.use_crop_to_border=True
+    scene.render.border_min_x=x0;scene.render.border_max_x=x1
+    scene.render.border_min_y=1-y1;scene.render.border_max_y=1-y0
 scene.cycles.samples = 16 if args.quick else args.samples
 scene.cycles.device = 'CPU'
 name = 'cathedral-' + args.variant + ('-quick' if args.quick else '-study')
