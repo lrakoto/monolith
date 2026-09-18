@@ -47,7 +47,7 @@ args.add_argument('--thicket-plinth', action='store_true', help='also replace8 p
 args.add_argument('--thicket-fitted', action='store_true', help='retain the original outer dimensions of unpaired planting replacements')
 args.add_argument('--thicket-right', action='store_true', help='extend the approved thicket structure to15 right-bank crowns')
 args.add_argument('--thicket-lower', action='store_true', help='continue the finer thickets through12 lower-left crowns')
-args.add_argument('--thicket-fill', choices=('right','both'), help='continue thickets through lower-right and middle-left transition patches')
+args.add_argument('--thicket-fill', choices=('right','both','left-edge','edges'), help='continue thickets through transition patches and optional forest edges')
 args.add_argument('--canopy-leaf-thinning', action='store_true', help='remove one in three distant leaves without moving retained geometry')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'

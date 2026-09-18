@@ -70,8 +70,11 @@ def replace_thicket(scene, plinth=False, fitted=False, right=False, lower=False,
         selected.update(lower_pairs)
     if fill:
         anchors=[(.69,.64)]
-        if fill=='both':anchors.append((.31,.54))
+        if fill in ('both','left-edge','edges'):anchors.append((.31,.54))
+        if fill in ('left-edge','edges'):anchors.append((.20,.54))
+        if fill=='edges':anchors.append((.79,.57))
         for ax,ay in anchors:
+            wanted=8 if (ax,ay) in ((.20,.54),(.79,.57)) else 16
             patch={}
             for dx,dy in offsets:
                 direction=Vector(((ax+dx-.5)*camera.data.sensor_width/camera.data.lens,(.5-ay-dy)*camera.data.sensor_width/camera.data.lens,-1))
@@ -85,8 +88,8 @@ def replace_thicket(scene, plinth=False, fitted=False, right=False, lower=False,
                 crown=bpy.data.objects.get('canopy lobe '+suffix);leaves=bpy.data.objects.get('fine foliage '+suffix)
                 if crown is None or leaves is None or crown.hide_render or crown.name in selected or (crown.location-leaves.location).length>.001:continue
                 patch[crown.name]=(crown,leaves)
-                if len(patch)==16:break
-            assert len(patch)==16,(ax,ay,len(patch))
+                if len(patch)==wanted:break
+            assert len(patch)==wanted,(ax,ay,len(patch))
             selected.update(patch)
     first=next(iter(selected.values()))[1]
     small=build_crown([slot.material for slot in first.material_slots],layered=True,natural=True,distant=True,shoot_density=.12)
