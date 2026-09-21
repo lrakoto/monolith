@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Block Shooter Field Log</title>
+<meta name="description" content="A two-week bootcamp project in 2022, 1,333 days of silence, and the four-year rebuild that followed. Seventeen milestones, every one rebuilt from source and recorded.">
+<link rel="canonical" href="https://threeohfivestudios.com/portfolio/blockshooter/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Block Shooter Field Log">
+<meta property="og:description" content="A two-week bootcamp project, 1,333 days of silence, and the rebuild that followed. Seventeen milestones rebuilt from source.">
+<meta property="og:url" content="https://threeohfivestudios.com/portfolio/blockshooter/">
+<meta property="og:image" content="https://threeohfivestudios.com/portfolio/blockshooter/media/s16.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Block Shooter Field Log">
+<meta name="twitter:description" content="A two-week bootcamp project, 1,333 days of silence, and the rebuild that followed.">
+<meta name="twitter:image" content="https://threeohfivestudios.com/portfolio/blockshooter/media/s16.jpg">
+<link rel="icon" href="../assets/brand/icon-32.webp" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+  /* One theme on purpose: the game is a lit grid in the dark, and the page is
+     read as its HUD. Every colour is stated, so it holds on either host. */
+  :root{
+    --bg:#0a0d0c; --surface:#121715; --surface-2:#182120; --line:#24312b;
+    --ink:#dce9e2; --ink-2:#93a49b; --ink-3:#6c7d75;
+    --mint:#1bffc1;   /* the enemy green from the 2022 source */
+    --alert:#ff5a5a;  /* what the enemies became */
+    --amber:#ffb648;  /* the tracers */
+    --f-display:"Oxanium",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --f-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  img,video{max-width:100%}
+  a{color:inherit}
+  body{
+    margin:0; color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.62;
+    background:var(--bg);
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:44px 44px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding-inline:20px}
+
+  .top{position:sticky; top:env(safe-area-inset-top,0px); z-index:50;
+    background:color-mix(in srgb, var(--bg) 93%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+  .top-in{display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding-block:12px}
+  .mark{font-family:var(--f-display); font-weight:700; font-size:14px; letter-spacing:.14em;
+    text-transform:uppercase; border:1px solid var(--mint); color:var(--mint); padding:4px 9px; line-height:1}
+  .top-title{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-3)}
+  .spacer{flex:1 1 auto}
+  .backlink{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); text-decoration:none}
+  .backlink:hover{color:var(--mint)}
+  .filters{display:flex; gap:7px; flex-wrap:wrap; padding-bottom:12px}
+  .chip{font-family:var(--f-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    padding:5px 11px; border:1px solid var(--line); background:transparent; color:var(--ink-3);
+    cursor:pointer; border-radius:2px; transition:border-color .15s,color .15s,background .15s}
+  .chip:hover{border-color:var(--ink-3); color:var(--ink)}
+  .chip[aria-pressed="true"]{background:var(--mint); color:#04100c; border-color:var(--mint); font-weight:600}
+  .chip:focus-visible,.backlink:focus-visible,.cta:focus-visible{outline:2px solid var(--mint); outline-offset:2px}
+
+  .head{padding-block:46px 30px; border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--mint); margin:0 0 14px}
+  h1{font-family:var(--f-display); font-weight:700; font-size:clamp(32px,6.4vw,58px); line-height:1.02;
+    margin:0 0 18px; letter-spacing:-.01em; text-wrap:balance}
+  h1 b{color:var(--mint); font-weight:700}
+  .standfirst{font-size:17px; color:var(--ink-2); max-width:62ch; margin:0 0 22px}
+  .facts{display:flex; gap:26px; flex-wrap:wrap; font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3)}
+  .facts b{display:block; font-family:var(--f-display); font-weight:700; font-size:21px;
+    color:var(--ink); letter-spacing:0; font-variant-numeric:tabular-nums}
+  .ctas{display:flex; gap:10px; flex-wrap:wrap; margin-top:22px}
+  .cta{display:inline-block; font-family:var(--f-mono); font-size:12px; letter-spacing:.1em;
+    text-transform:uppercase; padding:11px 20px; background:var(--mint); color:#04100c;
+    text-decoration:none; border-radius:2px; font-weight:600}
+  .cta:hover{background:#fff}
+  .cta.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+  .cta.ghost:hover{background:transparent; border-color:var(--mint); color:var(--mint)}
+
+  .act{padding-block:40px 8px}
+  .act-head{display:flex; align-items:baseline; gap:14px; border-bottom:1px solid var(--line);
+    padding-bottom:10px; margin-bottom:28px; flex-wrap:wrap}
+  .act-n{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.18em; color:var(--mint); text-transform:uppercase}
+  .act-t{font-family:var(--f-display); font-weight:700; font-size:25px; margin:0; letter-spacing:.01em}
+  .act-d{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3); margin-left:auto}
+
+  /* The silence is the story, so it gets drawn rather than mentioned. */
+  .gap{margin:46px 0 10px; border:1px solid var(--line); background:var(--surface);
+    padding:clamp(22px,4vw,38px); display:grid; gap:14px; justify-items:center; text-align:center}
+  .gap-n{font-family:var(--f-display); font-weight:700; font-size:clamp(40px,9vw,86px);
+    line-height:1; color:var(--alert); letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .gap-k{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-3)}
+  .gap-p{margin:0; color:var(--ink-2); max-width:56ch}
+  .gap-rule{width:100%; height:1px; background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 16px)}
+
+  .beat{display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,1fr); gap:30px;
+    padding-block:26px; border-bottom:1px solid var(--line); align-items:start}
+  .beat:last-child{border-bottom:0}
+  .plate{position:relative; background:#050807; border:1px solid var(--line); overflow:hidden}
+  .plate video{display:block; width:100%; aspect-ratio:16/9; object-fit:cover}
+  .plate .num{position:absolute; top:0; left:0; font-family:var(--f-mono); font-size:11px; font-weight:600;
+    background:var(--mint); color:#04100c; padding:3px 8px; letter-spacing:.08em; z-index:2}
+  .playpip{position:absolute; inset:auto 8px 8px auto; font-family:var(--f-mono); font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; background:rgba(0,0,0,.7); color:#fff;
+    padding:3px 7px; border:0; cursor:pointer; border-radius:2px}
+  .dossier{min-width:0}
+  .meta{display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-family:var(--f-mono);
+    font-size:11.5px; color:var(--ink-3); margin-bottom:9px}
+  .meta .date{color:var(--ink-2)}
+  .commit{border:1px solid var(--line); padding:1px 6px; border-radius:2px}
+  h3{font-family:var(--f-display); font-weight:700; font-size:22px; line-height:1.16; margin:0 0 12px;
+    letter-spacing:.005em; text-wrap:balance}
+  .hook{font-family:var(--f-display); font-weight:500; font-size:20px; line-height:1.34; margin:0 0 14px;
+    padding-left:15px; border-left:3px solid var(--mint); color:var(--ink)}
+  .caption{margin:0 0 14px; color:var(--ink-2); max-width:58ch}
+  .changed{margin:0 0 4px; color:var(--ink-2); font-size:14px; max-width:58ch;
+    border-top:1px dashed var(--line); padding-top:12px}
+  .changed b{font-family:var(--f-mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-3); display:block; margin-bottom:5px; font-weight:400}
+
+  .foot{border-top:1px solid var(--line); margin-top:40px; padding-block:30px 60px;
+    color:var(--ink-2); font-size:14px}
+  .foot h4{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-3); margin:0 0 12px; font-weight:400}
+  .foot p{max-width:70ch}
+  .foot a.inline{color:var(--mint); text-decoration:none; border-bottom:1px solid rgba(27,255,193,.35)}
+  .foot a.inline:hover{border-bottom-color:var(--mint)}
+
+  @media (max-width:800px){
+    .beat{grid-template-columns:1fr; gap:18px}
+    .act-d{margin-left:0; width:100%}
+    h3{font-size:20px} .hook{font-size:18px}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="top-in">
+      <div class="mark">BS</div>
+      <div class="top-title">Block Shooter &middot; Field Log</div>
+      <div class="spacer"></div>
+      <a class="backlink" href="../">&larr; Lova Rakoto</a>
+    </div>
+    <div class="filters" id="filters">
+      <button class="chip" data-filter="all" aria-pressed="true">All 17</button>
+      <button class="chip" data-filter="1" aria-pressed="false">2022</button>
+      <button class="chip" data-filter="2" aria-pressed="false">The revival</button>
+      <button class="chip" data-filter="3" aria-pressed="false">A real game</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="head">
+    <p class="kicker">Development process &middot; 2022 &ndash; 2026</p>
+    <h1>Two weeks in 2022. Then <b>1,333 days</b> of nothing.</h1>
+    <p class="standfirst">
+      Block Shooter started as a two-week bootcamp project: click the squares before
+      they reach the middle. I finished it, and did not open it again for three and a
+      half years. This is what happened when I did &mdash; seventeen milestones across
+      four years, every one checked out of git, run in a browser and recorded.
+    </p>
+    <div class="facts">
+      <div><b>17</b> milestones</div>
+      <div><b>78</b> commits</div>
+      <div><b>1,517 days</b> Jul 2022 &rarr; Sep 2026</div>
+      <div><b>1,333</b> of them silent</div>
+      <div><b>0</b> dependencies</div>
+    </div>
+    <div class="ctas">
+      <a class="cta" href="https://lrakoto.github.io/blockshooter/" target="_blank" rel="noopener">Play it</a>
+      <a class="cta ghost" href="#act-2">Skip to the revival</a>
+    </div>
+  </div>
+  <div id="acts"></div>
+</main>
+
+<footer class="wrap foot">
+  <h4>How this was made</h4>
+  <p>
+    Block Shooter is plain HTML, CSS and JavaScript with no build step and no
+    dependencies &mdash; which is the only reason a commit from 2022 still runs
+    today. Each milestone was checked out into its own working copy, served, played
+    and recorded. All seventeen still run.
+  </p>
+  <p style="margin-top:14px">
+    One of them did not. The first attempt at the scrolling camera threw on an
+    undefined constant and took the game loop with it; the commit captured here is
+    the fix that followed. Play the current build at
+    <a class="inline" href="https://lrakoto.github.io/blockshooter/" target="_blank" rel="noopener">lrakoto.github.io/blockshooter</a>,
+    or go back to <a class="inline" href="../">the rest of my work</a>.
+  </p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+var ACTS = [
+  {
+    "n": 1,
+    "roman": "Act I",
+    "title": "The bootcamp project",
+    "dates": "July – August 2022"
+  },
+  {
+    "n": 2,
+    "roman": "Act II",
+    "title": "The revival",
+    "dates": "March – May 2026"
+  },
+  {
+    "n": 3,
+    "roman": "Act III",
+    "title": "It becomes a game",
+    "dates": "August – September 2026"
+  }
+];
+
+var BEATS = [{"id":"s01","n":"01","act":1,"date":"26 Jul 2022","commit":"ff3b6f1","title":"Drawing at the cursor","hook":"Day one: make something happen where the mouse is.","caption":"The very first mechanic. A mousemove listener on the canvas, drawing where the cursor goes. Everything else in this game is built on top of this one idea.","changed":"Took two commits to get right — the first version listened on mouseover and only fired once. Moving everything inside DOMContentLoaded and switching to mousemove fixed it."},{"id":"s02","n":"02","act":1,"date":"27 Jul 2022","commit":"6c0cbea","title":"A turret that aims","hook":"I spent a day looking up vector formulas.","caption":"A line from the centre of the screen to the cursor, clamped to a maximum length so it reads as a barrel rather than a laser pointer. There is a commit in this repo literally titled \"searching for vector formulas\".","changed":""},{"id":"s03","n":"03","act":1,"date":"30 Jul 2022","commit":"ef7ede2","title":"Enemies appear","hook":"Getting things to spawn was harder than getting them to die.","caption":"Random coordinates pushed into an array and drawn on an interval. My first attempt made them flicker in and out because I was redrawing the wrong thing every frame.","changed":"The commit messages from this week are a diary of not knowing: \"need to figure out how to make them stay forever\", then \"fixed glitchy enemy renders\"."},{"id":"s04","n":"04","act":1,"date":"30 Jul 2022","commit":"25d2bc6","title":"Hit detection","hook":"Now they can die. Sometimes two at once, which is a bug.","caption":"Click detection against the enemy array, removing the one you hit. The next commit is titled \"sometimes click removes more than 1, need to find out why\".","changed":""},{"id":"s05","n":"05","act":1,"date":"2 Aug 2022","commit":"42810d7","title":"They come for you","hook":"Static targets became an actual threat.","caption":"Enemies now move toward the centre instead of sitting where they spawned. That single change turned a click-the-dot exercise into a game with pressure in it.","changed":""},{"id":"s06","n":"06","act":1,"date":"6 Aug 2022","commit":"250464d","title":"A finished project","hook":"Two weeks in, it was done. I did not touch it again for three and a half years.","caption":"Menus, win and lose conditions, a health bar, lives, and a difficulty curve. This was the last commit for 1,333 days.","changed":""},{"id":"s07","n":"07","act":2,"date":"31 Mar 2026","commit":"c08197c","title":"Four years later, I opened it again","hook":"I came back to my bootcamp project after three and a half years.","caption":"First commit of the revival is a refactor: the enemy array restructured, interval management fixed, the difficulty curve rebuilt. Reading your own beginner code years later is its own experience.","changed":""},{"id":"s08","n":"08","act":2,"date":"31 Mar 2026","commit":"144646e","title":"Every sound is synthesized","hook":"I deleted the audio file and wrote the sounds in code.","caption":"Particle explosions, a glowing laser with a fading afterimage, and a Web Audio laser instead of an mp3. The explosion went through four rewrites in one day before it landed on a boom with a bit-crushed LFO tail.","changed":""},{"id":"s09","n":"09","act":2,"date":"31 Mar 2026","commit":"11fd9e7","title":"A real arsenal","hook":"One laser became Gatling, shotgun, railgun and rockets.","caption":"A five-level structure, a weapon shop, multi-HP enemies, and kinetic weapons that replaced the laser entirely. All of this landed in a single day.","changed":""},{"id":"s10","n":"10","act":2,"date":"6 Apr 2026","commit":"8c89ab7","title":"Game feel","hook":"Screen shake, overheating, and kill streaks.","caption":"No new systems — just the layer that makes a game feel like one. The Gatling overheats if you hold it, the screen kicks when you fire, and kills chain into a streak.","changed":""},{"id":"s11","n":"11","act":2,"date":"8 May 2026","commit":"cd66dfc","title":"The camera lets go","hook":"The turret stopped being the middle of the world.","caption":"The player moves and the world scrolls under them, with the turret held at the centre of the view. Four years of this game had the camera nailed to one spot.","changed":"The first attempt at this did not run at all — it threw on an undefined turret constant and took the game loop down with it. The commit captured here is the fix: the boundary removed, bullets extended to the viewport instead of the old canvas, and crates spawning near the player rather than anywhere on a map you could now leave."},{"id":"s12","n":"12","act":2,"date":"8 May 2026","commit":"423b6b4","title":"Wave blast, and no more finish line","hook":"I removed the ending.","caption":"A directional wave blast on a cooldown, deployable turrets, and levels that never stop — the game scales forever instead of finishing at five. High scores persist in localStorage.","changed":""},{"id":"s13","n":"13","act":2,"date":"9 May 2026","commit":"cb17a28","title":"Enemies that shoot back","hook":"Tanks. Slow, heavy, and they return fire.","caption":"The first enemy that is not simply coming at you. Paired with a credit-based upgrade shop, so the difficulty and the economy grew together.","changed":""},{"id":"s14","n":"14","act":2,"date":"23 May 2026","commit":"54bd2b9","title":"It works on a phone","hook":"Two thumbs, no keyboard.","caption":"Dual-zone touch controls — move on the left, aim on the right. The aim zone went through three designs: joystick, relative joystick, then a trackpad model that finally felt right.","changed":""},{"id":"s15","n":"15","act":3,"date":"1 Aug 2026","commit":"3c03515","title":"It becomes a story","hook":"My click-the-squares game got a narrative.","caption":"Radio chatter, title cards, an intro prologue, a drop-ship deploy sequence, extraction, and a death sequence. Plus a nebula, chromatic split and slow motion.","changed":""},{"id":"s16","n":"16","act":3,"date":"25 Aug 2026","commit":"cd231ee","title":"Blockmaster","hook":"It has a boss now.","caption":"A full boss fight, alongside a performance and UX overhaul — DPR scaling so it is sharp on retina, and a reduced-motion path for people who need one.","changed":""},{"id":"s17","n":"17","act":3,"date":"17 Sep 2026","commit":"71758e0","title":"Where it is now","hook":"From a two-week bootcamp project to this.","caption":"High scores on the start menu, generated late-level text, and authorship and support terms published as data. Seventy-eight commits across four years.","changed":""}];
+
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  var acts = document.getElementById("acts");
+
+  function beatHTML(b){
+    var changed = b.changed ? '<div class="changed"><b>What actually changed</b>' + esc(b.changed) + '</div>' : '';
+    return '<article class="beat" data-act="' + b.act + '">' +
+      '<div class="plate">' +
+        '<span class="num">' + b.n + '</span>' +
+        '<video src="media/' + b.id + '.mp4" poster="media/' + b.id + '.jpg" muted loop playsinline ' +
+          'preload="none" aria-label="' + esc(b.title) + ' gameplay clip"></video>' +
+        (reduced ? '<button class="playpip" type="button" data-play>Play</button>' : '') +
+      '</div>' +
+      '<div class="dossier">' +
+        '<div class="meta"><span class="date">' + esc(b.date) + '</span>' +
+          '<span class="commit">' + esc(b.commit) + '</span></div>' +
+        '<h3>' + esc(b.title) + '</h3>' +
+        '<p class="hook">' + esc(b.hook) + '</p>' +
+        '<p class="caption">' + esc(b.caption) + '</p>' + changed +
+      '</div></article>';
+  }
+
+  var gap =
+    '<div class="gap">' +
+      '<span class="gap-k">Nothing happened here</span>' +
+      '<span class="gap-n">1,333</span>' +
+      '<span class="gap-k">days</span>' +
+      '<div class="gap-rule"></div>' +
+      '<p class="gap-p">Between 6 August 2022 and 31 March 2026 this repository had no ' +
+      'commits at all. The project was finished, graded and closed.</p>' +
+    '</div>';
+
+  var html = "";
+  ACTS.forEach(function(a){
+    if (a.n === 2) html += gap;
+    var mine = BEATS.filter(function(b){ return b.act === a.n; });
+    html += '<section class="act" id="act-' + a.n + '" data-act="' + a.n + '">' +
+      '<div class="act-head"><span class="act-n">' + esc(a.roman) + '</span>' +
+        '<h2 class="act-t">' + esc(a.title) + '</h2>' +
+        '<span class="act-d">' + esc(a.dates) + '</span></div>' +
+      mine.map(beatHTML).join("") + '</section>';
+  });
+  acts.innerHTML = html;
+
+  if(!reduced && "IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        var v = en.target.querySelector("video"); if(!v) return;
+        if(en.isIntersecting){ var p = v.play(); if(p && p.catch) p.catch(function(){}); }
+        else v.pause();
+      });
+    }, { threshold:0.35 });
+    acts.querySelectorAll(".plate").forEach(function(p){ io.observe(p); });
+  } else if(reduced){
+    acts.addEventListener("click", function(ev){
+      if(!ev.target.hasAttribute("data-play")) return;
+      var v = ev.target.closest(".plate").querySelector("video"); if(!v) return;
+      if(v.paused){ v.play(); ev.target.textContent = "Pause"; }
+      else { v.pause(); ev.target.textContent = "Play"; }
+    });
+  }
+
+  var current = "all";
+  function applyFilter(){
+    acts.querySelectorAll(".beat").forEach(function(el){
+      el.hidden = !(current === "all" || el.getAttribute("data-act") === current);
+    });
+    acts.querySelectorAll(".act").forEach(function(sec){
+      sec.hidden = !Array.prototype.some.call(sec.querySelectorAll(".beat"), function(b){ return !b.hidden; });
+    });
+    var g = acts.querySelector(".gap");
+    if (g) g.hidden = (current !== "all");
+  }
+  document.getElementById("filters").addEventListener("click", function(ev){
+    var btn = ev.target.closest(".chip"); if(!btn) return;
+    current = btn.getAttribute("data-filter");
+    this.querySelectorAll(".chip").forEach(function(c){
+      c.setAttribute("aria-pressed", c === btn ? "true" : "false"); });
+    applyFilter();
+  });
+})();
+</script>
+</body>
+</html>
