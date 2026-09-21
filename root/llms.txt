@@ -22,6 +22,7 @@ file is the plain-text copy of the same material.
 
 - [Portfolio](https://threeohfivestudios.com/portfolio/): the work, the services, the experience and the contact details, over a live Three.js scene.
 - [AERO](https://threeohfivestudios.com/aero/): a century of Lockheed aviation as one scrolling record. An independent educational project.
+- [Pyxel Game field log](https://threeohfivestudios.com/portfolio/pyxel/): building a browser detective game, in eighteen milestones rebuilt from source.
 - [Design archive](https://threeohfivestudios.com/design/): selected print, packaging and campaign work.
 
 ## What I do
@@ -61,6 +62,15 @@ open into field notes and the sources behind them, and an ocean horizon held
 under the whole scroll. React and Framer Motion. An independent educational
 project, not affiliated with Lockheed Martin.
 https://threeohfivestudios.com/aero/
+
+### Pyxel Game — personal project, game development
+A cyberpunk noir detective game that runs in a browser, and the field log of
+building it: eighteen milestones from June to September 2026, each one rebuilt
+from its own commit, run and recorded. It began as a three.js scene with real
+3D lights and a post-processing stack, and was rebuilt in September as a 2D
+canvas renderer with no runtime dependencies at all — every light, reflection,
+bloom and lens flare hand-written.
+https://threeohfivestudios.com/portfolio/pyxel/
 
 ### Monolith — this portfolio
 The page itself: a board-formed concrete slab at the head of a forty-step

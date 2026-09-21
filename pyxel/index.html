@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sector 7 Field Log — EVERYBODY / NOBODY</title>
+<meta name="description" content="A hundred days of building a cyberpunk noir detective game, in eighteen milestones. Every clip is the real build from that date, rebuilt from source and recorded.">
+<link rel="canonical" href="https://threeohfivestudios.com/portfolio/pyxel/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sector 7 Field Log — EVERYBODY / NOBODY">
+<meta property="og:description" content="A hundred days of building a cyberpunk noir detective game, in eighteen milestones. Every clip is the real build from that date.">
+<meta property="og:url" content="https://threeohfivestudios.com/portfolio/pyxel/">
+<meta property="og:image" content="https://threeohfivestudios.com/portfolio/pyxel/media/m18.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sector 7 Field Log — EVERYBODY / NOBODY">
+<meta name="twitter:description" content="A hundred days of building a cyberpunk noir detective game, in eighteen milestones.">
+<meta name="twitter:image" content="https://threeohfivestudios.com/portfolio/pyxel/media/m18.jpg">
+<link rel="icon" href="../assets/brand/icon-32.webp" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+
+  :root{
+    --bg:#e4dfcf; --surface:#efeade; --surface-2:#f7f4ec; --line:#c6bfa8;
+    --ink:#24261e; --ink-2:#585a4d; --ink-3:#83846f;
+    --brass:#8a6a2f; --stamp:#a8392a; --ok:#4f7040; --plate:#14150f;
+    --shadow:0 1px 0 rgba(0,0,0,.06), 0 8px 24px -16px rgba(0,0,0,.45);
+    --f-display:"Archivo Black","Helvetica Neue",Arial,sans-serif;
+    --f-serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#191b14; --surface:#22251b; --surface-2:#2a2e22; --line:#3d4232;
+      --ink:#e7e2d0; --ink-2:#a9a894; --ink-3:#7d7e6d;
+      --brass:#c39a53; --stamp:#d4604c; --ok:#88aa6b; --plate:#0c0d08;
+      --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#191b14; --surface:#22251b; --surface-2:#2a2e22; --line:#3d4232;
+    --ink:#e7e2d0; --ink-2:#a9a894; --ink-3:#7d7e6d;
+    --brass:#c39a53; --stamp:#d4604c; --ok:#88aa6b; --plate:#0c0d08;
+    --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.9);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--f-body); font-size:15px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding-inline:20px}
+
+  /* ---- header ---------------------------------------------------- */
+  .top{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:50;
+    background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  }
+  .top-in{display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding-block:12px}
+  .mark{
+    font-family:var(--f-display); font-size:15px; letter-spacing:.02em;
+    border:2px solid var(--ink); padding:3px 7px; line-height:1; white-space:nowrap;
+  }
+  .mark span{color:var(--stamp)}
+  .top-title{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2)}
+  .spacer{flex:1 1 auto}
+  .tally{font-family:var(--f-mono); font-size:12px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap}
+  .tally b{color:var(--ink); font-weight:600}
+
+  .filters{display:flex; gap:7px; flex-wrap:wrap; padding-bottom:12px}
+  .chip{
+    font-family:var(--f-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+    padding:5px 11px; border:1px solid var(--line); background:transparent; color:var(--ink-2);
+    cursor:pointer; border-radius:2px; transition:background .13s, color .13s, border-color .13s;
+  }
+  .chip:hover{border-color:var(--ink-3); color:var(--ink)}
+  .chip[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  .chip:focus-visible,.backlink:focus-visible{outline:2px solid var(--brass); outline-offset:2px}
+
+  /* ---- masthead -------------------------------------------------- */
+  .head{padding-block:44px 30px; border-bottom:2px solid var(--ink)}
+  .kicker{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--stamp); margin:0 0 14px}
+  h1{
+    font-family:var(--f-display); font-size:clamp(34px,7.2vw,62px); line-height:.96;
+    margin:0 0 18px; letter-spacing:-.015em; text-wrap:balance;
+  }
+  h1 i{font-family:var(--f-serif); font-style:italic; font-weight:400; color:var(--stamp); letter-spacing:0}
+  .standfirst{font-size:17px; color:var(--ink-2); max-width:62ch; margin:0 0 22px}
+  .facts{display:flex; gap:26px; flex-wrap:wrap; font-family:var(--f-mono); font-size:12px; color:var(--ink-3)}
+  .facts b{display:block; font-family:var(--f-display); font-size:21px; color:var(--ink); font-weight:400; letter-spacing:0}
+
+  /* ---- acts ------------------------------------------------------ */
+  .act{padding-block:40px 8px}
+  .act-head{display:flex; align-items:baseline; gap:14px; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:30px; flex-wrap:wrap}
+  .act-n{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.18em; color:var(--stamp); text-transform:uppercase}
+  .act-t{font-family:var(--f-serif); font-style:italic; font-size:27px; line-height:1.15; margin:0}
+  .act-d{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3); margin-left:auto}
+
+  /* ---- beat ------------------------------------------------------ */
+  .beat{
+    display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);
+    gap:30px; padding-block:26px; border-bottom:1px solid var(--line); align-items:start;
+  }
+  .beat:last-child{border-bottom:0}
+  .beat.pick .dossier{position:relative}
+  .plate{position:relative; background:var(--plate); border:1px solid var(--line); box-shadow:var(--shadow); overflow:hidden}
+  .plate video,.plate img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; max-width:100%}
+  .plate .num{
+    position:absolute; top:0; left:0; font-family:var(--f-mono); font-size:11px; font-weight:600;
+    background:var(--ink); color:var(--bg); padding:3px 8px; letter-spacing:.08em; z-index:2;
+  }
+  .playpip{
+    position:absolute; inset:auto 8px 8px auto; font-family:var(--f-mono); font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; background:rgba(0,0,0,.6); color:#fff;
+    padding:3px 7px; border:0; cursor:pointer; border-radius:2px;
+  }
+
+  .dossier{min-width:0}
+  .meta{display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3); margin-bottom:9px}
+  .meta .date{color:var(--ink-2)}
+  .repo{border:1px solid var(--line); padding:1px 6px; border-radius:2px; letter-spacing:.04em}
+  .starthere{background:var(--stamp); color:#fff; padding:1px 7px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; font-size:10px; border-radius:2px}
+  h3{font-family:var(--f-display); font-size:23px; line-height:1.14; margin:0 0 12px; letter-spacing:-.01em; text-wrap:balance}
+  .hook{
+    font-family:var(--f-serif); font-style:italic; font-size:22px; line-height:1.34;
+    margin:0 0 14px; padding-left:15px; border-left:3px solid var(--stamp); color:var(--ink);
+  }
+  .caption{margin:0 0 14px; color:var(--ink-2); max-width:58ch}
+  .changed{margin:0 0 16px; color:var(--ink-2); font-size:14px; max-width:58ch; border-top:1px dashed var(--line); padding-top:12px}
+  .changed b{font-family:var(--f-mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); display:block; margin-bottom:5px; font-weight:400}
+
+  .tools{display:flex; gap:7px; flex-wrap:wrap; align-items:center}
+              
+  /* ---- footer ---------------------------------------------------- */
+  .foot{border-top:2px solid var(--ink); margin-top:40px; padding-block:30px 60px; color:var(--ink-2); font-size:14px}
+  .foot h4{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); margin:0 0 12px; font-weight:400}
+  .foot code{font-family:var(--f-mono); font-size:12.5px; background:var(--surface); padding:1px 5px; border:1px solid var(--line); border-radius:2px}
+  .foot p{max-width:70ch}
+
+  .toast{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(14px); bottom:24px;
+    background:var(--ink); color:var(--bg); font-family:var(--f-mono); font-size:12px;
+    padding:9px 16px; border-radius:2px; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:99;
+  }
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:800px){
+    .beat{grid-template-columns:1fr; gap:18px}
+    .act-d{margin-left:0; width:100%}
+    h3{font-size:21px} .hook{font-size:20px}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+
+  img,video{max-width:100%}
+  a{color:inherit}
+  .backlink{
+    font-family:var(--f-mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); text-decoration:none; border-bottom:1px solid transparent; padding-bottom:1px;
+  }
+  .backlink:hover{color:var(--ink); border-bottom-color:var(--ink-3)}
+  .cta{
+    display:inline-block; font-family:var(--f-mono); font-size:12px; letter-spacing:.08em;
+    text-transform:uppercase; padding:11px 20px; background:var(--ink); color:var(--bg);
+    text-decoration:none; border-radius:2px; margin-top:6px;
+  }
+  .cta:hover{background:var(--stamp)}
+  .cta.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+  .cta.ghost:hover{background:transparent; border-color:var(--ink); color:var(--stamp)}
+  .ctas{display:flex; gap:10px; flex-wrap:wrap; margin-top:20px}
+  .foot a.inline{color:var(--stamp); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--stamp) 40%,transparent)}
+  .foot a.inline:hover{border-bottom-color:var(--stamp)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="top-in">
+      <div class="mark">E<span>/</span>N</div>
+      <div class="top-title">Field Log &middot; Case 07-031</div>
+      <div class="spacer"></div>
+      <a class="backlink" href="../">&larr; Lova Rakoto</a>
+    </div>
+    <div class="filters" id="filters">
+      <button class="chip" data-filter="all" aria-pressed="true">All 18</button>
+      <button class="chip" data-filter="1" aria-pressed="false">Act I</button>
+      <button class="chip" data-filter="2" aria-pressed="false">Act II</button>
+      <button class="chip" data-filter="3" aria-pressed="false">Act III</button>
+      <button class="chip" data-filter="4" aria-pressed="false">Act IV</button>
+      <button class="chip" data-filter="5" aria-pressed="false">Act V</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="head">
+    <p class="kicker">Development process &middot; June &ndash; September 2026</p>
+    <h1>A hundred days, <i>rebuilt from source</i></h1>
+    <p class="standfirst">
+      EVERYBODY / NOBODY is a cyberpunk noir detective game that runs in a browser.
+      This is how it was built &mdash; eighteen milestones from the first wet street to
+      the detective who ended up solving the case. Every clip below is the real build
+      from that date: checked out of git, compiled, run and recorded. Nothing here is
+      a reconstruction.
+    </p>
+    <div class="facts">
+      <div><b>18</b> milestones</div>
+      <div><b>71</b> commits</div>
+      <div><b>100 days</b> Jun 12 &rarr; Sep 20</div>
+      <div><b>2</b> codebases</div>
+      <div><b>0</b> dependencies, now</div>
+    </div>
+    <div class="ctas">
+      <a class="cta" href="https://lrakoto.github.io/Pyxel2/" target="_blank" rel="noopener">Play the current build</a>
+      <a class="cta ghost" href="#act-4">Jump to the rewrite</a>
+    </div>
+  </div>
+  <div id="acts"></div>
+</main>
+
+<footer class="wrap foot">
+  <h4>How this was made</h4>
+  <p>
+    The game began in June 2026 as a three.js scene: pixel sprites lit by real 3D lights,
+    run through a post-processing stack. In September it was rebuilt from nothing as a
+    <b>2D canvas renderer with no runtime dependencies at all</b> &mdash; every light,
+    reflection, bloom and lens flare hand-written. The rebuild looks better than the
+    engine did, which was not the expected result.
+  </p>
+  <p style="margin-top:14px">
+    The captures were made by checking out each milestone commit into its own build,
+    installing its original dependencies, running it in a browser and recording it.
+    All eighteen still compile. Play the current build at
+    <a class="inline" href="https://lrakoto.github.io/Pyxel2/" target="_blank" rel="noopener">lrakoto.github.io/Pyxel2</a>,
+    or go back to <a class="inline" href="../">the rest of my work</a>.
+  </p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var ACTS = [
+    {n:1, roman:"Act I",   title:"Finding the look",               dates:"June 12 – 17"},
+    {n:2, roman:"Act II",  title:"Systems, and one big reversal",  dates:"June 17 – 25"},
+    {n:3, roman:"Act III", title:"A world, not a street",          dates:"July 25 – August 13"},
+    {n:4, roman:"Act IV",  title:"Starting over",                  dates:"September 4 – 9"},
+    {n:5, roman:"Act V",   title:"Making it an object",            dates:"September 19 – 20"}
+  ];
+
+  var BEATS = [
+  {id:"m01",n:"01",act:1,date:"12 Jun 2026",commit:"72e715c",repo:"Pyxel",
+   title:"Proof of scene",
+   hook:"Day one of my cyberpunk detective game.",
+   caption:"Started this on a Friday. A wet street, some neon signs, and a guy in a coat. Everything you see is drawn in code except the skyline, which is a painted plate run through a pixelation pass.",
+   changed:"The whole pipeline landed in one commit — pixel sprites inside a real 3D-lit scene at 960×540 internal resolution, upscaled crisp. HDR bloom, film grain, chromatic aberration and vignette. The player sprite has a wet rim glow that reacts to whichever neon is nearest."},
+
+  {id:"m02",n:"02",act:1,date:"12 Jun 2026",commit:"ee0f40c",repo:"Pyxel",
+   title:"The street goes procedural",
+   hook:"I deleted the AI-generated buildings and wrote them in code instead.",
+   caption:"Generated a row of storefronts, looked at them, and threw them out. Wrote the facades procedurally instead — storefronts, lit windows with interior detail, AC units, pipes, canopies. Better, and now I can change any of it.",
+   changed:"This set the art-direction rule the project still follows: everything in the play space is procedural or hand-pixeled, and generated art is only allowed in distant painted layers."},
+
+  {id:"m03",n:"03",act:1,date:"12 Jun 2026",commit:"fd83df7",repo:"Pyxel",pick:true,
+   title:"Mirror puddles",
+   hook:"The puddles are a second camera, mirrored through the floor.",
+   caption:"Real reflections. There's a whole second render of the scene from a camera flipped underneath the ground plane, and the puddles sample it projectively with a ripple on top.",
+   changed:"The sparkles got rewritten too, and this is the detail I like most — each fleck is a physical micro-facet that reflects the scene's actual point lights, and only lights up when its bounce happens to aim at the camera. No random twinkle. The colour comes from whichever light it caught."},
+
+  {id:"m04",n:"04",act:1,date:"16 Jun 2026",commit:"52c2f85",repo:"Pyxel",
+   title:"The scarf becomes cloth",
+   hook:"Rewrote the scarf as actual cloth simulation.",
+   caption:"It was a single spring. Now it's a verlet chain — gravity, air drag, wind off his walk speed, gusts, distance constraints. It lags when he starts, flutters when he moves, and settles when he stops.",
+   changed:"This is the one capture where the dev tuning panel is left visible on purpose — eighteen sliders, live, with a SAVE TO CODE button that writes the values back into the source. Tuning happens in the browser, not the editor."},
+
+  {id:"m05",n:"05",act:1,date:"17 Jun 2026",commit:"c80772f",repo:"Pyxel",
+   title:"Sunglasses that catch the neon",
+   hook:"Every neon sign gets its own reflection in his sunglasses.",
+   caption:"Not one generic shine — each sign reflects separately, tinted its own colour, positioned by the direction that light is actually coming from. When he stops walking the reflections freeze in place mid-sweep instead of snapping back.",
+   changed:"Rebuilding this commit reproduced a bug I'd forgotten: the console throws “[Cole idle] row 2 is 13 wide, expected 14”. His fedora crown was one pixel narrow and stayed that way for five days. The sprite validator caught it at the time and I shipped past it anyway."},
+
+  {id:"m06",n:"06",act:2,date:"17 Jun 2026",commit:"7911184",repo:"Pyxel",
+   title:"Turn-based battle",
+   hook:"I built a full Final Fantasy-style turn queue.",
+   caption:"Conditional turn-based combat — turn meters that fill at each fighter's speed, a projected next-six queue you can read ahead on, attack/skill/defend with damage variance and guard. Portraits, HP bars, hit flashes, damage popups.",
+   changed:"Deliberately built presentation-agnostic: the engine knows nothing about how it's drawn. That decision is the only reason the next beat didn't hurt more."},
+
+  {id:"m07",n:"07",act:2,date:"25 Jun 2026",commit:"90e8c7e",repo:"Pyxel",pick:true,
+   title:"I scrapped it for a shooter",
+   hook:"Eight days later I deleted the whole combat system.",
+   caption:"Turn-based was the wrong genre for this. Ripped it out and replaced it with a side-scrolling twin-stick shooter — walk on the keyboard, aim with the mouse, machine pistol, ground enforcers and aerial drones.",
+   changed:"My favourite trick here: “accurate up close, inaccurate at range” needed no special-casing at all. Give every shot a small random angular jitter and the error scales with distance for free — a tiny miss point-blank, a wide one across the street."},
+
+  {id:"m08",n:"08",act:3,date:"25 Jul 2026",commit:"966328f",repo:"Pyxel",
+   title:"A second room",
+   hook:"The street finally leads somewhere.",
+   caption:"Added an area system and the first interior — Marlon Graves' studio, which is the crime scene the whole case hangs off. Fifty fragmented faces in the painting on the wall, each with its own eyes and mouth.",
+   changed:"Doors, transitions and per-area worlds. The studio got exposed brick, branching wall cracks, aged tile, paint splatter, a hanging bulb whose colour tracks its own flicker, and a chalk body outline with iridescent residue."},
+
+  {id:"m09",n:"09",act:3,date:"27 Jul 2026",commit:"89db394",repo:"Pyxel",
+   title:"Title card",
+   hook:"The moment it started looking like a real game.",
+   caption:"Glitch title with cyan/magenta chromatic split, drifting scanlines, and a slash that cycles colour. Retuned the whole post stack around it — tighter bloom, deeper vignette, lower exposure so the neon reads hotter.",
+   changed:"Pure presentation, no new systems. Worth its own post because it's the single biggest perceived-quality jump in the project for the least code."},
+
+  {id:"m10",n:"10",act:3,date:"1 Aug 2026",commit:"7792356",repo:"Pyxel",
+   title:"Evidence mode",
+   hook:"Press I and the room tells you what matters.",
+   caption:"The detective layer. Objects glint when you're in investigation mode, examining them files a clue in a case journal, and clues you've collected unlock new dialogue lines that weren't available before.",
+   changed:"This is where it stopped being a scene and became a game about noticing things."},
+
+  {id:"m11",n:"11",act:3,date:"13 Aug 2026",commit:"888ea62",repo:"Pyxel",
+   title:"Cole, redrawn",
+   hook:"Redesigned my detective from scratch.",
+   caption:"New sprite, rebuilt motion. Also the last thing I'd build in this codebase — though I didn't know that yet.",
+   changed:""},
+
+  {id:"m12",n:"12",act:4,date:"4 Sep 2026",commit:"358f90e",repo:"Pyxel2",pick:true,
+   title:"I rebuilt the entire game with zero dependencies",
+   hook:"I rebuilt my 3D game in 2D. It looks better.",
+   caption:"Fragments is the whole thing rewritten from scratch. The original ran on three.js and WebGL — real 3D lights, a post-processing stack, planar reflection cameras. The rebuild has no runtime dependencies at all. Every light, reflection, bloom and flare is hand-written 2D canvas code.",
+   changed:"The most counterintuitive result in the project: dropping the 3D engine made it look more cinematic, because every effect is now authored for exactly the shot it appears in rather than emerging from a general lighting model."},
+
+  {id:"m13",n:"13",act:4,date:"8 Sep 2026",commit:"c2fe9ec",repo:"Pyxel2",
+   title:"The city gets a crowd",
+   hook:"Porting a 3D lighting shader to 2D taught me something about tone mapping.",
+   caption:"Brought the wet rim light and the verlet scarf over from the old prototype. The rim had to be capped well below the original's strength — three.js was tone-mapping the result and canvas isn't, so the same numbers blew the entire silhouette out to white.",
+   changed:"Pedestrians with contact shadows and depth lanes, foreground traffic whose headlights do the night-time work, an elevated train, window bloom and fog in the middle distance. Plus a fix for a bug I'd shipped twice: pedestrians and midground were composited at reduced alpha, so the skyline read straight through people."},
+
+  {id:"m14",n:"14",act:4,date:"8 Sep 2026",commit:"0adb4ab",repo:"Pyxel2",
+   title:"Rain gets indoors",
+   hook:"My ceiling leaks were falling slower than a walking pace.",
+   caption:"Interior weather — rain seen through the doorway, droplets clinging to glass, ceiling leaks that ring when they land, puddles smearing whatever light is above them. Then I did the maths: a drop was crossing the room in 2.5 seconds, averaging well under walking speed. No amount of easing fixes “too slow”. Now it lands in about a second.",
+   changed:"The puddles were invisible at first for a good reason — they sampled the strip directly above them, which indoors is just more dark floor. A reflection of a dark room adds nothing to a dark floor. They now squash a tall slice of the wall into a shallow band and composite it additively, so only genuinely bright things come through."},
+
+  {id:"m15",n:"15",act:4,date:"9 Sep 2026",commit:"c286543",repo:"Pyxel2",
+   title:"A wrong guess should teach you something",
+   hook:"My deduction game punished thinking. So I fixed it.",
+   caption:"The case board rejected all 36 wrong pairings with the same single sentence. In a game about deduction that leaves brute force as the only viable strategy, because nothing you learn from a miss narrows the next guess.",
+   changed:"Misses are graded now. Pair two records of the same kind and it refuses on kind. Get one half right and it names only that half — never the partner — so a half-formed idea is rewarded without handing over the answer. Only a genuinely cold pair gets the flat no."},
+
+  {id:"m16",n:"16",act:5,date:"19 Sep 2026",commit:"f5b6fb1",repo:"Pyxel2",
+   title:"The case file becomes a thing you hold",
+   hook:"I turned my menu into a physical object.",
+   caption:"The investigation UI isn't a HUD any more — it's a field notebook. Tactile paper, handwriting, margin notes that evolve as the case develops, and an olive cloth case jacket with worn brass that wraps the whole page.",
+   changed:""},
+
+  {id:"m17",n:"17",act:5,date:"20 Sep 2026",commit:"807911d",repo:"Pyxel2",
+   title:"Wet surfaces, lit characters",
+   hook:"Evidence that lights the room it's sitting in.",
+   caption:"Characters integrated into the scene properly, wet ground that holds reflections, and atmospheric lighting driven by the evidence itself. Vent vapour on the near plane and rain-soaked railings for depth.",
+   changed:""},
+
+  {id:"m18",n:"18",act:5,date:"20 Sep 2026",commit:"b4c820e",repo:"Pyxel2",
+   title:"Detective Gravity",
+   hook:"My detective isn't who he used to be.",
+   caption:"Cole is gone. Detective Gravity takes the case — blonde, black outfit, authored pixel animation rather than a procedural placeholder. She kept his red scarf, now hanging near her ankles.",
+   changed:"The most honest beat in the log: black boots, then back to white, stockings added and removed, a fuller silhouette committed and reverted within nine minutes. Four commits in forty minutes to settle one character."}
+  ];
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  var acts = document.getElementById("acts");
+
+  function beatHTML(b){
+    var changed = b.changed
+      ? '<div class="changed"><b>What actually changed</b>' + esc(b.changed) + '</div>' : '';
+    return '' +
+    '<article class="beat" data-id="'+b.id+'" data-act="'+b.act+'">' +
+      '<div class="plate">' +
+        '<span class="num">'+b.n+'</span>' +
+        '<video src="media/'+b.id+'.mp4" poster="media/'+b.id+'.jpg" muted loop playsinline preload="none" ' +
+          'aria-label="'+esc(b.title)+' \u2014 gameplay clip"></video>' +
+        (reduced ? '<button class="playpip" type="button" data-play>Play</button>' : '') +
+      '</div>' +
+      '<div class="dossier">' +
+        '<div class="meta">' +
+          '<span class="date">'+esc(b.date)+'</span>' +
+          '<span class="repo">'+esc(b.commit)+'</span>' +
+        '</div>' +
+        '<h3>'+esc(b.title)+'</h3>' +
+        '<p class="hook">'+esc(b.hook)+'</p>' +
+        '<p class="caption">'+esc(b.caption)+'</p>' +
+        changed +
+      '</div>' +
+    '</article>';
+  }
+
+  var html = "";
+  ACTS.forEach(function(a){
+    var mine = BEATS.filter(function(b){ return b.act === a.n; });
+    html += '<section class="act" id="act-'+a.n+'" data-act="'+a.n+'">' +
+      '<div class="act-head">' +
+        '<span class="act-n">'+a.roman+'</span>' +
+        '<h2 class="act-t">'+esc(a.title)+'</h2>' +
+        '<span class="act-d">'+esc(a.dates)+'</span>' +
+      '</div>' + mine.map(beatHTML).join("") +
+    '</section>';
+  });
+  acts.innerHTML = html;
+
+  /* play only what is on screen: eighteen clips must not all fetch at once */
+  if(!reduced && "IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var v = en.target.querySelector("video");
+        if(!v) return;
+        if(en.isIntersecting){ var p = v.play(); if(p && p.catch) p.catch(function(){}); }
+        else v.pause();
+      });
+    }, { threshold: 0.35 });
+    acts.querySelectorAll(".plate").forEach(function(p){ io.observe(p); });
+  } else if(reduced){
+    acts.addEventListener("click", function(ev){
+      if(!ev.target.hasAttribute("data-play")) return;
+      var v = ev.target.closest(".plate").querySelector("video");
+      if(!v) return;
+      if(v.paused){ v.play(); ev.target.textContent = "Pause"; }
+      else { v.pause(); ev.target.textContent = "Play"; }
+    });
+  }
+
+  var current = "all";
+  function applyFilter(){
+    acts.querySelectorAll(".beat").forEach(function(el){
+      el.hidden = !(current === "all" || el.getAttribute("data-act") === current);
+    });
+    acts.querySelectorAll(".act").forEach(function(sec){
+      sec.hidden = !Array.prototype.some.call(sec.querySelectorAll(".beat"), function(b){ return !b.hidden; });
+    });
+  }
+  document.getElementById("filters").addEventListener("click", function(ev){
+    var btn = ev.target.closest(".chip");
+    if(!btn) return;
+    current = btn.getAttribute("data-filter");
+    this.querySelectorAll(".chip").forEach(function(c){
+      c.setAttribute("aria-pressed", c === btn ? "true" : "false");
+    });
+    applyFilter();
+  });
+})();
+</script>
+</body>
+</html>

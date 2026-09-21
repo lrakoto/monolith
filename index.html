@@ -108,6 +108,7 @@
         "https://autodx.io/",
         "https://www.gundrymd.com",
         "https://threeohfivestudios.com/aero/",
+        "https://threeohfivestudios.com/portfolio/pyxel/",
         "https://threeohfivestudios.com/design/"
       ],
       "hasPart": [
@@ -1513,6 +1514,11 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     </a>
   </div>
   <div class="cards-arch-head" data-rv="fade">
+    <b>Games</b><span class="rule"></span><i>In development</i>
+  </div>
+  <div class="cards-arch" id="cards-games"></div>
+
+  <div class="cards-arch-head" data-rv="fade">
     <b>Design</b><span class="rule"></span><i>Selected work</i>
   </div>
   <div class="cards-arch" id="cards-arch"></div>
@@ -1554,6 +1560,14 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
         Framer Motion. An independent educational project, not affiliated with
         Lockheed Martin.
         <a href="https://threeohfivestudios.com/aero/">threeohfivestudios.com/aero</a></p>
+
+      <h4>Pyxel Game — personal project, game development</h4>
+      <p>A cyberpunk noir detective game built for the browser, and a field log
+        of making it: eighteen milestones from June to September 2026, each one
+        rebuilt from its own commit and recorded. It began as a three.js scene
+        and was rebuilt in September as a 2D canvas renderer with no runtime
+        dependencies at all.
+        <a href="https://threeohfivestudios.com/portfolio/pyxel/">the field log</a></p>
 
       <h4>Experience</h4>
       <ul>
@@ -5130,6 +5144,13 @@ function wireWorkModal() {
            cta: { label: d.cta, href: href } });
   }
 
+  function openGame(slug) {
+    const d = GAMES_WORK.filter(x => x.slug === slug)[0]; if (!d) return;
+    show({ tag: d.tag, title: d.title, body: d.body, facts: d.facts,
+           media: [{ type: 'img', src: GAMES_DIR + d.thumb, alt: d.title + ' project preview' }],
+           cta: { label: d.cta, href: d.href } });
+  }
+
   function openDesign(slug) {
     const d = DESIGN_WORK.filter(x => x.slug === slug)[0]; if (!d) return;
     const media = d.vimeo.map(id => ({ type: 'vid', id: id }))
@@ -5150,6 +5171,8 @@ function wireWorkModal() {
       openFeatured(card.dataset.work, card.getAttribute('href'));
     });
   });
+  $$('.acard[data-game]').forEach(card =>
+    card.addEventListener('click', () => openGame(card.dataset.game)));
   $$('.acard[data-design]').forEach(card =>
     card.addEventListener('click', () => openDesign(card.dataset.design)));
 
@@ -5288,11 +5311,45 @@ function buildArchive() {
       '<span class="acard-fr"><img alt="" loading="lazy" decoding="async" src="' +
         DESIGN_DIR + p.thumb + '"></span>' +
       '<span class="acard-meta"><span>' + p.title + '</span><span>' +
-        ('0' + (i + 4)).slice(-2) + '</span></span>';
+        ('0' + (i + 4 + GAMES_WORK.length)).slice(-2) + '</span></span>';
     wrap.appendChild(el);
   });
 }
 const DESIGN_DIR = 'assets/work/design/';
+
+/* Games sit between the featured three and the design archive: newer than the
+   archive, not yet one of the three. They reuse the archive's flat plate —
+   nine more scissored renders is a cost paid for nothing — but unlike an
+   archive entry a game has somewhere to send you, so the panel keeps a way
+   out to it. */
+const GAMES_DIR = 'assets/work/games/';
+const GAMES_WORK = [
+  { slug: "pyxel", title: "Pyxel Game", thumb: "pyxel.jpg",
+    tag: 'Personal project — Game development',
+    body: 'A cyberpunk noir detective game that runs in a browser, and the field log of building it — eighteen milestones from the first wet street in June to the detective who ended up solving the case. It began as a three.js scene and was rebuilt in September as a 2D canvas renderer with no runtime dependencies at all.',
+    facts: { Role: 'Design and build', Stack: 'TypeScript, canvas 2D, no dependencies',
+             Contents: 'Eighteen milestones, June to September',
+             Technique: 'Every milestone rebuilt from its commit and recorded' },
+    cta: 'Read the field log', href: 'https://threeohfivestudios.com/portfolio/pyxel/' }
+];
+
+function buildGames() {
+  const wrap = $('#cards-games'); if (!wrap) return;
+  GAMES_WORK.forEach((p, i) => {
+    const el = document.createElement('button');
+    el.className = 'acard'; el.type = 'button';
+    el.dataset.game = p.slug;
+    el.setAttribute('data-rv', 'up');
+    el.setAttribute('data-cursor', '');
+    el.setAttribute('aria-label', p.title + ' — open project');
+    el.innerHTML =
+      '<span class="acard-fr"><img alt="" loading="lazy" decoding="async" src="' +
+        GAMES_DIR + p.thumb + '"></span>' +
+      '<span class="acard-meta"><span>' + p.title + '</span><span>' +
+        ('0' + (i + 4)).slice(-2) + '</span></span>';
+    wrap.appendChild(el);
+  });
+}
 
 const CARD_PLATES = [[9101, .70, .42, 'autodex'], [9203, .32, .58, 'shop'], [9307, .54, .30, 'aero']];
 
@@ -7029,7 +7086,7 @@ const JOBS = [
 
 function boot() {
   applyGrainOverlay(TUNE.grainOverlay);
-  buildArchive(); buildXpAnchors();
+  buildGames(); buildArchive(); buildXpAnchors();
   wireWorkModal(); wireCardSheen();
   wireReveals(); wireNav(); wireHeroExit(); wireFocus(); wireCursor();
   document.body.classList.add('is-locked');

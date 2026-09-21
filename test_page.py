@@ -172,7 +172,7 @@ async function run(position, rejected, critical) {
       setTimeout: fn => fn(), start: () => resolve('started'),
       fallback: () => resolve('fallback')
     };
-    for (const name of ['applyGrainOverlay', 'buildArchive', 'buildXpAnchors',
+    for (const name of ['applyGrainOverlay', 'buildGames', 'buildArchive', 'buildXpAnchors',
       'wireWorkModal', 'wireCardSheen', 'wireReveals', 'wireNav',
       'wireHeroExit', 'wireFocus', 'wireCursor']) context[name] = noop;
     context.JOBS = Array.from({length: position}, () => ['asset', noop]);
