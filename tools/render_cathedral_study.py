@@ -33,6 +33,8 @@ args.add_argument('--pond-roughness', type=float, help='isolated water reflectio
 args.add_argument('--shore-colonies', action='store_true', help='cluster foreground floating leaves for the distant camera')
 args.add_argument('--shore-gathered', action='store_true', help='denser asymmetric colonies with selective foreground light')
 args.add_argument('--shore-no-light', action='store_true', help='retain gathered planting without the experimental foreground light')
+args.add_argument('--shore-shoots', action='store_true', help='add a few low emergent plants along the foreground water edges')
+args.add_argument('--shore-shoot-style', choices=('sparse','gathered'), default='sparse', help='choose sparse upright shoots or lower irregular foreground tufts')
 args.add_argument('--canopy-detail', choices=('support','fine','broken','dense'), help='recess crown shells, optionally split broad surface leaves')
 args.add_argument('--branch-patch', choices=('left','both','upper','bank-left','banks','banks-extended'), help='replace a small visible hillside patch with actual branching crowns')
 args.add_argument('--render-crop', nargs=4, type=float, metavar=('X0','Y0','X1','Y1'), help='normalized top-down detail render without changing the camera')
@@ -47,8 +49,10 @@ args.add_argument('--thicket-plinth', action='store_true', help='also replace8 p
 args.add_argument('--thicket-fitted', action='store_true', help='retain the original outer dimensions of unpaired planting replacements')
 args.add_argument('--thicket-right', action='store_true', help='extend the approved thicket structure to15 right-bank crowns')
 args.add_argument('--thicket-lower', action='store_true', help='continue the finer thickets through12 lower-left crowns')
-args.add_argument('--thicket-fill', choices=('right','both','left-edge','edges'), help='continue thickets through transition patches and optional forest edges')
+args.add_argument('--thicket-fill', choices=('right','both','left-edge','edges','inner','inner-left','inner-banks','inner-rise'), help='continue thickets through transition patches, forest edges and inner banks')
+args.add_argument('--thicket-upper-plinth', choices=('left','both'), help='refine camera-identified upper planting clumps within their existing bounds')
 args.add_argument('--canopy-leaf-thinning', action='store_true', help='remove one in three distant leaves without moving retained geometry')
+args.add_argument('--compact-memory', action='store_true', help='use compact CPU acceleration data and128px render tiles')
 args = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 source = ROOT / 'renders/cathedral-lace-study.blend'
 assert source.exists(), source
@@ -531,12 +535,17 @@ if args.canopy_root_extension:
 if args.canopy_thicket:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_thicket import replace_thicket
-    replace_thicket(scene, plinth=args.thicket_plinth, fitted=args.thicket_fitted, right=args.thicket_right, lower=args.thicket_lower, fill=args.thicket_fill)
+    replace_thicket(scene, plinth=args.thicket_plinth, fitted=args.thicket_fitted, right=args.thicket_right, lower=args.thicket_lower, fill=args.thicket_fill, upper_plinth=args.thicket_upper_plinth)
 
 if args.canopy_leaf_thinning:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from cathedral_leaf_thinning import thin_distant_leaves
     thin_distant_leaves(scene)
+
+if args.shore_shoots:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from cathedral_shore_shoots import add_shore_shoots
+    add_shore_shoots(scene, gathered=args.shore_shoot_style=='gathered')
 
 scene.render.resolution_x = scene.render.resolution_y = args.resolution
 scene.render.resolution_percentage = 100
@@ -549,6 +558,10 @@ if args.render_crop:
     scene.render.border_min_y=1-y1;scene.render.border_max_y=1-y0
 scene.cycles.samples = 16 if args.quick else args.samples
 scene.cycles.device = 'CPU'
+if args.compact_memory:
+    scene.cycles.debug_use_compact_bvh=True
+    scene.cycles.tile_size=128
+    scene.render.use_persistent_data=False
 name = 'cathedral-' + args.variant + ('-quick' if args.quick else '-study')
 if args.output_name:
     assert Path(args.output_name).name == args.output_name, 'output name must be a filename stem'

@@ -1,0 +1,23 @@
+{
+  "blender": "5.2.1 LTS",
+  "source": "cathedral-canopy-upper-planting-study.blend",
+  "package": "cathedral-cloud-benchmark-1200-64.blend",
+  "bytes": 76480034,
+  "sha256": "80add1e0863bf07d360668d59bfb298fbc8808eeef39d14dd4f5fa2d526a2413",
+  "external_dependencies": [],
+  "engine": "CYCLES",
+  "frame": 1,
+  "resolution": [
+    1200,
+    1200
+  ],
+  "samples": 64,
+  "device": "CPU",
+  "denoising": true,
+  "view_transform": "AgX",
+  "look": "None",
+  "exposure": 0.10000000149011612,
+  "gamma": 1.0,
+  "comparison": "cathedral-canopy-upper-planting-full.png",
+  "local_seconds": 1239
+}

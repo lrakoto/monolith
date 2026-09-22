@@ -5,7 +5,7 @@ from mathutils import Vector, Matrix
 from cathedral_crown import build_crown
 
 
-def replace_thicket(scene, plinth=False, fitted=False, right=False, lower=False, fill=None):
+def replace_thicket(scene, plinth=False, fitted=False, right=False, lower=False, fill=None, upper_plinth=None):
     camera=scene.camera; bpy.context.view_layer.update()
     depsgraph=bpy.context.evaluated_depsgraph_get();selected={};extra={}
     offsets=sorted(((i*.011,j*.013) for i in range(-6,7) for j in range(-6,7)),key=lambda p:p[0]**2+p[1]**2)
@@ -70,11 +70,15 @@ def replace_thicket(scene, plinth=False, fitted=False, right=False, lower=False,
         selected.update(lower_pairs)
     if fill:
         anchors=[(.69,.64)]
-        if fill in ('both','left-edge','edges'):anchors.append((.31,.54))
-        if fill in ('left-edge','edges'):anchors.append((.20,.54))
-        if fill=='edges':anchors.append((.79,.57))
+        if fill in ('both','left-edge','edges','inner','inner-left','inner-banks','inner-rise'):anchors.append((.31,.54))
+        if fill in ('left-edge','edges','inner','inner-left','inner-banks','inner-rise'):anchors.append((.20,.54))
+        if fill in ('edges','inner','inner-left','inner-banks','inner-rise'):anchors.append((.79,.57))
+        if fill=='inner':anchors.extend(((.37,.64),(.63,.55)))
+        if fill in ('inner-left','inner-banks','inner-rise'):anchors.append((.37,.64))
+        if fill in ('inner-banks','inner-rise'):anchors.append((.63,.55))
+        if fill=='inner-rise':anchors.append((.36,.51))
         for ax,ay in anchors:
-            wanted=8 if (ax,ay) in ((.20,.54),(.79,.57)) else 16
+            wanted=8 if (ax,ay) in ((.20,.54),(.79,.57),(.36,.51)) or (fill in ('inner-left','inner-banks','inner-rise') and (ax,ay) in ((.37,.64),(.63,.55))) else 16
             patch={}
             for dx,dy in offsets:
                 direction=Vector(((ax+dx-.5)*camera.data.sensor_width/camera.data.lens,(.5-ay-dy)*camera.data.sensor_width/camera.data.lens,-1))
@@ -91,6 +95,16 @@ def replace_thicket(scene, plinth=False, fitted=False, right=False, lower=False,
                 if len(patch)==wanted:break
             assert len(patch)==wanted,(ax,ay,len(patch))
             selected.update(patch)
+    if upper_plinth:
+        # these still-visible planting crowns were identified through the final camera.
+        # fitting their replacements keeps the upper bank envelope while opening the texture.
+        names=['plinth planting 020','plinth planting 038']
+        if upper_plinth=='both':names+=['plinth planting 063','plinth planting 054']
+        for name in names:
+            crown=bpy.data.objects[name]
+            assert not crown.hide_render and name not in selected,name
+            selected[name]=(crown,None)
+            if name in names[:2]:base_targets.add(name)
     first=next(iter(selected.values()))[1]
     small=build_crown([slot.material for slot in first.material_slots],layered=True,natural=True,distant=True,shoot_density=.12)
     verts=[];faces=[];tones=[]
