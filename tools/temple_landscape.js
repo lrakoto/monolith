@@ -1,5 +1,6 @@
 /* the garden is one reversible layer. the temple-only study remains available
    so a lighting change cannot masquerade as a better model. */
+const GARDEN_STYLE = typeof GARDEN_KIND==='undefined' ? 'temple' : GARDEN_KIND;
 const GARDEN = { original: [], trees: [], group: null, ready: false, edits: [], active: true };
 function rememberStudyMaple(seed, x, z, scale) {
   const tree = buildMaple(seed, x, z, scale);
@@ -84,6 +85,17 @@ function gardenSurface(mat, kind) {
 function gardenWind(mat, strength, leaf = false) {
   mat.onBeforeCompile=sh=>{
     sh.uniforms.uGardenTime=WET_TIME;
+    if(leaf){
+      sh.vertexShader='varying vec2 vGardenLeaf;\n'+sh.vertexShader;
+      sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGardenLeaf=position.xy;');
+      sh.fragmentShader='varying vec2 vGardenLeaf;\n'+sh.fragmentShader;
+      sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+        float rib=1.-smoothstep(.008,.018+fwidth(vGardenLeaf.x),abs(vGardenLeaf.x));
+        float edgeShade=smoothstep(.05,.38,abs(vGardenLeaf.x));
+        float tipShade=smoothstep(.62,1.,vGardenLeaf.y);
+        diffuseColor.rgb*=1.-edgeShade*.16-tipShade*.12;
+        diffuseColor.rgb+=diffuseColor.rgb*rib*.12;`);
+    }
     sh.vertexShader='uniform float uGardenTime;\n'+sh.vertexShader;
     sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
       vec3 root=(instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
@@ -144,10 +156,10 @@ function buildGardenMaple(seed,x,z,scale,background=false) {
     p.set(tip.x+Math.cos(a)*Math.sqrt(1-v*v)*r*1.12,tip.y+v*r*.78,tip.z+Math.sin(a)*Math.sqrt(1-v*v)*r*1.12);
     q.setFromEuler(new THREE.Euler((rnd()-.5)*2.4,rnd()*TAU,(rnd()-.5)*2.4));
     const size=.23+rnd()*.20;sc.set(size,size,size);matrix.compose(p,q,sc);leaves.setMatrixAt(i,matrix);
-    color.setHSL(.995+rnd()*.019,.82+rnd()*.12,.105+rnd()*.065);leaves.setColorAt(i,color);
+    color.setHSL(GARDEN_STYLE==='forest'?.27+rnd()*.045:.995+rnd()*.019,GARDEN_STYLE==='forest'?.40+rnd()*.14:.82+rnd()*.12,GARDEN_STYLE==='forest'?.12+rnd()*.06:.105+rnd()*.065);leaves.setColorAt(i,color);
   }
   leaves.instanceMatrix.needsUpdate=true;leaves.instanceColor.needsUpdate=true;leaves.frustumCulled=false;
-  const tree=new THREE.Group();tree.name=background?'distant maple':'garden maple';tree.add(trunk,leaves);
+  const tree=new THREE.Group();tree.name=GARDEN_STYLE==='forest'?(background?'distant woodland tree':'woodland tree'):(background?'distant maple':'garden maple');tree.add(trunk,leaves);
   tree.position.set(x,Math.max(0,gardenGround(x,z))-.04,z);tree.scale.set(scale*1.18,scale*1.38,scale*1.18);
   tree.rotation.y=rnd()*TAU;GARDEN.group.add(tree);
 }
@@ -181,7 +193,7 @@ function plantGardenBanks() {
   const rnd=mulberry32(93051),matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),color=new THREE.Color();
   const mat=gardenWind(new THREE.MeshStandardMaterial({color:0x82965a,vertexColors:true,side:THREE.DoubleSide,roughness:.89,envMapIntensity:.8}),.13);
   const grass=new THREE.InstancedMesh(gardenPlantGeo(false),mat,LOW?1400:4500);
-  const fern=new THREE.InstancedMesh(gardenPlantGeo(true),mat,LOW?100:300);
+  const fern=new THREE.InstancedMesh(gardenPlantGeo(true),mat,LOW?(GARDEN_STYLE==='temple'?100:190):(GARDEN_STYLE==='temple'?300:580));
   const clumps=noise2D(119);
   for(const mesh of [grass,fern]){
     let count=0;
@@ -298,15 +310,21 @@ function buildLandscapeStudy() {
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
   /* the silhouette is geometry rather than a rectangular alpha sheet. */
   const leaf=new THREE.Shape();
-  [[0,0],[-.20,.19],[-.50,.25],[-.30,.39],[-.43,.63],[-.18,.55],[0,1],[.18,.55],[.43,.63],[.30,.39],[.50,.25],[.20,.19]].forEach((p,i)=>i?leaf.lineTo(...p):leaf.moveTo(...p));leaf.closePath();
+  (GARDEN_STYLE==='temple'?[[0,0],[-.20,.19],[-.50,.25],[-.30,.39],[-.43,.63],[-.18,.55],[0,1],[.18,.55],[.43,.63],[.30,.39],[.50,.25],[.20,.19]]:[[0,0],[-.22,.20],[-.30,.46],[-.20,.72],[0,1],[.20,.72],[.30,.46],[.22,.20]]).forEach((p,i)=>i?leaf.lineTo(...p):leaf.moveTo(...p));leaf.closePath();
   GARDEN.leafGeo=new THREE.ShapeGeometry(leaf);
   const lp=GARDEN.leafGeo.attributes.position;
   for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
   GARDEN.leafGeo.computeVertexNormals();
   GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
   buildGardenTerrain();
-  GARDEN.trees.forEach(args=>buildGardenMaple(...args));
-  [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],[814,28,-58,2.15]].forEach(args=>buildGardenMaple(...args,true));
+  if(GARDEN_STYLE==='redwoods')buildGardenRedwoods();
+  else {
+    GARDEN.trees.forEach(args=>buildGardenMaple(...args));
+    [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],[814,28,-58,2.15]].forEach(args=>buildGardenMaple(...args,true));
+    if(GARDEN_STYLE==='forest')[[821,-19,-24,1.5],[822,20,-29,1.7]].forEach(args=>buildGardenMaple(...args,true));
+  }
+  if(typeof buildGardenStonework==='function')buildGardenStonework();
+  if(typeof buildWoodlandUnderstory==='function')buildWoodlandUnderstory();
   buildGardenAtmosphere();
   buildGardenLeafRafts();
   gardenEdit(WORLD.pond,'material',gardenWaterMaterial(WORLD.pond.material));

@@ -3,9 +3,14 @@ import argparse
 from pathlib import Path
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--production",action="store_true",help="also replace the live Temple page")
+parser.add_argument("--scene",choices=("temple","redwoods","forest"),default="temple")
 args=parser.parse_args()
+if args.production and args.scene!='temple':
+ parser.error('other scene studies remain isolated; promotion is not enabled yet')
+kind=args.scene
+label=kind.title()
 root=Path(__file__).resolve().parents[1]
-s=(root/'tools/templates/temple-original.html').read_text()
+s=(root/('tools/templates/temple-original.html' if kind=='temple' else kind+'.html')).read_text()
 css='''
 /* the comparison stays reachable when the portfolio copy is hidden. */
 .study-controls{position:fixed;z-index:120;left:20px;bottom:20px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(8,13,16,.92);border:1px solid rgba(223,231,224,.20);border-radius:16px;color:#dfe7e0;font:12px Onest,sans-serif;backdrop-filter:blur(14px);}
@@ -92,7 +97,9 @@ async function buildTempleStudy() {
   }
 }
 '''
+js = "const GARDEN_KIND = '"+kind+"';\n"+js
 js += (root/'tools/temple_landscape.js').read_text()
+js += (root/'tools/woodland_studies.js').read_text()
 replacements={
 'in a portfolio whose every surface is generated in the browser at load.':'in a live moonlit garden with a detailed timber temple.',
 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n}': 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  /* additive upsampling must retain the sharper bloom already in the target. */\n  const autoClear = renderer.autoClear;\n  renderer.autoClear = false;\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n  renderer.autoClear = autoClear;\n}',
@@ -121,14 +128,47 @@ replacements={
 'function buildMaple(seed, x, z, scale) {':js+'\nfunction buildMaple(seed, x, z, scale) {',
 "fetch('/__tune/temple/save'":"fetch('/__tune/study/save'",
 }
-start=s.index("  ['Planting the maples'")
-end=s.index("  ['Painting the near grass'",start)
-s=s[:start]+s[start:end].replace('buildMaple(', 'rememberStudyMaple(')+s[end:]
+if kind=='temple':
+ start=s.index("  ['Planting the maples'")
+ end=s.index("  ['Painting the near grass'",start)
+ s=s[:start]+s[start:end].replace('buildMaple(', 'rememberStudyMaple(')+s[end:]
+else:
+ title=replacements.pop('<title>Lova Rakoto — Web developer and designer in Los Angeles</title>')
+ replacements['<title>'+label+' — Lova Rakoto</title>']=title
+ replacements.pop('function buildMaple(seed, x, z, scale) {')
+ anchor='function texRedwoodBark() {' if kind=='redwoods' else 'function buildStele(seed, x, z, scale) {'
+ replacements[anchor]=js+'\n'+anchor
+ replacements.pop("fetch('/__tune/temple/save'")
+ replacements["fetch('/__tune/"+kind+"/save'"]="fetch('/__tune/study/save'"
+ if kind=='redwoods':
+  replacements["  ['Growing the redwood grove', () => buildRedwoods()],"]="  ['Growing the redwood grove', () => rememberStudyGrove()],"
+ else:
+  replacements.pop('    buildRocks();')
+  replacements.pop('function erodedRockGeo(radius, seed) {')
+  replacements.pop('  const geo = new THREE.IcosahedronGeometry(radius, LOW ? 3 : 6);')
+  import re
+  baseline=(root/'tools/templates/temple-original.html').read_text()
+  erosion=re.search(r'function erodedRockGeo\(radius, seed\) \{.*?\n\}',baseline,re.S).group()
+  erosion=erosion.replace('radius, seed)', 'radius, seed, detail = LOW ? 3 : 6)').replace('radius, LOW ? 3 : 6','radius, detail')
+  replacements[anchor]=js+'\n'+erosion+'\n'+anchor
+  replacements['    buildPondPlanting();']='    rememberStudyPond();'
+  start=s.index("  ['Setting the stones'")
+  end=s.index("  ['Painting the near grass'",start)
+  s=s[:start]+s[start:end].replace('buildStele(', 'rememberStudyStele(')+s[end:]
 for a,b in replacements.items():
  assert s.count(a)==1,(a,s.count(a))
  s=s.replace(a,b)
-(root/'temple-study.html').write_text(s)
-print('Created temple-study.html; live page unchanged unless --production is supplied.')
+# the study selector stays inside the three experimental scenes.
+for scene in ('temple','redwoods','forest'):
+ original='index.html' if scene=='temple' else scene+'.html'
+ a='<a href="'+original+'"'
+ assert s.count(a)==1,(a,s.count(a))
+ s=s.replace(a,'<a href="'+scene+'-study.html"')
+if kind!='temple':
+ s=s.replace('Temple garden study',label+' garden study').replace('this Temple study','this '+label+' study').replace('This Temple study','This '+label+' study')
+ s=s.replace('<strong>Garden study</strong>','<strong>'+label+' study</strong>')
+(root/(kind+'-study.html')).write_text(s)
+print('Created '+kind+'-study.html; live page unchanged unless --production is supplied.')
 if args.production:
  # promotion is explicit so the next study pass cannot silently change the live scene.
  for a,b in {
@@ -140,6 +180,11 @@ if args.production:
  }.items():
   assert s.count(a)==1,(a,s.count(a))
   s=s.replace(a,b)
+ for scene in ('temple','redwoods','forest'):
+  original='index.html' if scene=='temple' else scene+'.html'
+  a='<a href="'+scene+'-study.html"'
+  assert s.count(a)==1,(a,s.count(a))
+  s=s.replace(a,'<a href="'+original+'"')
  # pin the model as well as the page; another Blender bake belongs to the study
  # until the next deliberate promotion, even if both are deployed together.
  assets=('temple-quality.glb','temple-bounce.png','GLTFLoader.r149.js','THREE-LICENSE.txt')

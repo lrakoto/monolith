@@ -14,6 +14,38 @@ Temple is the opening scene in `index.html`, followed by Redwoods in
 `redwoods.html` and Forest in `forest.html`. The old `temple.html` link redirects
 to the homepage. Open `index.html` through a local server and scroll.
 
+## Scene quality studies
+
+The local comparison pages are `temple-study.html`, `redwoods-study.html` and
+`forest-study.html`. Their scene selector links between studies, leaving the
+production pages alone. Each has Original / Temple / Study modes and Wide /
+Pond / Close viewpoints. All share the detailed building, soft bloom, calm
+pond reflections and wind clock, but retain their own camera and accents.
+
+Redwoods refines its modeled giant trunks with darker bark, layered needle
+sprays and fern beds. Forest replaces the five standing stones with branching
+broadleaf trees, adds distant crowns and modeled understory, and retains its
+climbing stair planting and far woodland silhouettes. Both add a fallen bank
+limb. The Temple study continues with subtle stone joints, weathering and moss
+at the approach; leaf shading and midribs now accompany the existing flutter.
+These new refinements are study-only, including Temple's stonework.
+
+`tools/temple_landscape.js` authors the common ground and canopy;
+`tools/woodland_studies.js` owns the woodland additions and stonework. The
+Redwoods builder is an independent study copy of the approved grove, so its
+materials and needle motion do not change the Original comparison.
+The suite builds all three landscapes at both quality levels and checks their
+geometry budgets and reversible mode changes. All study scripts are parsed.
+
+```sh
+python3 tools/create_temple_study.py
+python3 tools/create_temple_study.py --scene redwoods
+python3 tools/create_temple_study.py --scene forest
+```
+
+Redwoods and Forest read their respective live pages as baselines. Their
+production promotion is deliberately disabled until a version is approved.
+
 ## Temple quality study
 
 `temple-study.html` is an isolated comparison with three modes: Original
