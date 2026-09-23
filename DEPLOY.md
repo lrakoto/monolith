@@ -24,8 +24,8 @@ served straight off disk with no rule of its own.
 
 The scene pages are `index.html` (Monolith), `temple.html` (Temple), and
 `forest.html` (Forest), sharing `assets/`. Include all three pages when publishing
-the scene selector. Temple also needs the local maps in
-`assets/materials/weathered-wood/`; keep that folder with the shared assets.
+the scene selector. All scene materials are generated locally; the archived
+photographic wood maps are not loaded by Temple.
 Upload over the top — cPanel File Manager, tick **Overwrite existing files**.
 
 **Purge the Cloudflare cache afterwards** or the old file lingers.

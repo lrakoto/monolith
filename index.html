@@ -2341,14 +2341,14 @@ function skyPainter(aspect) {
   const radius = .080 * TUNE.moonSize;
   const brightness = TUNE.moonBright, bright = Math.sqrt(Math.max(0, brightness) / .285);
   const keyLen = Math.hypot(...SKY.key), key = SKY.key.map(v => v / keyLen);
-  const out = [0, 0, 0, 0, 0, 0, 0];
+  const out = [0, 0, 0, 0];
   return (dx, dy, dz) => {
     const elevation = Math.asin(clamp(dy, -1, 1));
     const azimuth = Math.atan2(dx, -dz);
     const horizon = Math.exp(-Math.pow(elevation / .16, 2));
     if (dy < -.08) {
       const fade = Math.exp(dy * 16);
-      out[0] = 3 + 17 * fade; out[1] = 5 + 24 * fade; out[2] = 8 + 30 * fade; out[3] = 1; out[4] = out[5] = out[6] = 0;
+      out[0] = 3 + 17 * fade; out[1] = 5 + 24 * fade; out[2] = 8 + 30 * fade; out[3] = 1;
       return out;
     }
     const warp = fbm(cloud, dx * 2.8 + dz * 1.2, dy * 4.6 + dz * .8, 3, 2.03, .5);
@@ -2357,7 +2357,7 @@ function skyPainter(aspect) {
     const opening = Math.exp(-Math.pow((azimuth + .18) / .64, 2) - Math.pow((elevation - .27) / .22, 2));
     const keyOpening = Math.pow(Math.max(0, dx * key[0] + dy * key[1] + dz * key[2]), 12);
     const cover = smooth(-.23, .24, body + tooth * .12 + .13 * smooth(.3, .75, dy) - opening * .20 - keyOpening * .16);
-    const silver = Math.pow(Math.max(0, cover * (1 - cover) * 4), 1.6) * opening * Math.min(bright, 1.5);
+    const silver = Math.pow(Math.max(0, cover * (1 - cover) * 4), 1.6) * opening;
     const backlight = opening * .50 + keyOpening * .70;
     const cloudR = 4 + 8 * horizon + 12 * backlight + 45 * silver;
     const cloudG = 7 + 10 * horizon + 16 * backlight + 58 * silver;
@@ -2367,9 +2367,10 @@ function skyPainter(aspect) {
     out[1] = lerp(10 + 23 * horizon + 27 * opening + 58 * keyOpening, cloudG, opacity);
     out[2] = lerp(18 + 28 * horizon + 35 * opening + 69 * keyOpening, cloudB, opacity);
     const angle = Math.acos(clamp(dx * moon[0] + dy * moon[1] + dz * moon[2], -1, 1));
-    /* keep the edge light separate below so the finished density field can
-       shade both broad layers toward the moon without evaluating noise again. */
-    const edge = smooth(.18, .30, cover) * (1 - smooth(.38, .56, cover));
+    /* moonlight catches only the thin edge of the cloud. weighting a narrow
+       density band by spherical distance keeps the thick interiors dark and
+       gives the water exactly the same silver rim as the visible sky. */
+    const edge = smooth(.22, .31, cover) * (1 - smooth(.37, .49, cover));
     const rim = edge * Math.exp(-Math.pow(angle / .52, 2)) * Math.min(bright, 1.5);
     out[0] += 30 * rim; out[1] += 34 * rim; out[2] += 38 * rim;
     const air = Math.exp(-Math.pow(angle / Math.max(.001, radius * 2.5), 2)) * bright * (1 - cover * .65);
@@ -2384,10 +2385,6 @@ function skyPainter(aspect) {
     out[1] = lerp(5 + 24 * fade, out[1], ground);
     out[2] = lerp(8 + 30 * fade, out[2], ground);
     out[3] = cover;
-    const visible = (1 - transmission) * ground;
-    out[4] = (45 * silver * opacity + 30 * rim) * visible;
-    out[5] = (58 * silver * opacity + 34 * rim) * visible;
-    out[6] = (69 * silver * opacity + 38 * rim) * visible;
     return out;
   };
 }
@@ -2396,11 +2393,6 @@ async function texSky(aspect, generation) {
   const W = LOW ? 1024 : 4096, H = W / 2;
   const c = cvs(W, H), x = c.getContext('2d');
   const image = x.createImageData(W, H), data = image.data, paint = skyPainter(aspect);
-  const mask = cvs(W, H), mx = mask.getContext('2d'), rim = mx.createImageData(W, H);
-  const highlights = new Uint8ClampedArray(W * H * 3);
-  const moonAz = SKY.moonAzimuth * (1 - .40 * aspect), ce = Math.cos(SKY.moonElevation);
-  c.moonLight = { direction: [Math.sin(moonAz) * ce, Math.sin(SKY.moonElevation), -Math.cos(moonAz) * ce],
-    strength: Math.min(Math.sqrt(Math.max(0, TUNE.moonBright) / .285), 1.5) };
   const cos = new Float32Array(W), sin = new Float32Array(W);
   for (let i = 0; i < W; i++) {
     const az = (i / W - .5) * TAU;
@@ -2416,42 +2408,9 @@ async function texSky(aspect, generation) {
     for (let i = 0; i < W; i++) {
       const color = paint(cos[i] * ring, dy, sin[i] * ring), p = (y * W + i) * 4;
       data[p] = color[0]; data[p + 1] = color[1]; data[p + 2] = color[2]; data[p + 3] = 255;
-      const h = (y * W + i) * 3;
-      highlights[h] = color[4]; highlights[h + 1] = color[5]; highlights[h + 2] = color[6];
-      const cover16 = Math.round(clamp(color[3], 0, 1) * 65535);
-      rim.data[p] = cover16 >> 8; rim.data[p + 1] = cover16 & 255;
-      rim.data[p + 2] = 0; rim.data[p + 3] = 255;
     }
   }
-  /* the first bake knows density but not its slope. this inexpensive second
-     pass removes edge light from the far side of each cloud; using four
-     neighbors avoids four more expensive noise evaluations per sky pixel. */
-  const step = LOW ? 1 : 4, moon = c.moonLight.direction;
-  const density = (i, y) => {
-    const p = (clamp(y, 0, H - 1) * W + (i + W) % W) * 4;
-    return (rim.data[p] * 256 + rim.data[p + 1]) / 65535;
-  };
-  for (let y = 0; y < H; y++) {
-    if (y % 64 === 0) {
-      await new Promise(resolve => setTimeout(resolve, 0));
-      if (generation !== SKY.generation) return null;
-    }
-    const el = Math.PI * (.5 - y / H), sy = Math.sin(el), ring = Math.cos(el);
-    for (let i = 0; i < W; i++) {
-      const h = (y * W + i) * 3;
-      if (!highlights[h + 2]) continue;
-      const east = (density(i + step, y) - density(i - step, y)) / Math.max(ring, .01);
-      const north = density(i, y - step) - density(i, y + step);
-      const lightEast = -sin[i] * moon[0] + cos[i] * moon[2];
-      const lightNorth = -cos[i] * sy * moon[0] + ring * moon[1] - sin[i] * sy * moon[2];
-      const slope = Math.hypot(east, north);
-      const facing = smooth(.12, .75, -(east * lightEast + north * lightNorth)
-        / Math.max(slope * Math.hypot(lightEast, lightNorth), .00001)) * smooth(.001, .006, slope);
-      const p = (y * W + i) * 4;
-      for (let channel = 0; channel < 3; channel++) data[p + channel] -= highlights[h + channel] * (1 - facing);
-    }
-  }
-  x.putImageData(image, 0, 0); mx.putImageData(rim, 0, 0); c.edgeMask = mask;
+  x.putImageData(image, 0, 0);
   /* a few distant points survive only where the cloud opens. the large
      drifting flecks belong to the courtyard, not to the night above it. */
   const rnd = mulberry32(881);
@@ -2478,70 +2437,11 @@ async function buildEnvironment() {
   const environment = pm.fromEquirectangular(t);
   scene.background = t;
   scene.environment = environment.texture;
-  buildSkyShimmer(canvas.edgeMask, canvas.moonLight);
   if (SKY.texture) SKY.texture.dispose();
   if (SKY.environment) SKY.environment.dispose();
   SKY.texture = t; SKY.environment = environment; SKY.aspect = aspect;
   pm.dispose();
   if (Math.abs(aspect - aspectFix()) > .025) refreshSky();
-}
-
-/* the silver core is a second, very narrow light layer. it uses the baked
-   cloud mask, so only brightness moves and a frame never regenerates noise. */
-/* filter the cloud density before finding its edge. baking a thin white
-   line into the texture made it break into bright blocks when enlarged. */
-function buildSkyShimmer(mask, light) {
-  if (!mask || !light) return;
-  const texture = tx(mask, { srgb: false }); texture.wrapS = THREE.RepeatWrapping;
-  if (SKY.shimmer) {
-    const u = SKY.shimmer.material.uniforms;
-    u.uMask.value.dispose(); u.uMask.value = texture;
-    u.uMoon.value.fromArray(light.direction); u.uStrength.value = light.strength;
-    return;
-  }
-  WORLD.skyTime = { value: 0 };
-  const material = new THREE.ShaderMaterial({
-    uniforms: { uMask: { value: texture }, uTime: WORLD.skyTime,
-      uMoon: { value: new THREE.Vector3().fromArray(light.direction) }, uStrength: { value: light.strength } },
-    extensions: { derivatives: true },
-    side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending,
-    depthTest: true, depthWrite: false,
-    vertexShader: `varying vec3 vDirection;
-      void main(){ vDirection=position;
-        vec4 clip=projectionMatrix*vec4(mat3(viewMatrix)*position,1.0);
-        gl_Position=clip.xyww; }`,
-    fragmentShader: `uniform sampler2D uMask; uniform float uTime,uStrength; uniform vec3 uMoon; varying vec3 vDirection;
-      float density(vec3 d){
-        vec2 uv=vec2(atan(d.z,d.x)*0.1591549431+0.5,asin(clamp(d.y,-1.0,1.0))*0.3183098862+0.5);
-        return dot(texture2D(uMask,uv).rg,vec2(256.0/257.0,1.0/257.0));
-      }
-      void main(){
-        vec3 d=normalize(vDirection); float cover=density(d);
-        float fw=max(fwidth(cover),.0005);
-        float width=sqrt(.018*.018+.5*fw*fw);
-        float core=exp(-pow((cover-.29)/width,2.))*(.018/width);
-        vec3 tangent=uMoon-d*dot(d,uMoon); tangent/=max(length(tangent),.001);
-        float toward=density(normalize(d+tangent*.006));
-        float away=density(normalize(d-tangent*.006));
-        vec3 across=normalize(cross(d,tangent));
-        float crossToward=density(normalize(d+across*.006));
-        float crossAway=density(normalize(d-across*.006));
-        vec2 gradient=vec2(away-toward,crossAway-crossToward);
-        float slope=length(gradient);
-        float facing=smoothstep(.12,.75,gradient.x/max(slope,.00001))*smoothstep(.001,.006,slope);
-        float angle=acos(clamp(dot(d,uMoon),-1.,1.));
-        float edge=core*facing*exp(-pow(angle/.40,2.))*uStrength*smoothstep(-.04,.03,d.y);
-        float wave=sin(dot(d,vec3(33.,21.,15.))-uTime*.21);
-        float fine=sin(dot(d,vec3(-57.,39.,24.))+uTime*.32);
-        float shimmer=.88+.09*wave+.03*fine;
-        gl_FragColor=vec4(vec3(1.45,1.57,1.72)*edge*shimmer,1.0);
-        #include <tonemapping_fragment>
-        #include <encodings_fragment>
-      }`
-  });
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), material);
-  mesh.name = 'moonlit-cloud-edges'; mesh.frustumCulled = false; mesh.renderOrder = -1000;
-  scene.add(mesh); SKY.shimmer = mesh;
 }
 
 function refreshSky() {
@@ -3367,6 +3267,59 @@ function castGeometry(w, h, d, bevel, opening) {
     curveSegments: 1 }).translate(0, 0, -d / 2 + bevel);
 }
 
+/* a shallow cut shares the concrete's lighting and grain. only its inner
+   walls darken; the facade has no separate label or luminous lettering. */
+function etchMonolithFace(material, heightOffset) {
+  const stamp = lib('monolith-305-etch', () => {
+    const W = 1024, H = 512, size = 320, tracking = size * .12;
+    const c = cvs(W, H), x = c.getContext('2d');
+    x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+    x.font = '600 ' + size + 'px Wordmark, sans-serif'; x.textBaseline = 'alphabetic';
+    let pen = 0, left = Infinity, right = -Infinity, ascent = 0, descent = 0;
+    const glyphs = [];
+    for (const ch of '305') {
+      const m = x.measureText(ch);
+      glyphs.push({ ch, pen });
+      left = Math.min(left, pen - m.actualBoundingBoxLeft);
+      right = Math.max(right, pen + m.actualBoundingBoxRight);
+      ascent = Math.max(ascent, m.actualBoundingBoxAscent);
+      descent = Math.max(descent, m.actualBoundingBoxDescent);
+      pen += m.width + tracking;
+    }
+    x.fillStyle = '#fff'; x.filter = 'blur(1px)';
+    glyphs.forEach(g => x.fillText(g.ch, W / 2 - (left + right) / 2 + g.pen, H / 2 + (ascent - descent) / 2));
+    return { map: tx(c, { srgb: false }), size: new THREE.Vector2(2.55 * W / (right - left), .90 * H / (ascent + descent)) };
+  });
+  const before = material.onBeforeCompile, cacheKey = material.customProgramCacheKey();
+  material.onBeforeCompile = function(shader, renderer) {
+    before.call(this, shader, renderer);
+    shader.uniforms.uEtchMask = { value: stamp.map };
+    shader.uniforms.uEtchSize = { value: stamp.size };
+    shader.uniforms.uEtchY = { value: MONO.slotY + MONO.slotH / 2 + 1.13 - heightOffset };
+    shader.vertexShader = 'uniform vec2 uEtchSize; uniform float uEtchY; varying vec2 vEtchUv; varying float vEtchFront;\n' + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n' +
+      'vEtchUv=vec2(position.x,position.y-uEtchY)/uEtchSize+.5;\n' +
+      'vEtchFront=step(.98,normal.z);\n');
+    shader.fragmentShader = 'uniform sampler2D uEtchMask; varying vec2 vEtchUv; varying float vEtchFront;\n' + shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>',
+      '#include <map_fragment>\n' +
+      'float etched=texture2D(uEtchMask,vEtchUv).r*vEtchFront;\n' +
+      'diffuseColor.rgb*=1.-etched*.42;\n');
+    /* view-space derivatives let a centimetre of cut keep its physical scale
+       even when the forest facade uses a different concrete texture repeat. */
+    shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>',
+      '#include <normal_fragment_maps>\n' +
+      'float etchHeight=-.028*etched;\n' +
+      'vec3 etchX=dFdx(-vViewPosition),etchY=dFdy(-vViewPosition);\n' +
+      'vec3 etchR1=cross(etchY,normal),etchR2=cross(normal,etchX);\n' +
+      'float etchDet=dot(etchX,etchR1)*faceDirection;\n' +
+      'vec3 etchGrad=sign(etchDet)*(dFdx(etchHeight)*etchR1+dFdy(etchHeight)*etchR2);\n' +
+      'normal=normalize(max(abs(etchDet),.0000001)*normal-etchGrad);\n');
+  };
+  material.customProgramCacheKey = () => cacheKey + '|etched-305-v1';
+}
+
 function buildMonolith() {
   const g = new THREE.Group();
   const cast = lib('cast-concrete', texCastConcrete);
@@ -3374,6 +3327,7 @@ function buildMonolith() {
   const reveal = face.clone();
   reveal.color.setHex(0x51595d); reveal.roughness = .78;
   reveal.normalScale.set(.48, .48); reveal.envMapIntensity = .8;
+  etchMonolithFace(face, 0);
   const trim = surface(concreteTex(), [1.1, 1.1], { color: 0x363d43, roughness: .48, metalness: .03, normal: .7, env: 1.05 });
   /* the arris strips are the one genuinely metal thing on the slab, and the
      only place a hard, tight highlight belongs */
@@ -3686,7 +3640,7 @@ function redwoodSprayGeo() {
 
 function buildRedwoods() {
   const bark = surface(lib('redwoodBark', texRedwoodBark), [1, 1],
-    { color: 0xc6b29e, roughness: .93, normal: 1.15, metalness: 0, env: .75 });
+    { color: 0x968374, roughness: .96, normal: 1.15, metalness: 0, env: .55 });
   const needles = new THREE.MeshStandardMaterial({ color: 0x465b47, roughness: .94,
     metalness: 0, side: THREE.DoubleSide, envMapIntensity: .65 });
   WORLD.breeze = { value: 0 };
@@ -7317,7 +7271,6 @@ function resize() {
 function updateWorld(dt) {
   WORLD.uT.value = clock;
   WET_TIME.value = REDUCE ? 0 : clock;
-  if (WORLD.skyTime) WORLD.skyTime.value = WET_TIME.value;
   if (WORLD.breeze) WORLD.breeze.value = WET_TIME.value;
 
   /* the focused chapter warms the lanterns and swells the disc */

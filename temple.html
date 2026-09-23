@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Temple — Lova Rakoto</title>
-<meta name="description" content="I specialize in helping businesses and individuals create an impactful, thoughtful, and elegant digital presence. Ten years designing and building for brands like Mattel, Newegg and USC — in an interactive portfolio built with browser-generated architecture and photographed timber.">
+<meta name="description" content="I specialize in helping businesses and individuals create an impactful, thoughtful, and elegant digital presence. Ten years designing and building for brands like Mattel, Newegg and USC — in a portfolio whose every surface is generated in the browser at load.">
 
 <!-- ========================================================== a note for AI
      visitors. In the source and not on the page, because the reader it is
@@ -1505,9 +1505,9 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
         intent survives all the way into production code.</p>
       <p class="body" data-rv="up">That means end-to-end web experiences that pair strong visual design with
         clean, scalable development, and a process that treats a site as a growth tool rather than a
-        delivery. Success is built on vision, strategy and collaboration. This page is the argument:
-        the temple is built in the browser, with photographed timber bringing natural grain and
-        weathering to its generated architecture.</p>
+        delivery. Success is built on vision, strategy and collaboration. This page is the argument: every
+        surface below is generated in the browser at load, with no model files and no images behind
+        the scene.</p>
       <a class="arrowlink" href="#pathways" data-rv="fade" data-cursor>
         <span>See recent work</span>
         <span class="ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
@@ -1759,8 +1759,8 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
         <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
         <rect x="13" y="20" width="18" height="3.6" fill="#e4606c"/>
       </svg>
-      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. The temple is generated in the
-        browser, with photographed timber adding natural texture to the architecture.</p>
+      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. Every surface in the
+        scene backdrop on this page is generated in browser at load.</p>
       <div class="foot-signals" id="foot-signals" hidden>
         <span class="foot-signals-k">Signals received</span>
         <ul id="foot-signals-list"></ul>
@@ -1828,8 +1828,8 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
 <script>
 /* =====================================================================
    305 — the ThreeOhFive Studios portfolio, with the original Kage temple restored.
-   The architecture is generated at runtime; local CC0 timber photography
-   supplies the Temple wood material. See assets/materials/weathered-wood/README.md.
+   The architecture and its fine timber grain are generated at runtime.
+   The original wood returns with shallower relief and narrower growth rings.
    ===================================================================== */
 (function () {
 'use strict';
@@ -1932,7 +1932,7 @@ const TUNE = {
   stairFilmRough:   0.050,
   stairEdgeShine:   0.480,
   envIntensity:     1.15,
-  slotBright:       0.820,
+  slotBright:       1.550,
   moonBright:       0.285,
   moonSize:         0.76,
   lampBright:       8.00,
@@ -2373,14 +2373,14 @@ function skyPainter(aspect) {
   const radius = .080 * TUNE.moonSize;
   const brightness = TUNE.moonBright, bright = Math.sqrt(Math.max(0, brightness) / .285);
   const keyLen = Math.hypot(...SKY.key), key = SKY.key.map(v => v / keyLen);
-  const out = [0, 0, 0, 0, 0, 0, 0];
+  const out = [0, 0, 0, 0];
   return (dx, dy, dz) => {
     const elevation = Math.asin(clamp(dy, -1, 1));
     const azimuth = Math.atan2(dx, -dz);
     const horizon = Math.exp(-Math.pow(elevation / .16, 2));
     if (dy < -.08) {
       const fade = Math.exp(dy * 16);
-      out[0] = 3 + 17 * fade; out[1] = 5 + 24 * fade; out[2] = 8 + 30 * fade; out[3] = 1; out[4] = out[5] = out[6] = 0;
+      out[0] = 3 + 17 * fade; out[1] = 5 + 24 * fade; out[2] = 8 + 30 * fade; out[3] = 1;
       return out;
     }
     const warp = fbm(cloud, dx * 2.8 + dz * 1.2, dy * 4.6 + dz * .8, 3, 2.03, .5);
@@ -2389,7 +2389,7 @@ function skyPainter(aspect) {
     const opening = Math.exp(-Math.pow((azimuth + .18) / .64, 2) - Math.pow((elevation - .27) / .22, 2));
     const keyOpening = Math.pow(Math.max(0, dx * key[0] + dy * key[1] + dz * key[2]), 12);
     const cover = smooth(-.23, .24, body + tooth * .12 + .13 * smooth(.3, .75, dy) - opening * .20 - keyOpening * .16);
-    const silver = Math.pow(Math.max(0, cover * (1 - cover) * 4), 1.6) * opening * Math.min(bright, 1.5);
+    const silver = Math.pow(Math.max(0, cover * (1 - cover) * 4), 1.6) * opening;
     const backlight = opening * .50 + keyOpening * .70;
     const cloudR = 4 + 8 * horizon + 12 * backlight + 45 * silver;
     const cloudG = 7 + 10 * horizon + 16 * backlight + 58 * silver;
@@ -2399,9 +2399,10 @@ function skyPainter(aspect) {
     out[1] = lerp(10 + 23 * horizon + 27 * opening + 58 * keyOpening, cloudG, opacity);
     out[2] = lerp(18 + 28 * horizon + 35 * opening + 69 * keyOpening, cloudB, opacity);
     const angle = Math.acos(clamp(dx * moon[0] + dy * moon[1] + dz * moon[2], -1, 1));
-    /* keep the edge light separate below so the finished density field can
-       shade both broad layers toward the moon without evaluating noise again. */
-    const edge = smooth(.18, .30, cover) * (1 - smooth(.38, .56, cover));
+    /* moonlight catches only the thin edge of the cloud. weighting a narrow
+       density band by spherical distance keeps the thick interiors dark and
+       gives the water exactly the same silver rim as the visible sky. */
+    const edge = smooth(.22, .31, cover) * (1 - smooth(.37, .49, cover));
     const rim = edge * Math.exp(-Math.pow(angle / .52, 2)) * Math.min(bright, 1.5);
     out[0] += 30 * rim; out[1] += 34 * rim; out[2] += 38 * rim;
     const air = Math.exp(-Math.pow(angle / Math.max(.001, radius * 2.5), 2)) * bright * (1 - cover * .65);
@@ -2416,10 +2417,6 @@ function skyPainter(aspect) {
     out[1] = lerp(5 + 24 * fade, out[1], ground);
     out[2] = lerp(8 + 30 * fade, out[2], ground);
     out[3] = cover;
-    const visible = (1 - transmission) * ground;
-    out[4] = (45 * silver * opacity + 30 * rim) * visible;
-    out[5] = (58 * silver * opacity + 34 * rim) * visible;
-    out[6] = (69 * silver * opacity + 38 * rim) * visible;
     return out;
   };
 }
@@ -2428,11 +2425,6 @@ async function texSky(aspect, generation) {
   const W = LOW ? 1024 : 4096, H = W / 2;
   const c = cvs(W, H), x = c.getContext('2d');
   const image = x.createImageData(W, H), data = image.data, paint = skyPainter(aspect);
-  const mask = cvs(W, H), mx = mask.getContext('2d'), rim = mx.createImageData(W, H);
-  const highlights = new Uint8ClampedArray(W * H * 3);
-  const moonAz = SKY.moonAzimuth * (1 - .40 * aspect), ce = Math.cos(SKY.moonElevation);
-  c.moonLight = { direction: [Math.sin(moonAz) * ce, Math.sin(SKY.moonElevation), -Math.cos(moonAz) * ce],
-    strength: Math.min(Math.sqrt(Math.max(0, TUNE.moonBright) / .285), 1.5) };
   const cos = new Float32Array(W), sin = new Float32Array(W);
   for (let i = 0; i < W; i++) {
     const az = (i / W - .5) * TAU;
@@ -2448,42 +2440,9 @@ async function texSky(aspect, generation) {
     for (let i = 0; i < W; i++) {
       const color = paint(cos[i] * ring, dy, sin[i] * ring), p = (y * W + i) * 4;
       data[p] = color[0]; data[p + 1] = color[1]; data[p + 2] = color[2]; data[p + 3] = 255;
-      const h = (y * W + i) * 3;
-      highlights[h] = color[4]; highlights[h + 1] = color[5]; highlights[h + 2] = color[6];
-      const cover16 = Math.round(clamp(color[3], 0, 1) * 65535);
-      rim.data[p] = cover16 >> 8; rim.data[p + 1] = cover16 & 255;
-      rim.data[p + 2] = 0; rim.data[p + 3] = 255;
     }
   }
-  /* the first bake knows density but not its slope. this inexpensive second
-     pass removes edge light from the far side of each cloud; using four
-     neighbors avoids four more expensive noise evaluations per sky pixel. */
-  const step = LOW ? 1 : 4, moon = c.moonLight.direction;
-  const density = (i, y) => {
-    const p = (clamp(y, 0, H - 1) * W + (i + W) % W) * 4;
-    return (rim.data[p] * 256 + rim.data[p + 1]) / 65535;
-  };
-  for (let y = 0; y < H; y++) {
-    if (y % 64 === 0) {
-      await new Promise(resolve => setTimeout(resolve, 0));
-      if (generation !== SKY.generation) return null;
-    }
-    const el = Math.PI * (.5 - y / H), sy = Math.sin(el), ring = Math.cos(el);
-    for (let i = 0; i < W; i++) {
-      const h = (y * W + i) * 3;
-      if (!highlights[h + 2]) continue;
-      const east = (density(i + step, y) - density(i - step, y)) / Math.max(ring, .01);
-      const north = density(i, y - step) - density(i, y + step);
-      const lightEast = -sin[i] * moon[0] + cos[i] * moon[2];
-      const lightNorth = -cos[i] * sy * moon[0] + ring * moon[1] - sin[i] * sy * moon[2];
-      const slope = Math.hypot(east, north);
-      const facing = smooth(.12, .75, -(east * lightEast + north * lightNorth)
-        / Math.max(slope * Math.hypot(lightEast, lightNorth), .00001)) * smooth(.001, .006, slope);
-      const p = (y * W + i) * 4;
-      for (let channel = 0; channel < 3; channel++) data[p + channel] -= highlights[h + channel] * (1 - facing);
-    }
-  }
-  x.putImageData(image, 0, 0); mx.putImageData(rim, 0, 0); c.edgeMask = mask;
+  x.putImageData(image, 0, 0);
   /* a few distant points survive only where the cloud opens. the large
      drifting flecks belong to the courtyard, not to the night above it. */
   const rnd = mulberry32(881);
@@ -2510,70 +2469,11 @@ async function buildEnvironment() {
   const environment = pm.fromEquirectangular(t);
   scene.background = t;
   scene.environment = environment.texture;
-  buildSkyShimmer(canvas.edgeMask, canvas.moonLight);
   if (SKY.texture) SKY.texture.dispose();
   if (SKY.environment) SKY.environment.dispose();
   SKY.texture = t; SKY.environment = environment; SKY.aspect = aspect;
   pm.dispose();
   if (Math.abs(aspect - aspectFix()) > .025) refreshSky();
-}
-
-/* the silver core is a second, very narrow light layer. it uses the baked
-   cloud mask, so only brightness moves and a frame never regenerates noise. */
-/* filter the cloud density before finding its edge. baking a thin white
-   line into the texture made it break into bright blocks when enlarged. */
-function buildSkyShimmer(mask, light) {
-  if (!mask || !light) return;
-  const texture = tx(mask, { srgb: false }); texture.wrapS = THREE.RepeatWrapping;
-  if (SKY.shimmer) {
-    const u = SKY.shimmer.material.uniforms;
-    u.uMask.value.dispose(); u.uMask.value = texture;
-    u.uMoon.value.fromArray(light.direction); u.uStrength.value = light.strength;
-    return;
-  }
-  WORLD.skyTime = { value: 0 };
-  const material = new THREE.ShaderMaterial({
-    uniforms: { uMask: { value: texture }, uTime: WORLD.skyTime,
-      uMoon: { value: new THREE.Vector3().fromArray(light.direction) }, uStrength: { value: light.strength } },
-    extensions: { derivatives: true },
-    side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending,
-    depthTest: true, depthWrite: false,
-    vertexShader: `varying vec3 vDirection;
-      void main(){ vDirection=position;
-        vec4 clip=projectionMatrix*vec4(mat3(viewMatrix)*position,1.0);
-        gl_Position=clip.xyww; }`,
-    fragmentShader: `uniform sampler2D uMask; uniform float uTime,uStrength; uniform vec3 uMoon; varying vec3 vDirection;
-      float density(vec3 d){
-        vec2 uv=vec2(atan(d.z,d.x)*0.1591549431+0.5,asin(clamp(d.y,-1.0,1.0))*0.3183098862+0.5);
-        return dot(texture2D(uMask,uv).rg,vec2(256.0/257.0,1.0/257.0));
-      }
-      void main(){
-        vec3 d=normalize(vDirection); float cover=density(d);
-        float fw=max(fwidth(cover),.0005);
-        float width=sqrt(.018*.018+.5*fw*fw);
-        float core=exp(-pow((cover-.29)/width,2.))*(.018/width);
-        vec3 tangent=uMoon-d*dot(d,uMoon); tangent/=max(length(tangent),.001);
-        float toward=density(normalize(d+tangent*.006));
-        float away=density(normalize(d-tangent*.006));
-        vec3 across=normalize(cross(d,tangent));
-        float crossToward=density(normalize(d+across*.006));
-        float crossAway=density(normalize(d-across*.006));
-        vec2 gradient=vec2(away-toward,crossAway-crossToward);
-        float slope=length(gradient);
-        float facing=smoothstep(.12,.75,gradient.x/max(slope,.00001))*smoothstep(.001,.006,slope);
-        float angle=acos(clamp(dot(d,uMoon),-1.,1.));
-        float edge=core*facing*exp(-pow(angle/.40,2.))*uStrength*smoothstep(-.04,.03,d.y);
-        float wave=sin(dot(d,vec3(33.,21.,15.))-uTime*.21);
-        float fine=sin(dot(d,vec3(-57.,39.,24.))+uTime*.32);
-        float shimmer=.88+.09*wave+.03*fine;
-        gl_FragColor=vec4(vec3(1.45,1.57,1.72)*edge*shimmer,1.0);
-        #include <tonemapping_fragment>
-        #include <encodings_fragment>
-      }`
-  });
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), material);
-  mesh.name = 'moonlit-cloud-edges'; mesh.frustumCulled = false; mesh.renderOrder = -1000;
-  scene.add(mesh); SKY.shimmer = mesh;
 }
 
 function refreshSky() {
@@ -3148,37 +3048,6 @@ function mergeGeos(list) {
 /* restored from Kage, ThreeUI Community, MIT, Meng To (2026).
    upstream 326580429881c2abe7893bee53c62cbb31b6ee49; the portfolio keeps its
    current content, wet paving and seven camera chapters around this scene. */
-/* local CC0 photography supplies grain, relief and roughness together.
-   procedural wood remains available if a texture cannot be decoded. */
-const PHOTO_WOOD = { boards: null, posts: null, lacquer: null };
-async function loadWoodMaterials() {
-  const load = name => new Promise((resolve, reject) => {
-    const image = new Image(), timer = setTimeout(() => reject(new Error('wood texture timed out')), 6000);
-    image.onload = () => { clearTimeout(timer); resolve(image); };
-    image.onerror = () => { clearTimeout(timer); reject(new Error('wood texture unavailable')); };
-    image.src = 'assets/materials/weathered-wood/' + name + '.jpg';
-  });
-  try {
-    const images = await Promise.all(['color', 'normal', 'roughness'].map(load));
-    const set = crop => {
-      const result = {};
-      images.forEach((im, i) => {
-        const w = crop ? 256 : (LOW ? 512 : 1024), h = LOW ? 512 : 1024;
-        const c = cvs(w, h), x = c.getContext('2d');
-        if (crop) x.drawImage(im, 340, 0, 56, 1024, 0, 0, w, h);
-        else x.drawImage(im, 0, 0, w, h);
-        result[['map', 'normal', 'rough'][i]] = c;
-      });
-      return result;
-    };
-    PHOTO_WOOD.boards = set(false); PHOTO_WOOD.posts = set(true);
-    const lacquer = set(true), x = lacquer.map.getContext('2d');
-    x.globalCompositeOperation = 'multiply'; x.fillStyle = '#a95944';
-    x.fillRect(0, 0, lacquer.map.width, lacquer.map.height); x.globalCompositeOperation = 'source-over';
-    PHOTO_WOOD.lacquer = lacquer;
-  } catch (err) { console.warn('[305] using procedural wood fallback', err.message); }
-}
-
 function weatherRoofEdges(geo, width, depth, seed) {
   const p = geo.attributes.position, normal = geo.attributes.normal;
   const colors = new Float32Array(p.count * 3), n = noise2D(seed);
@@ -3229,7 +3098,7 @@ function texWood(seed, opt) {
     const amp = bw * (.10 + rnd() * .40);
     const per = 1 + ((rnd() * 2) | 0), ph = rnd() * TAU;
     const dAt = y => d0 + Math.sin(y / H * TAU * per + ph) * amp;
-    const gap = 2.4 + rnd() * 5.0;                    /* ring spacing */
+    const gap = 1.6 + rnd() * 2.4;                    /* ring spacing */
 
     [x, hx, rx].forEach(d => { d.save(); d.beginPath(); d.rect(x0, 0, bw, H); d.clip(); });
     x.fillStyle = hex(base[0] * tone, base[1] * tone, base[2] * tone);
@@ -3237,7 +3106,7 @@ function texWood(seed, opt) {
 
     for (let k = 1; k * gap < bw * 3.4 + d0 + amp; k++) {
       const rr = k * gap * (.88 + rnd() * .24);
-      const dark = .42 + rnd() * .38, wide = .8 + rnd() * 1.9;
+      const dark = .22 + rnd() * .20, wide = .35 + rnd() * .55;
       for (const side of [-1, 1]) {
         let pts = [];
         const flush = () => {
@@ -3265,12 +3134,12 @@ function texWood(seed, opt) {
     }
     /* the odd knot, where a branch left the trunk */
     if (rnd() > .55) {
-      const kx = x0 + bw * (.2 + rnd() * .6), ky = rnd() * H, kr = 2.5 + rnd() * 5;
+      const kx = x0 + bw * (.2 + rnd() * .6), ky = rnd() * H, kr = 1.7 + rnd() * 3.4;
       for (let i = 5; i >= 1; i--) {
         const t = i / 5;
-        x.strokeStyle = 'rgba(0,0,0,' + (.5 - t * .25).toFixed(2) + ')'; x.lineWidth = 1.1;
+        x.strokeStyle = 'rgba(0,0,0,' + (.5 - t * .25).toFixed(2) + ')'; x.lineWidth = .65;
         x.beginPath(); x.ellipse(kx, ky, kr * t * 1.5, kr * t * 2.4, 0, 0, TAU); x.stroke();
-        hx.strokeStyle = 'rgba(0,0,0,.30)'; hx.lineWidth = 1.1;
+        hx.strokeStyle = 'rgba(0,0,0,.30)'; hx.lineWidth = .65;
         hx.beginPath(); hx.ellipse(kx, ky, kr * t * 1.5, kr * t * 2.4, 0, 0, TAU); hx.stroke();
       }
     }
@@ -3279,8 +3148,8 @@ function texWood(seed, opt) {
       const sx = x0 + rnd() * bw, sy = rnd() * H, ln = 20 + rnd() * 120;
       const pts = [];
       for (let y = sy; y < sy + ln; y += 6) pts.push([sx + Math.sin(y * .07) * 1.4, y]);
-      stroke(pts, x, 'rgba(0,0,0,.62)', .7 + rnd() * 1.2);
-      stroke(pts, hx, 'rgba(0,0,0,.55)', .7 + rnd() * 1.2);
+      stroke(pts, x, 'rgba(0,0,0,.36)', .35 + rnd() * .6);
+      stroke(pts, hx, 'rgba(0,0,0,.30)', .35 + rnd() * .6);
     }
     [x, hx, rx].forEach(d => d.restore());
 
@@ -3304,7 +3173,7 @@ function texWood(seed, opt) {
     g.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = g; x.fillRect(sx, top, .8 + rnd() * 3.4, ln);
   }
-  return { map: c, normal: normalFromHeight(h, o.relief || 2.4), rough: r };
+  return { map: c, normal: normalFromHeight(h, o.relief || 1.0), rough: r };
 }
 
 function texLacquer() {
@@ -3562,12 +3431,22 @@ function texTemplePlaque() {
   return { map: c, normal: normalFromHeight(h, 2.1) };
 }
 
+/* a slight falloff at the paper edges gives the light a source inside the
+   room while keeping the lattice legible and the courtyard lamps restrained. */
+function texWindowPaper() {
+  const c = cvs(256, 256), x = c.getContext('2d');
+  const light = x.createRadialGradient(142, 132, 18, 128, 128, 170);
+  light.addColorStop(0, '#ffffff'); light.addColorStop(.55, '#f4f1ea'); light.addColorStop(1, '#d7cfc3');
+  x.fillStyle = light; x.fillRect(0, 0, 256, 256);
+  return c;
+}
+
 function buildTemple() {
   const g = new THREE.Group();
   /* One board library, sampled at two scales: the hall's flanks want the grain
      long and lying down, the columns want it running their own length. */
-  const timber = surface(wallWood(), [3.4, 1.4], { color: 0xa79e93, normal: .42, roughness: .91, metalness: 0 });
-  const post   = surface(postWood(), [1.1, 1.8], { color: 0xb2a292, normal: .38, roughness: .89, metalness: 0 });
+  const timber = surface(wallWood(), [4, 1.6], { color: 0x565150, normal: .60, roughness: .89, metalness: 0 });
+  const post   = surface(postWood(), [1.1, 1.0], { color: 0x8a746d, normal: .48, roughness: .88, metalness: .03 });
   const gold   = new THREE.MeshStandardMaterial({ color: 0x8f6f2e, roughness: .38, metalness: .78 });
   const rf = lib('roof', () => texRoof());
   /* Nearly a silhouette: the roof carries almost no colour of its own, and
@@ -3576,7 +3455,7 @@ function buildTemple() {
   const tileMat = surface(rf, [1, 1], { color: 0x2b343a, roughness: .74, metalness: .10, normal: 1.4 });
   /* the paper the lamps burn through — the only thing in the hall that is
      allowed to be bright, and even then only just above white */
-  const paper = new THREE.MeshBasicMaterial({ color: hdr(TUNE.slotBright * SLOT_RGB[0], TUNE.slotBright * SLOT_RGB[1], TUNE.slotBright * SLOT_RGB[2]), fog: true, toneMapped: false });
+  const paper = new THREE.MeshBasicMaterial({ map: tx(texWindowPaper()), color: hdr(TUNE.slotBright * SLOT_RGB[0], TUNE.slotBright * SLOT_RGB[1], TUNE.slotBright * SLOT_RGB[2]), fog: true, toneMapped: false });
   const grid  = new THREE.MeshBasicMaterial({ map: tx(texShoji()), transparent: true,
     depthWrite: false, fog: true });
   WORLD.paper = paper; WORLD.slot = paper;
@@ -3754,8 +3633,8 @@ function buildMaple(seed, x, z, scale) {
 
   const leafGeo = new THREE.PlaneGeometry(.44, .44);
   const leafMat = new THREE.MeshStandardMaterial({
-    map: tx(texLeaf()), color: 0x713b32, alphaTest: .42, side: THREE.DoubleSide,
-    roughness: .91, metalness: 0
+    map: tx(texLeaf()), color: 0x2b0406, alphaTest: .42, side: THREE.DoubleSide,
+    roughness: .86, metalness: 0, emissive: 0x080000, emissiveIntensity: .12
   });
   const per = LOW ? 8 : 14;
   const inst = new THREE.InstancedMesh(leafGeo, leafMat, tips.length * per);
@@ -3794,8 +3673,8 @@ function buildMaple(seed, x, z, scale) {
   return g;
 }
 
-const wallWood = () => lib('wallWood', () => PHOTO_WOOD.boards || texWood(3, { boards: 7 }));
-const postWood = () => lib('postWood', () => PHOTO_WOOD.posts || texWood(29, { boards: 0 }));
+const wallWood = () => lib('wallWood', () => texWood(3, { boards: 7 }));
+const postWood = () => lib('postWood', () => texWood(29, { boards: 0 }));
 
 /* ========================================================== 5 · the world */
 const WORLD = {};                 /* named handles the page can animate */
@@ -3931,7 +3810,7 @@ const MONO = {
    the green much past .75 and it goes lemon; drop the blue under .3 and the
    clipped core turns orange. Both the material and the tuning panel's live
    handler multiply through this, so the two can never drift apart. */
-const SLOT_RGB = [1, .84, .65];
+const SLOT_RGB = [1, .57, .27];
 /* One pour, shared by the slab, the threshold, the bollards and the stones.
    Concrete is the whole scene now, and generating it per-object is six
    canvases and six normal-map passes for a surface nobody sees twice. */
@@ -4200,7 +4079,7 @@ function buildTorii() {
   /* the weathering costs the gate a lot of its chroma, so the tint puts it
      back: red lifted well past green and blue rather than a flat brightening,
      or the vermilion comes out of the grade as brick */
-  const lac = surface(lib('lacquer', () => PHOTO_WOOD.lacquer || texLacquer()), [2, 2],
+  const lac = surface(lib('lacquer', () => texLacquer()), [2, 2],
     { color: hdr(1.42, 1.03, .95), roughness: .87, metalness: .02, normal: .34 });
   const gold = new THREE.MeshStandardMaterial({ color: 0x7a5d2a, roughness: .50, metalness: .60 });
   const g = new THREE.Group();
@@ -4546,7 +4425,7 @@ function buildForeground() {
     ['grassNear', texGrassCutout(303, { crest: .28, peak: .44, wide: .46, blades: 14000, len: 48, warm: .85, crest2: .42, crest3: .44 }),
                   -1.9,  2.38,  5.6, 12,  7.4, .092],
     /* the bough hangs overhead and was never in the way — it stays put */
-    ['bough',     texBranchCutout(505, { dry: true }), 4.6, 2.95, 6.4, 13, 8.7, .045],
+    ['bough',     texBranchCutout(505, { dry: false }), 4.6, 2.95, 6.4, 13, 8.7, .045],
     ['rockNear',  texRockCutout(606, { blobs: [[.18, .86, .54, .44], [.54, 1.02, .50, .36], [.86, .92, .40, .32]] }),
                   -6.6,  0.85,  6.0, 9, 6, .008]
   ];
@@ -6322,7 +6201,7 @@ function buildLights() {
   /* The hall's own lamps. They light the podium and the top of the flight and
      nothing else — a range that reaches the roof turns the whole building into
      a paper lantern and the silhouette disappears. */
-  const hallL = new THREE.PointLight(0xefdbb9, 1.25, 15, 2);
+  const hallL = new THREE.PointLight(0xffd4a2, 1.25, 15, 2);
   hallL.position.set(0, PODIUM + 1.2, TEMPLE_Z + 8.6); scene.add(hallL); WORLD.hallLight = hallL;
   [-1, 1].forEach(s => {
     const w = new THREE.PointLight(0xead9ba, 1.0, 11, 2);
@@ -7774,7 +7653,6 @@ function resize() {
 function updateWorld(dt) {
   WORLD.uT.value = clock;
   WET_TIME.value = REDUCE ? 0 : clock;
-  if (WORLD.skyTime) WORLD.skyTime.value = WET_TIME.value;
   if (WORLD.breeze) WORLD.breeze.value = WET_TIME.value;
 
   /* the focused chapter warms the lanterns and swells the disc */
@@ -7917,7 +7795,6 @@ function queue() { TIMER ? setTimeout(() => frame(performance.now()), 16) : requ
 const JOBS = [
   ['Reading the type', () => document.fonts && document.fonts.load('600 320px Wordmark')],
   ['Fetching the work', () => loadWorkShots()],
-  ['Weathering the timber', () => loadWoodMaterials()],
   /* critical jobs are marked rather than counted: fetching the work moved
      renderer setup to third, and the old index check left failed boots locked. */
   ['Pouring the ground', async () => { initGL(); WORLD.uT = { value: 0 }; buildRig(); await buildEnvironment(); buildLights(); }, true],

@@ -214,3 +214,29 @@ both redwood quality modes and shared rock normals. Desktop/narrow browser
 review covers all scenes; screenshots remain local review artifacts. This is
 still a local study, with no deployment and no Blender changes. 28cd03e preserves
 the preceding scene pass.
+
+
+## Softer sky and engraved studio marks
+
+The cloud treatment returns to 28cd03e, retaining the 4K desktop bake. Only
+the extra silver rim is thinner, from density band .18–.56 to .22–.49; the
+cloud body and broad glow keep their earlier shading. The later directional
+mask and bright filament pass are removed. This also removes their per-frame
+sky draw and extra density texture. The async sky safeguards remain.
+
+Redwood trunks are darker with less environment reflection. Both Monolith and
+Forest carry a 2.55m-wide, .90m-high 305 just above the slit, shaded as a shallow
+cut into the concrete. A front-face mask and view-space height derivatives
+retain the underlying concrete; there is no separate plaque. Forest chains its
+canopy-light shader and keeps its existing facade mapping.
+
+Temple returns to its original procedural wood and material tints. The growth
+rings, knots and splits are finer, and the height relief and normal strengths
+are reduced. Red maple foliage returns while keeping the fuller tree geometry.
+Shoji paper emits warm interior light with a subtle edge falloff; exterior
+lanterns retain their restrained cream light. Photographic wood assets remain
+archived but are no longer loaded.
+
+Validation: 56 tests pass after removing the intentionally reverted directional
+edge-light assertion. Desktop previews check both engraved facades, Temple's
+wood and windows, and all three shared skies. This remains a local study.
