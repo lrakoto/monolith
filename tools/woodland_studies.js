@@ -79,6 +79,7 @@ function buildGardenRedwoods() {
       'transformed.x+=(sin(uBreeze*.64+ph)*.065+sin(uBreeze*3.1+ph*2.)*.032)*tip;\n' +
       'transformed.y+=cos(uBreeze*.51+ph)*.048*tip;\n');
   };
+  gardenSway(bark,8,38,.25);gardenSway(needles,8,38,.25);
   const woodParts = [], sprays = [], specs = [
     [71, 13.4, -13.0, 1.05, 43, 1.72], [72, -12.8, -9.4, .95, 46, 1.82],
     [73, 10.0, -19.0, .90, 36, 1.44], [74, -15.5, -17.5, 1.0, 44, 1.65],

@@ -13,13 +13,13 @@ PAGE=ROOT/'temple-study.html'
 class TempleStudyTests(unittest.TestCase):
     @unittest.skipIf(shutil.which('node') is None, 'node unavailable')
     def test_study_and_vendored_loader_parse(self):
-        for name in ('temple','redwoods','forest'):
+        for name in ('temple','redwoods','pond'):
             source=(ROOT/(name+'-study.html')).read_text()
             script=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',source,re.S)[-1]
             result=subprocess.run(['node','--check'],input=script,text=True,capture_output=True)
             self.assertEqual(result.returncode,0,name+result.stderr)
             self.assertIn("fetch('/__tune/study/save'",source)
-            for other in ('temple','redwoods','forest'):
+            for other in ('temple','redwoods','pond'):
                 self.assertIn('href="'+other+'-study.html"',source)
         result=subprocess.run(['node','--check',str(ROOT/'assets/temple-study/GLTFLoader.r149.js')],text=True,capture_output=True)
         self.assertEqual(result.returncode,0,result.stderr)

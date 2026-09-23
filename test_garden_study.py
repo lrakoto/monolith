@@ -10,7 +10,7 @@ class GardenStudyTests(unittest.TestCase):
     def test_geometry_budget_water_and_reversible_scene_modes(self):
         code=r"""
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),THREE=require('./assets/three.min.js');
-const page=fs.readFileSync('temple-study.html','utf8'),garden=fs.readFileSync('tools/temple_landscape.js','utf8')+'\n'+fs.readFileSync('tools/woodland_studies.js','utf8');
+const page=fs.readFileSync('temple-study.html','utf8'),garden=fs.readFileSync('tools/temple_landscape.js','utf8')+'\n'+fs.readFileSync('tools/woodland_studies.js','utf8')+'\n'+fs.readFileSync('tools/pond_study.js','utf8');
 const redwoods=fs.readFileSync('redwoods.html','utf8');
 const native= ['redwoodTrunkGeo','redwoodSprayGeo'].map(name=>redwoods.match(new RegExp('function '+name+'\\([^\\n]*\\) \\{[\\s\\S]*?\\n\\}'))[0]).join('\n');
 const helpers=page.slice(page.indexOf('const clamp  ='),page.indexOf('/* ------------------------------------------------------- 0b'));
@@ -34,13 +34,13 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  rememberStudyRocks();buildLandscapeStudy();`,ctx);
  const g=scene.getObjectByName('complete garden study');assert(g.visible);
  assert.notEqual(stair.material,stone);
- if(kind==='forest')assert(g.getObjectByName('woodland tree'));
+ if(kind==='forest'){assert(!g.getObjectByName('woodland tree'));assert(g.getObjectByName('emergent pond reeds').count>0);const pads=g.getObjectByName('pond lily pads');assert(pads.count>0);for(let i=0;i<pads.count;i++){const m=new THREE.Matrix4();pads.getMatrixAt(i,m);assert(Math.abs(m.elements[12])>=6.2);}}
  if(kind==='redwoods')assert(g.getObjectByName('detailed redwood grove'));
- const canopy=g.getObjectByName(kind==='redwoods'?'redwood-needle-sprays':(kind==='forest'?'woodland tree':'garden maple'));
- const leafMaterial=kind==='redwoods'?canopy.material:canopy.children.find(o=>o.isInstancedMesh).material;
- const leafShader={uniforms:{},vertexShader:'#include <begin_vertex>',fragmentShader:'#include <color_fragment>'};
+ const canopy=g.getObjectByName(kind==='redwoods'?'redwood-needle-sprays':(kind==='forest'?'pond shrub leaves':'garden maple'));
+ const leafMaterial=kind!=='temple'?canopy.material:canopy.children.find(o=>o.isInstancedMesh).material;
+ const leafShader={uniforms:{},vertexShader:'#include <begin_vertex>\n#include <project_vertex>',fragmentShader:'#include <color_fragment>'};
  leafMaterial.onBeforeCompile(leafShader);
- assert.equal(leafShader.uniforms[kind==='redwoods'?'uBreeze':'uGardenTime'],clock);
+ assert.equal(leafShader.uniforms[kind==='redwoods'?'uBreeze':'uGardenTime'],clock);assert.equal(leafShader.uniforms.uGardenSway,clock);
 
  const old=scene.getObjectByName('original garden');assert.equal(old.visible,false);WORLD.fg[0].visible=true;assert.equal(WORLD.fg[0].parent.visible,false);
  let triangles=0,meshes=0;

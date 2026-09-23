@@ -191,7 +191,7 @@ function gardenPlantGeo(fern) {
 }
 function plantGardenBanks() {
   const rnd=mulberry32(93051),matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),color=new THREE.Color();
-  const mat=gardenWind(new THREE.MeshStandardMaterial({color:0x82965a,vertexColors:true,side:THREE.DoubleSide,roughness:.89,envMapIntensity:.8}),.13);
+  const mat=gardenWind(new THREE.MeshStandardMaterial({color:0x82965a,vertexColors:true,side:THREE.DoubleSide,roughness:.89,envMapIntensity:.8}),.24);
   const grass=new THREE.InstancedMesh(gardenPlantGeo(false),mat,LOW?1400:4500);
   const fern=new THREE.InstancedMesh(gardenPlantGeo(true),mat,LOW?(GARDEN_STYLE==='temple'?100:190):(GARDEN_STYLE==='temple'?300:580));
   const clumps=noise2D(119);
@@ -316,15 +316,17 @@ function buildLandscapeStudy() {
   for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
   GARDEN.leafGeo.computeVertexNormals();
   GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
+  if(GARDEN_STYLE==='temple'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
   buildGardenTerrain();
   if(GARDEN_STYLE==='redwoods')buildGardenRedwoods();
+  else if(GARDEN_STYLE==='forest')buildPondGarden();
   else {
     GARDEN.trees.forEach(args=>buildGardenMaple(...args));
     [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],[814,28,-58,2.15]].forEach(args=>buildGardenMaple(...args,true));
-    if(GARDEN_STYLE==='forest')[[821,-19,-24,1.5],[822,20,-29,1.7]].forEach(args=>buildGardenMaple(...args,true));
+
   }
   if(typeof buildGardenStonework==='function')buildGardenStonework();
-  if(typeof buildWoodlandUnderstory==='function')buildWoodlandUnderstory();
+  if(GARDEN_STYLE==='redwoods')buildWoodlandUnderstory();
   buildGardenAtmosphere();
   buildGardenLeafRafts();
   gardenEdit(WORLD.pond,'material',gardenWaterMaterial(WORLD.pond.material));
