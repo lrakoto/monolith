@@ -153,9 +153,9 @@
   --muted:#78837c;
   --line:rgba(223,231,224,.13);
   --line-soft:rgba(223,231,224,.07);
-  --brand:#66c987;        /* the forest keeps its original leaf green accent */
-  --brand-rgb:102,201,135;
-  --brand-deep:#38674a;   /* its shadow side, for gradients that need a floor */
+  --brand:#45c96d;
+  --brand-rgb:69,201,109;
+  --brand-deep:#276c3f;
   --ember:#ff6f66;        /* the warm end, tied to the slot light in the scene */
   --gold:#c9a24a;
   --pad:clamp(20px, 3.4vw, 56px);
@@ -321,11 +321,7 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
   position:relative; font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
   color:var(--bone-dim); display:block; height:15px; line-height:15px; overflow:hidden;
 }
-.nav-link span{ display:block; height:15px; line-height:15px; transition:transform .55s var(--ease-out), color .3s; }
-.nav-link .alt{ position:absolute; inset:0; transform:translate3d(0,100%,0); color:var(--brand); letter-spacing:.32em; }
-.nav-link:hover span{ transform:translate3d(0,-100%,0); }
-.nav-link:hover .alt{ transform:none; }
-.nav-link.on{ color:var(--brand); }
+.nav-link span{ display:block; height:15px; line-height:15px; }
 .nav-link::after{ content:''; position:absolute; left:0; bottom:0; width:100%; height:1px;
   background:var(--brand); transform:scaleX(0); transform-origin:left; transition:transform .25s; }
 .nav-link:hover::after,.nav-link:focus-visible::after,.nav-link.on::after{ transform:scaleX(1); }
@@ -1073,7 +1069,6 @@ body.xp-3d .xp li p{ margin-top:4px; }
     font-size:17px; line-height:1.2;
   }
   .nav-links .nav-link span{ height:auto; line-height:1.2; transform:none !important; }
-  .nav-links .nav-link .alt{ position:static; margin-top:6px; font-size:10px; color:var(--muted); }
   /* The links panel leaves the flow to become the slide-in sheet, taking its
      margin-left:auto with it, so without this the burger sits tucked against
      the wordmark instead of out at the edge where a thumb reaches. */
@@ -1338,7 +1333,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 .acard:hover .acard-meta{ color:#e4ebe6; }
 
 /* color stays with the interactive details, leaving the main copy calm. */
-.eyebrow,.sec-head .k,.nav-icon:hover,.foot li a:hover{ color:var(--brand); }
+.eyebrow,.sec-head .k,.foot li a:hover{ color:var(--brand); }
 .cta,.nav-cv{ border-color:rgba(var(--brand-rgb),.48); }
 .cta i,.nav-cv i{ background:var(--brand); }
 .cta:hover,.nav-cv:hover{ border-color:var(--brand); }
@@ -1353,13 +1348,9 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
   min-height:30px; padding:0 10px; border-radius:100px; color:#c6d1ca;
   font-size:11px; font-weight:500; text-decoration:none;
   transition:background .2s, color .2s; }
-.scene-options a:hover{ background:rgba(var(--brand-rgb),.12); color:var(--brand); }
-.scene-options a[aria-current="page"]{ background:rgba(var(--brand-rgb),.16); color:var(--brand); }
-.scene-options a::after{ content:''; position:absolute; left:12px; right:12px; bottom:4px;
-  height:1px; background:var(--brand); transform:scaleX(0); transition:transform .2s; }
-.scene-options a:hover::after,.scene-options a:focus-visible::after,
-.scene-options a[aria-current="page"]::after{ transform:scaleX(1); }
-.scene-options a:focus-visible{ outline:2px solid var(--brand); outline-offset:3px; }
+.scene-options a:hover{ background:rgba(223,231,224,.09); }
+.scene-options a[aria-current="page"]{ background:rgba(223,231,224,.14); }
+.scene-options a:focus-visible{ outline:2px solid var(--bone-dim); outline-offset:3px; }
 @media (max-width:520px){
   .card-lab{ padding:10px; gap:8px; }
   .card-meta{ letter-spacing:.08em; }
@@ -1436,11 +1427,11 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
     <span class="brand-tx"><b>THREEOHFIVE<em>STUDIOS</em></b><i>LOS ANGELES</i></span>
   </a>
   <nav class="nav-links" id="navlinks">
-    <a class="nav-link" href="#top" data-cursor><span>Top</span><span class="alt">01</span></a>
-    <a class="nav-link" href="#pathways" data-cursor><span>Work</span><span class="alt">02</span></a>
-    <a class="nav-link" href="#lessons" data-cursor><span>What I do</span><span class="alt">03</span></a>
-    <a class="nav-link" href="#experience" data-cursor><span>Experience</span><span class="alt">04</span></a>
-    <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">05</span></a>
+    <a class="nav-link" href="#top" data-cursor><span>Top</span></a>
+    <a class="nav-link" href="#pathways" data-cursor><span>Work</span></a>
+    <a class="nav-link" href="#lessons" data-cursor><span>What I do</span></a>
+    <a class="nav-link" href="#experience" data-cursor><span>Experience</span></a>
+    <a class="nav-link" href="#eternity" data-cursor><span>Contact</span></a>
   </nav>
   <a class="nav-cv" href="/wp-content/uploads/2026/03/Lova_Resume_2026.pdf" aria-label="Download résumé" download data-cursor>
     <i></i>
@@ -1945,7 +1936,7 @@ const TUNE = {
   stairFilmRough:   0.050,
   stairEdgeShine:   0.480,
   envIntensity:     1.15,
-  slotBright:       1.550,
+  slotBright:       1.100,
   moonBright:       0.285,
   moonSize:         0.76,
   lampBright:       8.00,
@@ -3541,6 +3532,18 @@ function texWindowPaper() {
   return c;
 }
 
+/* a little less aerial wash keeps the distant hall readable. the garden
+   keeps its full fog, and the difference fades naturally on the approach. */
+function applyTempleDepth(mat) {
+  const compile = mat.onBeforeCompile, cacheKey = mat.customProgramCacheKey();
+  mat.onBeforeCompile = function(shader, renderer) {
+    compile.call(this, shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <fog_fragment>',
+      THREE.ShaderChunk.fog_fragment.replace('fogDensity * fogDensity', 'fogDensity * fogDensity * .72'));
+  };
+  mat.customProgramCacheKey = () => cacheKey + '|temple-depth-v1';
+}
+
 function buildTemple() {
   const g = new THREE.Group();
   /* One board library, sampled at two scales: the hall's flanks want the grain
@@ -3676,21 +3679,31 @@ function buildTemple() {
     r.position.set(s * 10.6, F + 3.4, TEMPLE_Z + 1.4); r.castShadow = true; g.add(r);
   });
 
+  /* the eaves were casting onto the garden but never receiving each other.
+     the existing shadow map can now give the hall its recesses back. */
+  const hallMaterials = new Set();
+  g.traverse(mesh => {
+    if (mesh.isMesh && mesh.material.isMeshStandardMaterial) {
+      mesh.receiveShadow = true;
+      hallMaterials.add(mesh.material);
+    }
+  });
+  hallMaterials.forEach(applyTempleDepth);
   scene.add(g); WORLD.temple = g;
 
   /* the glow the hall pushes out over its own steps */
   const spill = new THREE.Mesh(new THREE.PlaneGeometry(30, 16),
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,237,205,.64)', 'rgba(240,221,184,.08)')),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .09 }));
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .035 }));
   spill.position.set(0, F + 3.0, TEMPLE_Z + 5.6); spill.renderOrder = 2;
   scene.add(spill); WORLD.hallHalo = spill;
 
-  /* the band of mist that separates the hall from the trees behind it — the
-     one thing that stops the whole background reading as a single flat cut-out */
+  /* keep the mist behind the hall. in front, its additive veil flattened
+     the timber and roof into the same blue grey at the opening distance. */
   const mist = new THREE.Mesh(new THREE.PlaneGeometry(64, 20),
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(150,178,190,.62)', 'rgba(104,138,154,.20)')),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .17 }));
-  mist.position.set(0, F - 1.4, TEMPLE_Z + 10); mist.renderOrder = 2; scene.add(mist);
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .10 }));
+  mist.position.set(0, F - 1.4, TEMPLE_Z - 9); mist.renderOrder = 2; scene.add(mist);
 }
 
 const wallWood = () => lib('wallWood', () => texWood(3, { boards: 7 }));
@@ -6554,10 +6567,10 @@ function buildLights() {
 
 
   /* the hall lamps stay close to the paper and the top of the flight. */
-  const hallL = new THREE.PointLight(0xffd4a2, 1.25, 15, 2);
+  const hallL = new THREE.PointLight(0xffd4a2, .90, 15, 2);
   hallL.position.set(0, PODIUM + 1.2, TEMPLE_Z + 8.6); scene.add(hallL); WORLD.hallLight = hallL;
   [-1, 1].forEach(s => {
-    const w = new THREE.PointLight(0xead9ba, 1.0, 11, 2);
+    const w = new THREE.PointLight(0xead9ba, .78, 11, 2);
     w.position.set(s * 11.4, PODIUM + 1.2, TEMPLE_Z + 5.6); scene.add(w);
   });
 
@@ -8155,8 +8168,8 @@ function updateWorld(dt) {
   RIG.focusAmt = damp(RIG.focusAmt, RIG.focus >= 0 ? 1 : 0, 5, dt);
   const pulse = Math.sin(clock * 1.9) * .5 + .5;
   const f = RIG.focusAmt;
-  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .08 + f * .025 + Math.sin(clock * .6) * .005;
-  if (WORLD.hallLight) WORLD.hallLight.intensity = 1.25 * (1 + f * .15) * (1 + Math.sin(clock * .43) * .025);
+  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .035 + f * .012 + Math.sin(clock * .6) * .003;
+  if (WORLD.hallLight) WORLD.hallLight.intensity = .90 * (1 + f * .15) * (1 + Math.sin(clock * .43) * .025);
   /* the moon only breathes — the haze in front of it is what actually moves */
   if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .44 + f * .10 + Math.sin(clock * .34) * .05;
   if (WORLD.lanternLights) WORLD.lanternLights.forEach((l, i) => {

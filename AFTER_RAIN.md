@@ -294,3 +294,23 @@ all scene pages revalidate their cache. The 64-test suite covers scene routing,
 redirects, navigation selection, shaders, submerged geometry in both quality
 modes, and the actual local save endpoints. Desktop browser checks cover all
 three settings; the narrow layout is checked before publishing.
+
+
+## Quieter navigation and clearer Temple depth
+
+Scene choices keep a neutral active pill, with no accent tint or underline.
+Main navigation keeps neutral labels on hover and selection; only its underline
+uses the scene accent. The rolling number labels are removed. Temple uses a
+slightly richer red, Redwoods a pale leaf green, and Forest a stronger green.
+
+All three halls have softer paper windows, less halo and lower spill lighting.
+The additive mist sheet now sits behind the building, where it was intended,
+and the opaque Temple meshes receive the existing shadows. A modest local fog
+adjustment preserves more roof and timber contrast at the opening distance;
+it fades naturally as the camera approaches. Forest's canopy lighting is
+chained through the material hook and keeps a distinct shader cache key.
+
+Validation includes the 65-test suite and real Three.js shader composition for
+all three scenes, covering both plain materials and Forest's canopy hook.
+Browser review covers wide and close views, active and hovered navigation,
+scene palettes and the narrow menu. Clouds, water and planting remain intact.

@@ -212,6 +212,50 @@ class ForestMachineReadableTests(MachineReadableTests):
     source = INDEX.with_name("forest.html").read_text()
 
 
+class TempleMaterialTests(unittest.TestCase):
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_depth_shading_preserves_forest_light_and_shader_cache(self):
+        for page in (INDEX, INDEX.with_name("redwoods.html"), INDEX.with_name("forest.html")):
+            with self.subTest(page=page.name):
+                source = inline_script(page.read_text())
+                depth = re.search(r"function applyTempleDepth\(mat\) \{.*?\n\}", source, re.S).group(0)
+                canopy = re.search(r"function applyForestLight\(mat\) \{.*?\n\}", source, re.S)
+                harness = r"""
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const THREE=require('./assets/three.min.js');
+const originalFog=THREE.ShaderChunk.fog_fragment;
+const WORLD={canopy:new THREE.Texture(),breeze:{value:1}};
+const ctx={THREE,WORLD};vm.createContext(ctx);vm.runInContext(DEPTH+CANOPY,ctx);
+const plain=new THREE.MeshStandardMaterial(),mat=new THREE.MeshStandardMaterial();
+if(CANOPY) ctx.applyForestLight(mat);
+const oldKey=mat.customProgramCacheKey();ctx.applyTempleDepth(mat);
+const key=mat.customProgramCacheKey();assert.notEqual(key,oldKey);
+assert.notEqual(key,plain.customProgramCacheKey());
+for(let i=0;i<2;i++) {
+ const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,
+  fragmentShader:THREE.ShaderLib.standard.fragmentShader};
+ mat.onBeforeCompile(shader);
+ assert(!shader.fragmentShader.includes('#include <fog_fragment>'));
+ assert.equal((shader.fragmentShader.match(/float fogFactor = 1.0 - exp/g)||[]).length,1);
+ const factor=Number(shader.fragmentShader.match(/fogDensity \* fogDensity \* ([.\d]+)/)[1]);
+ assert(factor>0 && factor<1);
+ assert(shader.fragmentShader.includes('smoothstep( fogNear, fogFar, vFogDepth )'));
+ if(CANOPY) {
+  assert.equal(shader.uniforms.uCanopy.value,WORLD.canopy);
+  assert.equal(shader.uniforms.uBreeze,WORLD.breeze);
+  assert(shader.vertexShader.includes('vGardenWorld=(modelMatrix*gardenP).xyz'));
+  assert(shader.fragmentShader.includes('diffuseColor.rgb*=mix(.82,1.42,canopy)'));
+ }
+ assert.equal(mat.customProgramCacheKey(),key);
+}
+assert.equal(THREE.ShaderChunk.fog_fragment,originalFog);
+"""
+                result = subprocess.run(["node", "-e", "const DEPTH=" + json.dumps(depth) +
+                                         ";const CANOPY=" + json.dumps(canopy.group(0) if canopy else "") +
+                                         ";\n" + harness], cwd=INDEX.parent, capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+
 class PondTests(unittest.TestCase):
     source = SOURCE
 
