@@ -74,7 +74,7 @@ class TuneSaveTests(unittest.TestCase):
         self.assertEqual(self.index.read_text(), "portfolio without settings")
 
     def test_scene_save_cannot_overwrite_the_other_scene(self):
-        scenes = {name: self.index.with_name(name + ".html") for name in ("temple", "forest")}
+        scenes = {name: self.index.with_name(name + ".html") for name in ("redwoods", "forest")}
         for page in scenes.values():
             page.write_text(SOURCE)
         for name, page in scenes.items():
@@ -96,9 +96,9 @@ class PreviewConnectionTests(unittest.TestCase):
     def test_scene_save_endpoints_target_their_own_page(self):
         with tempfile.TemporaryDirectory() as directory:
             index = Path(directory, "index.html")
-            temple = Path(directory, "temple.html")
+            redwoods = Path(directory, "redwoods.html")
             index.write_text(SOURCE)
-            temple.write_text(SOURCE)
+            redwoods.write_text(SOURCE)
             forest = Path(directory, "forest.html")
             forest.write_text(SOURCE)
             with patch.object(serve, "HERE", Path(directory)), patch.object(serve, "INDEX", index):
@@ -110,22 +110,19 @@ class PreviewConnectionTests(unittest.TestCase):
                 worker.start()
                 request = http.client.HTTPConnection(*server.server_address, timeout=2)
                 try:
-                    request.request("POST", "/__tune/temple/save", json.dumps({"first": .75}),
-                                    {"content-type": "application/json"})
-                    response = request.getresponse()
-                    self.assertEqual(response.status, 200)
-                    response.read()
-                    self.assertEqual(index.read_text(), SOURCE)
-                    self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
-                    self.assertEqual(forest.read_text(), SOURCE)
-                    request.request("POST", "/__tune/forest/save", json.dumps({"second": 3}),
-                                    {"content-type": "application/json"})
-                    response = request.getresponse()
-                    self.assertEqual(response.status, 200)
-                    response.read()
-                    self.assertEqual(forest.read_text(), SOURCE.replace("second: 1.00", "second: 3.00"))
-                    self.assertEqual(index.read_text(), SOURCE)
-                    self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+                    expected = {"index.html": SOURCE, "redwoods.html": SOURCE, "forest.html": SOURCE}
+                    for endpoint, filename in (("/__tune/temple/save", "index.html"),
+                                               ("/__tune/redwoods/save", "redwoods.html"),
+                                               ("/__tune/save", "redwoods.html"),
+                                               ("/__tune/forest/save", "forest.html")):
+                        request.request("POST", endpoint, json.dumps({"first": .75}),
+                                        {"content-type": "application/json"})
+                        response = request.getresponse()
+                        self.assertEqual(response.status, 200)
+                        response.read()
+                        expected[filename] = SOURCE.replace("first: .50", "first: 0.75")
+                        for name, content in expected.items():
+                            self.assertEqual(Path(directory, name).read_text(), content)
                 finally:
                     request.close()
                     server.shutdown()

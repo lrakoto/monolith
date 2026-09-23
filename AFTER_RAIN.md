@@ -266,3 +266,31 @@ shader behavior with and without reflections on all three pages. Desktop
 review covers Monolith's pond and Temple's leaves, timber, water and sky;
 Temple also loads without errors in a narrow low-quality viewport and after
 rotation. The preview remains on port 5193. This is a local study.
+
+
+## Temple across three landscapes
+
+The clouds return exactly to d9eeb56, before the brighter edge pass. All three
+scenes retain the 4K cloud shapes and soft moon glow. Temple now lives in
+index.html and appears first, followed by Redwoods in redwoods.html and Forest
+in forest.html. Old temple.html and monolith.html links redirect with their
+query settings and section intact. Tuning saves still target their own scene.
+
+All three settings use the same timber Temple building, 305 plaque and warm
+paper windows. Redwoods retains its giant grove; Forest retains its broadleaf
+banks, ferns, gateway vines and drifting canopy light. The slab and its unused
+material and engraving helpers are removed.
+
+The ponds gain sparse colonies of short submerged grass: 240 tufts on desktop
+and 80 in low quality, in one instanced mesh per scene. Their roots follow the
+actual basin triangles and every tip stays below the water. The existing water
+shading and reflections remain. Coral interface accents return to Temple and
+Redwoods; Forest restores its leaf green. Main navigation and scene choices
+show hover, keyboard focus and active underlines, initialized on arrival and
+kept active through chapters without a named navigation link.
+
+The deployment excludes local study notes and unused photographic maps, and
+all scene pages revalidate their cache. The 64-test suite covers scene routing,
+redirects, navigation selection, shaders, submerged geometry in both quality
+modes, and the actual local save endpoints. Desktop browser checks cover all
+three settings; the narrow layout is checked before publishing.

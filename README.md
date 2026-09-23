@@ -1,16 +1,18 @@
 # Monolith
 
 The portfolio of **ThreeOhFive Studios** — Lova Rakoto, web developer and
-designer in Los Angeles — built over a single-page WebGL scene: a board-formed
-concrete slab standing at the head of a forty-step flight, with one horizontal
-slot of light cut through it.
+designer in Los Angeles — built over a live WebGL temple above a forty-step
+flight and reflective pond. Three settings surround the same timber hall:
+red maples, a redwood grove and a planted forest.
 
 Rendered live in Three.js. Every piece of geometry and every texture *in the
 scene* is generated in JavaScript at load — no model files, no image assets.
 The exceptions are deliberate and both live outside the scene: the studio mark
 in `assets/brand/`, and captures of the work in `assets/work/`.
 
-Open `index.html` through a local server and scroll.
+Temple is the opening scene in `index.html`, followed by Redwoods in
+`redwoods.html` and Forest in `forest.html`. The old `temple.html` link redirects
+to the homepage. Open `index.html` through a local server and scroll.
 
 ## Running
 
@@ -21,8 +23,9 @@ python3 -m http.server 5180
 ```
 
 To use the tuning panel's **Save** button you need the small server included
-here, which adds one route (`POST /__tune/save`) that writes slider values back
-into the source:
+here, which writes slider values back into the selected scene: Temple uses
+`POST /__tune/temple/save`, Redwoods uses `POST /__tune/redwoods/save`, and Forest uses
+`POST /__tune/forest/save`:
 
 ```sh
 python3 serve.py           # http://127.0.0.1:5180
@@ -37,7 +40,7 @@ field, puddle opacity and ripple, the stair films, and scene-level environment,
 slot, and moon values.
 
 Drag to see the change on the next frame; **SAVE TO CODE** writes the numbers
-back into the `const TUNE` block in `index.html`, preserving the file's own
+back into the selected scene's `const TUNE` block, preserving the file's own
 number formatting. Without `serve.py` running, Save falls back to copying the
 values to the clipboard. Partial saves preserve omitted settings and comments;
 invalid values are rejected, and a failed write leaves the source intact.

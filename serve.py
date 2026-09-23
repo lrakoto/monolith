@@ -5,7 +5,7 @@
 CODE button needs somewhere to POST to. This is that, and nothing else: it
 serves the directory exactly as http.server does, and adds one route.
 
-  POST /__tune/save   body: the TUNE object as JSON
+  POST /__tune/temple/save   body: the TUNE object as JSON
                       effect: rewrites the `const TUNE = { ... };` block in
                               index.html in place, preserving key order and
                               the comment above it.
@@ -52,12 +52,12 @@ def format_value(value, template):
     return str(int(round(float(value))))
 
 
-def write_tune(values, scene="monolith"):
+def write_tune(values, scene="temple"):
     # atomic replacement protects the file; the lock also keeps two partial
     # saves from both reading the old values and discarding each other's edit.
-    if scene not in ("monolith", "temple", "forest"):
+    if scene not in ("redwoods", "temple", "forest"):
         raise ValueError("unknown scene")
-    target = INDEX if scene == "monolith" else INDEX.with_name(scene + ".html")
+    target = INDEX if scene == "temple" else INDEX.with_name(scene + ".html")
     with SAVE_LOCK:
         return _write_tune(values, target)
 
@@ -121,7 +121,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(HERE), **kwargs)
 
     def do_POST(self):  # noqa: N802 — http.server's naming
-        scenes = {"/__tune/save": "monolith", "/__tune/temple/save": "temple", "/__tune/forest/save": "forest"}
+        scenes = {"/__tune/save": "redwoods", "/__tune/redwoods/save": "redwoods", "/__tune/temple/save": "temple", "/__tune/forest/save": "forest"}
         if self.path not in scenes:
             self.send_error(404)
             return

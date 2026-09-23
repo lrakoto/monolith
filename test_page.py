@@ -34,13 +34,45 @@ def inline_script(source=SOURCE):
 class InlineScriptTests(unittest.TestCase):
     @unittest.skipIf(shutil.which("node") is None, "node is not installed")
     def test_inline_script_parses(self):
-        for page in (INDEX, INDEX.with_name("temple.html"), INDEX.with_name("forest.html")):
+        for page in (INDEX, INDEX.with_name("redwoods.html"), INDEX.with_name("forest.html"), INDEX.with_name("temple.html"), INDEX.with_name("monolith.html")):
             with self.subTest(page=page.name), tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as staged:
                 staged.write(inline_script(page.read_text()))
                 staged.flush()
                 result = subprocess.run(["node", "--check", staged.name],
                                         capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class SceneRoutingTests(unittest.TestCase):
+    def test_temple_is_home_and_first_scene(self):
+        for page, current in ((INDEX, "Temple"), (INDEX.with_name("redwoods.html"), "Redwoods"),
+                              (INDEX.with_name("forest.html"), "Forest")):
+            source = page.read_text()
+            self.assertIn("['Raising the temple', () => buildTemple()]", source)
+            self.assertNotIn("function buildMonolith()", source)
+            picker = re.search(r'<nav class="scene-picker".*?</nav>', source, re.S).group(0)
+            links = re.findall(r'<a href="([^"]+)"([^>]*)>([^<]+)</a>', picker)
+            self.assertEqual([(href, label) for href, _, label in links],
+                             [("index.html", "Temple"), ("redwoods.html", "Redwoods"), ("forest.html", "Forest")])
+            self.assertEqual([label for _, attrs, label in links if 'aria-current="page"' in attrs], [current])
+        self.assertIn("function buildTemple()", SOURCE)
+        self.assertIn("fetch('/__tune/temple/save'", SOURCE)
+        self.assertIn("fetch('/__tune/redwoods/save'", INDEX.with_name("redwoods.html").read_text())
+
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_old_scene_links_preserve_query_and_section(self):
+        for old, new in (("temple.html", "index.html"), ("monolith.html", "redwoods.html")):
+            redirect = inline_script(INDEX.with_name(old).read_text())
+            harness = "const assert=require('node:assert/strict'); const window={location:{search:'?tune=1',hash:'#experience',replace:url=>assert.equal(url," + json.dumps(new + '?tune=1#experience') + ")}};\n"
+            result = subprocess.run(["node", "-e", harness + redirect], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_navigation_stays_active_at_arrival_and_between_named_sections(self):
+        fn = re.search(r"function navChapterIndex\([^\n]+\) \{.*?\n\}", SOURCE, re.S).group(0)
+        harness = "const assert=require('node:assert/strict'); const chapters=[0,2400,9000,12000,15000]; for(const [p,i] of [[0,0],[500,0],[2300,0],[2400,1],[8900,1],[9000,2],[12000,3],[15000,4],[18000,4]]) assert.equal(navChapterIndex(chapters,p),i);"
+        result = subprocess.run(["node", "-e", fn + "\n" + harness], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 class TuningPanelTests(unittest.TestCase):
@@ -156,16 +188,16 @@ class MachineReadableTests(unittest.TestCase):
             self.assertIn(title, text, f"{title} is missing from llms.txt")
 
 
-class TempleTuningPanelTests(TuningPanelTests):
-    source = INDEX.with_name("temple.html").read_text()
+class RedwoodsTuningPanelTests(TuningPanelTests):
+    source = INDEX.with_name("redwoods.html").read_text()
 
 
-class TempleWorkCardTests(WorkCardTests):
-    source = INDEX.with_name("temple.html").read_text()
+class RedwoodsWorkCardTests(WorkCardTests):
+    source = INDEX.with_name("redwoods.html").read_text()
 
 
-class TempleMachineReadableTests(MachineReadableTests):
-    source = INDEX.with_name("temple.html").read_text()
+class RedwoodsMachineReadableTests(MachineReadableTests):
+    source = INDEX.with_name("redwoods.html").read_text()
 
 
 class ForestTuningPanelTests(TuningPanelTests):
@@ -219,12 +251,51 @@ for (const reflected of [false, true]) {
         self.assertEqual(result.returncode, 0, result.stderr)
 
 
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_greenery_is_rooted_in_basin_and_stays_submerged(self):
+        source = inline_script(self.source)
+        functions = "\n".join(re.search(r"function " + name + r"\(\) \{.*?\n\}", source, re.S).group(0)
+                              for name in ("buildPondBasin", "buildPondGreenery"))
+        helpers = source[source.index("const clamp  ="):source.index("/* ------------------------------------------------------- 0b")]
+        harness = r"""
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const THREE=require('./assets/three.min.js');
+for(const LOW of [false,true]) {
+ const scene=new THREE.Scene(),WORLD={};
+ const ctx={THREE,LOW,scene,WORLD};
+ vm.runInNewContext(HELPERS+FUNCTIONS+`
+ const floor=new THREE.Mesh(buildPondBasin(),new THREE.MeshBasicMaterial());
+ floor.rotation.x=-Math.PI/2;floor.position.set(0,0,-18);floor.updateMatrixWorld();
+ WORLD.floor=floor;buildPondGreenery();`,ctx);
+ const m=WORLD.pondGreenery,p=m.geometry.attributes.position,matrix=new THREE.Matrix4();
+ assert(m.isInstancedMesh && m.count>40 && m.count<300);
+ assert.equal(m.layers.mask,2);assert.equal(m.material.transparent,false);
+ assert(m.geometry.index.count/3*m.count<=6000);
+ const root=new THREE.Vector3(),v=new THREE.Vector3(),down=new THREE.Vector3(0,-1,0);
+ const ray=new THREE.Raycaster(undefined,down,0,5);
+ for(let i=0;i<m.count;i++) {
+  m.getMatrixAt(i,matrix);root.setFromMatrixPosition(matrix);
+  ray.ray.origin.set(root.x,2,root.z);
+  const hit=ray.intersectObject(WORLD.floor)[0];assert(hit);
+  assert(Math.abs(root.y-(hit.point.y-.012))<.0001,'root detached from basin');
+  for(let j=0;j<p.count;j++) {
+   v.fromBufferAttribute(p,j).applyMatrix4(matrix);
+   assert(Number.isFinite(v.x+v.y+v.z));assert(v.y<-.10,'blade breaks water');
+  }
+ }
+}
+"""
+        result = subprocess.run(["node", "-e", "const HELPERS=" + json.dumps(helpers) + ";const FUNCTIONS=" + json.dumps(functions) + ";\n" + harness],
+                                cwd=INDEX.parent, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 class ForestPondTests(PondTests):
     source = INDEX.with_name("forest.html").read_text()
 
 
-class TemplePondTests(PondTests):
-    source = INDEX.with_name("temple.html").read_text()
+class RedwoodsPondTests(PondTests):
+    source = INDEX.with_name("redwoods.html").read_text()
 
 
 class BootTests(unittest.TestCase):

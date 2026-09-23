@@ -22,10 +22,13 @@ served straight off disk with no rule of its own.
 
 ## Publishing an update
 
-The scene pages are `index.html` (Monolith), `temple.html` (Temple), and
-`forest.html` (Forest), sharing `assets/`. Include all three pages when publishing
-the scene selector. All scene materials are generated locally; the archived
-photographic wood maps are not loaded by Temple.
+The scene pages are `index.html` (Temple, the homepage), `redwoods.html`
+(Redwoods), and `forest.html` (Forest), sharing `assets/`. `temple.html` redirects
+old links to the homepage; `monolith.html` redirects to Redwoods. Both preserve
+query settings and section anchors.
+Include all five HTML files when publishing the scene selector. The page cache
+rule covers all five. All scene materials are generated locally; the archived
+photographic wood maps and local study notes are excluded from deployment.
 Upload over the top — cPanel File Manager, tick **Overwrite existing files**.
 
 **Purge the Cloudflare cache afterwards** or the old file lingers.

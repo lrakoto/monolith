@@ -1,5 +1,5 @@
 # revalidate the page on each visit; assets keep their normal cache lifetime.
-<FilesMatch "^index\.html$">
+<FilesMatch "^(index|redwoods|forest|temple|monolith)\.html$">
   <IfModule mod_expires.c>
     ExpiresActive Off
   </IfModule>
