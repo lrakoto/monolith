@@ -303,12 +303,14 @@ Main navigation keeps neutral labels on hover and selection; only its underline
 uses the scene accent. The rolling number labels are removed. Temple uses a
 slightly richer red, Redwoods a pale leaf green, and Forest a stronger green.
 
-All three halls have softer paper windows, less halo and lower spill lighting.
-The additive mist sheet now sits behind the building, where it was intended,
-and the opaque Temple meshes receive the existing shadows. A modest local fog
-adjustment preserves more roof and timber contrast at the opening distance;
-it fades naturally as the camera approaches. Forest's canopy lighting is
-chained through the material hook and keeps a distinct shader cache key.
+All three halls have softer paper windows. After review, the surrounding halo
+and spill lights return to their previous strength, while window brightness
+falls further to .85. The additive mist returns to its original foreground
+position at half its earlier opacity (.085). Opaque Temple meshes now receive
+the existing shadows, and a modest local fog adjustment preserves more roof
+and timber contrast at the opening distance; it fades naturally as the camera
+approaches. Forest's canopy lighting is chained through the material hook and
+keeps a distinct shader cache key.
 
 Validation includes the 65-test suite and real Three.js shader composition for
 all three scenes, covering both plain materials and Forest's canopy hook.

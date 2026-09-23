@@ -1936,7 +1936,7 @@ const TUNE = {
   stairFilmRough:   0.050,
   stairEdgeShine:   0.480,
   envIntensity:     1.15,
-  slotBright:       1.100,
+  slotBright:       0.850,
   moonBright:       0.285,
   moonSize:         0.76,
   lampBright:       8.00,
@@ -3565,16 +3565,16 @@ function buildTemple() {
   /* the glow the hall pushes out over its own steps */
   const spill = new THREE.Mesh(new THREE.PlaneGeometry(30, 16),
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,237,205,.64)', 'rgba(240,221,184,.08)')),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .035 }));
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .09 }));
   spill.position.set(0, F + 3.0, TEMPLE_Z + 5.6); spill.renderOrder = 2;
   scene.add(spill); WORLD.hallHalo = spill;
 
-  /* keep the mist behind the hall. in front, its additive veil flattened
-     the timber and roof into the same blue grey at the opening distance. */
+  /* the foreground mist gives the hall its atmosphere. half its original
+     strength keeps that soft veil without losing as much timber contrast. */
   const mist = new THREE.Mesh(new THREE.PlaneGeometry(64, 20),
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(150,178,190,.62)', 'rgba(104,138,154,.20)')),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .10 }));
-  mist.position.set(0, F - 1.4, TEMPLE_Z - 9); mist.renderOrder = 2; scene.add(mist);
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .085 }));
+  mist.position.set(0, F - 1.4, TEMPLE_Z + 10); mist.renderOrder = 2; scene.add(mist);
 }
 
 const wallWood = () => lib('wallWood', () => texWood(3, { boards: 7 }));
@@ -5958,10 +5958,10 @@ function buildLights() {
 
 
   /* the hall lamps stay close to the paper and the top of the flight. */
-  const hallL = new THREE.PointLight(0xffd4a2, .90, 15, 2);
+  const hallL = new THREE.PointLight(0xffd4a2, 1.25, 15, 2);
   hallL.position.set(0, PODIUM + 1.2, TEMPLE_Z + 8.6); scene.add(hallL); WORLD.hallLight = hallL;
   [-1, 1].forEach(s => {
-    const w = new THREE.PointLight(0xead9ba, .78, 11, 2);
+    const w = new THREE.PointLight(0xead9ba, 1.0, 11, 2);
     w.position.set(s * 11.4, PODIUM + 1.2, TEMPLE_Z + 5.6); scene.add(w);
   });
 
@@ -7550,8 +7550,8 @@ function updateWorld(dt) {
   RIG.focusAmt = damp(RIG.focusAmt, RIG.focus >= 0 ? 1 : 0, 5, dt);
   const pulse = Math.sin(clock * 1.9) * .5 + .5;
   const f = RIG.focusAmt;
-  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .035 + f * .012 + Math.sin(clock * .6) * .003;
-  if (WORLD.hallLight) WORLD.hallLight.intensity = .90 * (1 + f * .15) * (1 + Math.sin(clock * .43) * .025);
+  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .08 + f * .025 + Math.sin(clock * .6) * .005;
+  if (WORLD.hallLight) WORLD.hallLight.intensity = 1.25 * (1 + f * .15) * (1 + Math.sin(clock * .43) * .025);
   /* the moon only breathes — the haze in front of it is what actually moves */
   if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .23 + f * .045 + Math.sin(clock * .34) * .025;
   if (WORLD.lanternLights) WORLD.lanternLights.forEach((l, i) => {
