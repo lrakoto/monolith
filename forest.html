@@ -2410,9 +2410,11 @@ function skyPainter(aspect) {
     /* moonlight catches only the thin edge of the cloud. weighting a narrow
        density band by spherical distance keeps the thick interiors dark and
        gives the water exactly the same silver rim as the visible sky. */
-    const edge = smooth(.22, .31, cover) * (1 - smooth(.37, .49, cover));
+    const edge = smooth(.275, .31, cover) * (1 - smooth(.345, .395, cover));
     const rim = edge * Math.exp(-Math.pow(angle / .52, 2)) * Math.min(bright, 1.5);
-    out[0] += 30 * rim; out[1] += 34 * rim; out[2] += 38 * rim;
+    /* the previous line vanished under the night exposure. lift only this
+       narrow band, leaving the cloud body and the soft backlight intact. */
+    out[0] += 65 * rim; out[1] += 73 * rim; out[2] += 84 * rim;
     const air = Math.exp(-Math.pow(angle / Math.max(.001, radius * 2.5), 2)) * bright * (1 - cover * .65);
     out[0] += 6 * air; out[1] += 9 * air; out[2] += 13 * air;
     const disc = 1 - smooth(radius * .965, radius * 1.015, angle);

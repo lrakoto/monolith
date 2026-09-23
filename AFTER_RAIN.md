@@ -240,3 +240,29 @@ archived but are no longer loaded.
 Validation: 56 tests pass after removing the intentionally reverted directional
 edge-light assertion. Desktop previews check both engraved facades, Temple's
 wood and windows, and all three shared skies. This remains a local study.
+
+
+## Shared pond and warmer Temple
+
+Monolith and Temple now use Forest's continuous pond, including the sloping
+basin, submerged stone bed, clear shallow edges, fine ripples and undistorted
+scene reflection. The upper landing pools stay in place. All three share the
+same pond construction and tuning behavior. Low quality retains one smaller
+reflection updated every other frame; resizing skips the unused landing
+reflection target.
+
+Temple's maple foliage is a richer red, with less cool environment wash. The
+hall's boards and posts return toward brown through warmer material tints and
+a lighter brown albedo that remains visible under moonlight. The restored fine
+procedural grain, shallow relief and warm windows remain.
+
+The shared sky keeps the previous cloud shapes and broad backlight. Its extra
+silver rim is narrower again (.275–.395 density) and roughly twice as bright,
+with the same soft falloff around the moon. A stronger trial read as an outline
+on desktop, so the final gain is restrained to 65/73/84.
+
+Validation: 58 tests pass, including the full local server checks and pond
+shader behavior with and without reflections on all three pages. Desktop
+review covers Monolith's pond and Temple's leaves, timber, water and sky;
+Temple also loads without errors in a narrow low-quality viewport and after
+rotation. The preview remains on port 5193. This is a local study.

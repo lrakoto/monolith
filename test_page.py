@@ -180,11 +180,13 @@ class ForestMachineReadableTests(MachineReadableTests):
     source = INDEX.with_name("forest.html").read_text()
 
 
-class ForestPondTests(unittest.TestCase):
+class PondTests(unittest.TestCase):
+    source = SOURCE
+
     @unittest.skipIf(shutil.which("node") is None, "node is not installed")
     def test_pond_builds_with_and_without_planar_reflections(self):
         import json
-        build = re.search(r"function buildPond\(\) \{.*?\n\}", inline_script(INDEX.with_name("forest.html").read_text()), re.S).group(0)
+        build = re.search(r"function buildPond\(\) \{.*?\n\}", inline_script(self.source), re.S).group(0)
         harness = r"""
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
@@ -215,6 +217,14 @@ for (const reflected of [false, true]) {
         result = subprocess.run(["node", "-e", "const BUILD = " + json.dumps(build) + ";\n" + harness],
                                 cwd=INDEX.parent, capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class ForestPondTests(PondTests):
+    source = INDEX.with_name("forest.html").read_text()
+
+
+class TemplePondTests(PondTests):
+    source = INDEX.with_name("temple.html").read_text()
 
 
 class BootTests(unittest.TestCase):
