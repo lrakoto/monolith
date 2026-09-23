@@ -16,10 +16,27 @@ to the homepage. Open `index.html` through a local server and scroll.
 
 ## Temple quality study
 
-`temple-study.html` is an isolated comparison with a Blender-authored version
-of the Temple. The Original / Study buttons swap the opaque architecture in
-place, preserving the camera, windows, atmosphere and surrounding landscape.
-The three main scene pages remain the approved procedural versions.
+`temple-study.html` is an isolated comparison with three modes: Original
+restores the approved scene, Temple shows the Blender building in the original
+garden, and Study adds the complete landscape pass. All three share the camera
+path. Wide / Pond / Close jump between viewpoints; View scene
+hides the portfolio copy. The three main scene pages remain unchanged.
+
+The garden adds gently sloping planted banks, curved maple branches and roots,
+fuller red canopies with individual leaf silhouettes, distant trees, sedges,
+ferns, moss and weathered shoreline stones. A quieter central water surface
+preserves the reflection, with a local ripple and small groups of fallen leaves
+near the bank. Existing submerged planting stays visible. Moon-directed rim
+light, restrained stone highlights and low mist tie the landscape to the
+existing cloud painting. Wind and water use the shared reduced-motion clock.
+
+The landscape is authored in `tools/temple_landscape.js` and included by the
+page generator. It uses instanced geometry and shared materials, with no extra
+asset downloads. Low quality reduces vegetation and stone counts. Geometry
+and reversible mode changes are covered by `test_garden_study.py`; a debug
+`?studyStats=1` query adds the measured frame rate and render resolution to
+the comparison bar. A desktop browser at phone width is a layout check, not
+a substitute for profiling on physical phones.
 
 The study adds beveled joinery, individual roof caps, rafter tails, fitted
 cedar boards and a recessed bronze 305. Its 2K albedo, tangent normals and
