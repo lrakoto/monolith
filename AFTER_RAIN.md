@@ -45,7 +45,7 @@ The narrow header now fits the menu and an accessible resume icon.
 
 ## Validation
 
-- `python3 -B -m unittest discover -p 'test_*.py'`: 23 tests pass.
+- `python3 -B -m unittest discover -p 'test_*.py'`: 24 tests pass.
 - `git diff --check`: clean.
 - Vendored Three.js r149 geometry check: slab bounds remain
   12.6 by 19.4 by 3.7, 288 vertices, finite UVs and valid material groups.
@@ -61,3 +61,14 @@ These are review captures, not website assets. Nothing was deployed.
 
 Further iterations should compare the same views and preserve this pass as
 a checkpoint. The optional asymmetric facade setback has not been added.
+
+## Preview connection fix
+
+The single-request development server could wait indefinitely on a browser
+connection that had not yet sent an HTTP request, blocking every later page
+load. It now uses ThreadingHTTPServer with a 15-second per-connection timeout.
+Tuning saves are serialized across the full read/modify/replace transaction
+so concurrent partial saves preserve one another. The loopback bind remains.
+A regression opens an idle connection first, then verifies a separate page
+request succeeds. The corrected server was restarted on port 5186, and the
+page was reloaded and visually checked in the in-app browser.

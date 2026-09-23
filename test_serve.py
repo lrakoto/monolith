@@ -1,4 +1,7 @@
 """Tuning-save regressions; all writes use a temporary source file."""
+import http.client
+import socket
+import threading
 import tempfile
 import unittest
 from pathlib import Path
@@ -68,6 +71,43 @@ class TuneSaveTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             serve.write_tune({"first": .25})
         self.assertEqual(self.index.read_text(), "portfolio without settings")
+
+class PreviewConnectionTests(unittest.TestCase):
+    def test_idle_browser_connection_does_not_block_page_request(self):
+        accepted = threading.Event()
+
+        class RecordingHandler(serve.Handler):
+            def setup(self):
+                super().setup()
+                accepted.set()
+
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "index.html").write_text("preview ready")
+            with patch.object(serve, "HERE", Path(directory)):
+                try:
+                    server = serve.PreviewServer(("127.0.0.1", 0), RecordingHandler)
+                except PermissionError:
+                    self.skipTest("local socket binding is unavailable in this sandbox")
+                worker = threading.Thread(target=server.serve_forever, daemon=True)
+                worker.start()
+                idle = None
+                request = http.client.HTTPConnection(*server.server_address, timeout=2)
+                try:
+                    idle = socket.create_connection(server.server_address, timeout=2)
+                    self.assertTrue(accepted.wait(2), "idle connection was not accepted")
+                    request.request("GET", "/index.html")
+                    response = request.getresponse()
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), b"preview ready")
+                    self.assertEqual(response.getheader("cache-control"), "no-store")
+                finally:
+                    request.close()
+                    if idle is not None:
+                        idle.close()
+                    server.shutdown()
+                    worker.join(2)
+                    server.server_close()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -24,7 +24,7 @@ import json
 import math
 import os
 import re
-import socketserver
+import threading
 import sys
 import tempfile
 from pathlib import Path
@@ -34,6 +34,7 @@ INDEX = HERE / "index.html"
 
 # the opening line, everything up to the closing brace, and the semicolon
 TUNE_RE = re.compile(r"(const TUNE = \{)(.*?)(\n\};)", re.S)
+SAVE_LOCK = threading.Lock()
 
 
 def format_value(value, template):
@@ -52,6 +53,13 @@ def format_value(value, template):
 
 
 def write_tune(values):
+    # atomic replacement protects the file; the lock also keeps two partial
+    # saves from both reading the old values and discarding each other's edit.
+    with SAVE_LOCK:
+        return _write_tune(values)
+
+
+def _write_tune(values):
     if not isinstance(values, dict):
         raise ValueError("expected a JSON object of tuning values")
     src = INDEX.read_text(encoding="utf-8")
@@ -97,7 +105,15 @@ def write_tune(values):
     return len(updates)
 
 
+class PreviewServer(http.server.ThreadingHTTPServer):
+    # browsers can open a connection before sending a request. let another
+    # connection load the page while that one is still waiting for its bytes.
+    pass
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
+    timeout = 15
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(HERE), **kwargs)
 
@@ -137,8 +153,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 5180
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("127.0.0.1", port), Handler) as httpd:
+    with PreviewServer(("127.0.0.1", port), Handler) as httpd:
         print(f"portfolio  → http://127.0.0.1:{port}/")
         print(f"tuning     → http://127.0.0.1:{port}/?tune=1")
         try:
