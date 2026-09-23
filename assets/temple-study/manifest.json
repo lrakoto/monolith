@@ -1,0 +1,12 @@
+{
+  "source": "Blender 5.2 / approved Temple geometry",
+  "sourceCommit": "a505366",
+  "sourceGeometrySha256": "357d154668bbe488b2e361bb90c542a02f6689868f44e7bded263f4b3258abec",
+  "triangles": 150382,
+  "materials": 5,
+  "textureSize": 2048,
+  "lightmap": "temple-bounce.png",
+  "coordinateSystem": "three-y-up-world",
+  "bake": "Cycles 24 samples; tangent normal, ambient occlusion, indirect diffuse",
+  "glbBytes": 6356184
+}

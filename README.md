@@ -14,6 +14,44 @@ Temple is the opening scene in `index.html`, followed by Redwoods in
 `redwoods.html` and Forest in `forest.html`. The old `temple.html` link redirects
 to the homepage. Open `index.html` through a local server and scroll.
 
+## Temple quality study
+
+`temple-study.html` is an isolated comparison with a Blender-authored version
+of the Temple. The Original / Study buttons swap the opaque architecture in
+place, preserving the camera, windows, atmosphere and surrounding landscape.
+The three main scene pages remain the approved procedural versions.
+
+The study adds beveled joinery, individual roof caps, rafter tails, fitted
+cedar boards and a recessed bronze 305. Its 2K albedo, tangent normals and
+occlusion are baked in Blender; a 1K texture carries indirect light only.
+Direct moonlight and moving highlights still render in Three.js. The source
+materials are authored procedurally in Blender, not photographic scans.
+
+Rebuild from this checkout:
+
+```sh
+node tools/extract_temple_geometry.cjs
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 4 --python tools/build_temple_study.py
+python3 tools/create_temple_study.py
+python3 -B -m unittest discover -p 'test_*.py'
+```
+
+The editable, packed Blender file is local at
+`artifacts/temple-study/temple-quality.blend`. The browser loads the GLB and
+indirect-light PNG from `assets/temple-study/`; the other images are retained
+as editable bake outputs. The manifest records the approved source commit,
+geometry hash and asset budget: 150,382 triangles, five material groups,
+6.36 MB GLB plus roughly 95 KB of indirect light. Both full and low quality
+use this model; broader phone/GPU performance profiling is still needed
+before replacing the main scenes.
+
+The study uses 24-bit depth for the main view and pond reflections, keeping
+closely layered paper and timber stable at the wide camera distance.
+The comparison's tuning endpoint cannot overwrite the original Temple.
+Tests cover JavaScript syntax, camera/settings parity, GLB geometry/UV/material
+integrity, successful swaps and a failed-load fallback. The matching r149
+GLTFLoader is vendored from Three.js under the adjacent MIT license.
+
 ## Running
 
 The page is a single self-contained HTML file, so any static server will do:
