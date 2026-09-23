@@ -2367,6 +2367,12 @@ function skyPainter(aspect) {
     out[1] = lerp(10 + 23 * horizon + 27 * opening + 58 * keyOpening, cloudG, opacity);
     out[2] = lerp(18 + 28 * horizon + 35 * opening + 69 * keyOpening, cloudB, opacity);
     const angle = Math.acos(clamp(dx * moon[0] + dy * moon[1] + dz * moon[2], -1, 1));
+    /* moonlight catches only the thin edge of the cloud. weighting a narrow
+       density band by spherical distance keeps the thick interiors dark and
+       gives the water exactly the same silver rim as the visible sky. */
+    const edge = smooth(.18, .30, cover) * (1 - smooth(.38, .56, cover));
+    const rim = edge * Math.exp(-Math.pow(angle / .52, 2)) * Math.min(bright, 1.5);
+    out[0] += 30 * rim; out[1] += 34 * rim; out[2] += 38 * rim;
     const air = Math.exp(-Math.pow(angle / Math.max(.001, radius * 2.5), 2)) * bright * (1 - cover * .65);
     out[0] += 6 * air; out[1] += 9 * air; out[2] += 13 * air;
     const disc = 1 - smooth(radius * .965, radius * 1.015, angle);
@@ -3472,37 +3478,200 @@ function buildLantern(x, z, s, y) {
   return g;
 }
 
-/* ------------------------------------------------------- the standing stones
-   Where the maples were, on the same five scatter positions and the same call
-   signature. They are doing the maples' compositional job — breaking the empty
-   middle ground so the eye has something to measure the approach against, and
-   giving the fog a near edge to sit behind — with none of the branching cost.
-   Nothing about them is quite regular: no two are the same height, none of
-   them is plumb, and the seed decides all of it.                            */
-function buildStele(seed, x, z, scale) {
-  const rnd = mulberry32(seed);
-  const mat = lib('steleStone', () => surface(concreteTex(), [.8, 2.4],
-    { color: 0x454d53, roughness: .50, metalness: .04, normal: 1.44, env: 1.15 }));
-  const g = new THREE.Group();
+/* ------------------------------------------------------- the redwood grove
+   the five old stones become trees, but keep their clear central aisle.
+   long bare trunks carry the scale; a few lower boughs make them read as
+   living trees even when the high crowns leave the opening frame. */
+function texRedwoodBark() {
+  const W = LOW ? 256 : 512, H = W * 2, rnd = mulberry32(1071);
+  const c = cvs(W, H), x = c.getContext('2d');
+  const h = cvs(W, H), hx = h.getContext('2d');
+  const r = cvs(W, H), rx = r.getContext('2d');
+  x.fillStyle = '#795640'; x.fillRect(0, 0, W, H);
+  hx.fillStyle = '#999'; hx.fillRect(0, 0, W, H);
+  rx.fillStyle = '#e7e7e7'; rx.fillRect(0, 0, W, H);
+  const count = 46, stride = W / count;
+  for (let i = -1; i <= count; i++) {
+    const px = i * stride, phase = rnd() * TAU, width = stride * (.30 + rnd() * .32);
+    const points = [];
+    for (let y = -8; y <= H + 8; y += 8)
+      points.push([px + Math.sin(y / H * TAU * 2 + phase) * stride * .25
+        + Math.sin(y / H * TAU * 5 + phase) * stride * .10, y]);
+    const stroke = (ctx, col, w, offset) => {
+      ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath();
+      points.forEach((p, j) => j ? ctx.lineTo(p[0] + offset, p[1]) : ctx.moveTo(p[0] + offset, p[1]));
+      ctx.stroke();
+    };
+    stroke(x, '#493629', width + 1.8, 0);
+    stroke(x, '#30261f', width * .36, .15);
+    stroke(x, 'rgba(196,143,97,.36)', width * .27, -width * .75);
+    stroke(hx, '#434343', width, 0);
+    stroke(hx, '#b7b7b7', width * .25, -width * .70);
+    stroke(rx, '#c5c5c5', width * .6, 0);
+  }
+  /* small fibres break the long channels; their colour stays in the same
+     rusty brown family instead of making the bark a striped orange pole. */
+  for (let i = 0; i < 2200; i++) {
+    const px = rnd() * W, py = rnd() * H, len = 2 + rnd() * 30;
+    x.fillStyle = rnd() < .5 ? 'rgba(220,167,115,.085)' : 'rgba(28,20,16,.18)';
+    x.fillRect(px, py, .45 + rnd() * .7, len);
+  }
+  return { map: c, normal: normalFromHeight(h, 2.8), rough: r };
+}
 
-  /* one shaft, and a head cut back a little on all four sides — the setback
-     is what stops a tall box reading as a tall box */
-  const h = 5.4 + rnd() * 6.2, w = .70 + rnd() * .90, d = .55 + rnd() * .60;
-  const shaft = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  shaft.position.y = h / 2; shaft.castShadow = true; shaft.receiveShadow = true; g.add(shaft);
-  const head = new THREE.Mesh(new THREE.BoxGeometry(w - .16, .52, d - .12), mat);
-  head.position.y = h + .26; head.castShadow = true; g.add(head);
-  /* a footing that spreads, so it is standing on the ground rather than
-     stuck into it */
-  const foot = new THREE.Mesh(new THREE.BoxGeometry(w + .30, .26, d + .30), mat);
-  foot.position.y = .13; foot.castShadow = true; foot.receiveShadow = true; g.add(foot);
+function redwoodTrunkGeo(height, radius, seed) {
+  const rnd = mulberry32(seed), phase = rnd() * TAU, lean = (rnd() - .5) * .8;
+  const levels = [0, .014, .04, .085, .15, .24, .35, .47, .60, .73, .84, .92, .97, 1];
+  const sides = LOW ? 24 : 40, pos = [], uv = [], indices = [];
+  levels.forEach((t, j) => {
+    const cx = Math.sin(t * 2.4) * lean, cz = Math.sin(t * 3.6) * .24;
+    for (let i = 0; i <= sides; i++) {
+      const a = i / sides * TAU;
+      const flute = 1 + .045 * Math.cos(a * 13 + t * 3 + phase) + .025 * Math.sin(a * 7 - t * 4);
+      const root = Math.exp(-t * 42) * (.25 + .75 * Math.pow(.5 + .5 * Math.cos(a * 6 + phase), 3));
+      const rad = radius * ((.035 + .965 * Math.pow(1 - t, .72)) * flute + root * .82);
+      pos.push(cx + Math.cos(a) * rad, t * height - .055, cz + Math.sin(a) * rad);
+      uv.push(i / sides * 2, t * height / 7.5);
+      if (j && i < sides) {
+        const b = j * (sides + 1) + i, p = b - sides - 1;
+        indices.push(p, b, p + 1, b, b + 1, p + 1);
+      }
+    }
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(indices); geo.computeVertexNormals();
+  /* the seam shares a position but not a uv, so average its two normals. */
+  const normals = geo.attributes.normal;
+  for (let j = 0; j < levels.length; j++) {
+    const a = j * (sides + 1), b = a + sides;
+    const n = new THREE.Vector3().fromBufferAttribute(normals, a)
+      .add(new THREE.Vector3().fromBufferAttribute(normals, b)).normalize();
+    normals.setXYZ(a, n.x, n.y, n.z); normals.setXYZ(b, n.x, n.y, n.z);
+  }
+  return geo;
+}
 
-  g.position.set(x, 0, z);
-  g.rotation.y = rnd() * TAU;
-  g.rotation.z = (rnd() - .5) * .05;              /* none of them is quite plumb */
-  g.scale.setScalar(scale || 1);
-  scene.add(g);
-  return g;
+function redwoodSprayGeo() {
+  /* actual paired needles give the crown a fine broken silhouette. three
+     splayed shoots add depth without transparent rectangles or cone stacks. */
+  const pos = [], uv = [], idx = [];
+  const leaf = (a, b, width) => {
+    const v = pos.length / 3, d = b.clone().sub(a), side = new THREE.Vector3(-d.z, 0, d.x).normalize().multiplyScalar(width);
+    const mid = a.clone().lerp(b, .38); mid.y += width * .45;
+    [a, mid.clone().add(side), b, mid.clone().sub(side)].forEach(p => pos.push(p.x, p.y, p.z));
+    uv.push(0, 0, 0, .4, .5, 1, 1, .4); idx.push(v, v + 1, v + 2, v, v + 2, v + 3);
+  };
+  const shoots = LOW ? [-.35, .35] : [-.48, 0, .48];
+  shoots.forEach((angle, k) => {
+    const dir = new THREE.Vector3(Math.sin(angle), .05, Math.cos(angle));
+    const sideways = new THREE.Vector3(dir.z, 0, -dir.x);
+    const origin = new THREE.Vector3(k === 1 ? 0 : angle * .10, 0, 0);
+    for (let n = 0; n < 6; n++) {
+      const t = .12 + n * .13, base = origin.clone().addScaledVector(dir, t);
+      [-1, 1].forEach(s => {
+        const tip = base.clone().addScaledVector(sideways, s * (.26 - t * .14))
+          .addScaledVector(dir, .11); tip.y += .015 + Math.sin(n * 1.9) * .024;
+        leaf(base, tip, .022 * (1 - t * .3));
+      });
+    }
+    leaf(origin, origin.clone().addScaledVector(dir, .96), .011);
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx); geo.computeVertexNormals(); return geo;
+}
+
+function buildRedwoods() {
+  const bark = surface(lib('redwoodBark', texRedwoodBark), [1, 1],
+    { color: 0xc6b29e, roughness: .93, normal: 1.15, metalness: 0, env: .75 });
+  const needles = new THREE.MeshStandardMaterial({ color: 0x465b47, roughness: .94,
+    metalness: 0, side: THREE.DoubleSide, envMapIntensity: .65 });
+  const woodParts = [], sprays = [], specs = [
+    [71, 12.6, -13.0, 1.05, 34, 1.38], [72, -11.8, -9.4, .95, 37, 1.46],
+    [73, 9.2, -19.0, .82, 29, 1.18], [74, -14.5, -17.5, 1.0, 35, 1.32],
+    [75, 16.5, -6.0, .88, 39, 1.58]
+  ];
+  const up = new THREE.Vector3(0, 1, 0), orient = new THREE.Quaternion();
+  const twig = (a, b, ra, rb) => {
+    const d = b.clone().sub(a), len = d.length();
+    orient.setFromUnitVectors(up, d.normalize());
+    const geo = new THREE.CylinderGeometry(rb, ra, len, LOW ? 5 : 7, 1, true);
+    geo.applyQuaternion(orient).translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+    return geo;
+  };
+  specs.forEach(([seed, x, z, scale, height, radius]) => {
+    const rnd = mulberry32(seed), parts = [redwoodTrunkGeo(height, radius, seed)];
+    const trunkRnd = mulberry32(seed); trunkRnd();
+    const lean = (trunkRnd() - .5) * .8;
+    const world = new THREE.Matrix4().makeScale(scale, scale, scale); world.setPosition(x, 0, z);
+    const point = (a, distance, y) => {
+      const t = clamp(y / height, 0, 1);
+      const p = new THREE.Vector3(Math.cos(a) * distance + Math.sin(t * 2.4) * lean,
+        y, Math.sin(a) * distance + Math.sin(t * 3.6) * .24);
+      /* the inner tree's low limbs stay clear of the stair and the slot. */
+      if (y * scale < 20 && Math.abs(x + p.x * scale) < 7.3)
+        p.x = (Math.sign(x) * 7.3 - x) / scale;
+      return p;
+    };
+    /* broken low limbs and flared roots tell the scale before the canopy
+       enters the frame. they taper to the ground rather than sitting on it. */
+    for (let i = 0; i < 7; i++) {
+      const a = i / 7 * TAU + rnd() * .25;
+      const a0 = point(a, radius * .65, 1.1 + rnd() * .6);
+      const a1 = point(a, radius * 1.42, .36);
+      const a2 = point(a + .1, radius * (1.9 + rnd() * .35), -.025);
+      parts.push(twig(a0, a1, .31, .19), twig(a1, a2, .19, .015));
+    }
+    for (let i = 0; i < 6; i++) {
+      const a = rnd() * TAU, y = height * (.16 + rnd() * .24);
+      const a0 = point(a, radius * .65, y), a1 = point(a, radius + .7 + rnd() * .6, y + .2);
+      parts.push(twig(a0, a1, .17, .055));
+    }
+    const branches = LOW ? 14 : 22;
+    for (let i = 0; i < branches; i++) {
+      const t = .34 + i / (branches - 1) * .62, y = height * t + (rnd() - .5) * .7;
+      const a = i * 2.39996 + rnd() * .65 + seed;
+      const length = (1.0 + 4.8 * Math.pow(1 - t, .65)) * (.76 + rnd() * .36);
+      const p0 = point(a, radius * (1 - t) * .60, y);
+      const drop = .25 + rnd() * .80;
+      const p1 = point(a, length * .38, y - drop);
+      const p2 = point(a + .07, length * .76, y - drop * .62);
+      const p3 = point(a + .13, length, y + .38 + rnd() * .5);
+      const thickness = .17 * (1 - t) + .028;
+      parts.push(twig(p0, p1, thickness, thickness * .72),
+        twig(p1, p2, thickness * .72, thickness * .40), twig(p2, p3, thickness * .40, .012));
+      const leafCount = LOW ? 5 : 8;
+      for (let j = 0; j < leafCount; j++) {
+        const u = .14 + j / (leafCount - 1) * .82;
+        const centre = p1.clone().lerp(p3, u);
+        const s = j % 2 ? -1 : 1;
+        const side = new THREE.Vector3(-Math.sin(a), .05, Math.cos(a));
+        const tip = centre.clone().addScaledVector(side, s * (.35 + rnd() * .65) * (1 - u * .55));
+        parts.push(twig(centre, tip, .022, .007));
+        const obj = new THREE.Object3D();
+        obj.position.copy(tip).applyMatrix4(world);
+        obj.rotation.set((rnd() - .5) * 1.05, -a + s * .9 + (rnd() - .5) * .45, (rnd() - .5) * .80);
+        const leafScale = scale * (1.35 + rnd() * .80) * (1.1 - t * .35);
+        obj.scale.set(leafScale, leafScale, leafScale * (1.15 + rnd() * .5)); obj.updateMatrix();
+        sprays.push({ matrix: obj.matrix.clone(), color: new THREE.Color().setHSL(.27 + rnd() * .055, .17 + rnd() * .08, .50 + rnd() * .22) });
+      }
+    }
+    parts.forEach(geo => woodParts.push(geo.applyMatrix4(world)));
+  });
+  const group = new THREE.Group(); group.name = 'redwood-grove';
+  const wood = new THREE.Mesh(mergeGeos(woodParts), bark);
+  wood.name = 'redwood-trunks-and-boughs'; wood.castShadow = true; wood.receiveShadow = true; group.add(wood);
+  const foliage = new THREE.InstancedMesh(redwoodSprayGeo(), needles, sprays.length);
+  foliage.name = 'redwood-needle-sprays';
+  sprays.forEach((s, i) => { foliage.setMatrixAt(i, s.matrix); foliage.setColorAt(i, s.color); });
+  foliage.instanceMatrix.needsUpdate = true; foliage.instanceColor.needsUpdate = true;
+  foliage.receiveShadow = true; foliage.frustumCulled = false; group.add(foliage);
+  /* two draw calls for the grove; needle shadows at this distance only make
+     the static shadow map noisy, while the solid boughs carry its silhouette. */
+  scene.add(group); WORLD.redwoods = group;
 }
 
 function buildRocks() {
@@ -3631,7 +3800,7 @@ function cutoutMaterial(canvasEl, sway, tint, glow) {
       '#include <begin_vertex>',
       '#include <begin_vertex>\n' +
       'float h = uv.y;\n' +
-      'float ph = position.x*0.30 + float(gl_InstanceID)*0.0;\n' +
+      'float ph = position.x*0.30;\n' +
       'transformed.x += sin(uT*0.85 + ph)*uSway*h*h;\n' +
       'transformed.y += cos(uT*0.62 + ph*1.7)*uSway*0.35*h*h;\n');
     /* These plates are drawn to the edge of their own canvas — the grass runs
@@ -7186,11 +7355,7 @@ const JOBS = [
       buildLantern(-cheekX(z), z, sc, cheekTop(z));
     });
   }],
-  ['Setting the stones', () => {
-    buildStele(71, 12.6, -13.0, 1.05); buildStele(72, -11.8, -9.4, .95);
-    buildStele(73, 9.2, -19.0, .82);   buildStele(74, -14.5, -17.5, 1.0);
-    buildStele(75, 16.5, -6.0, .88);
-  }],
+  ['Growing the redwood grove', () => buildRedwoods()],
   ['Painting the near grass', () => buildForeground()],
   ['Cutting the word', () => buildWordmark()],
   ['Raising the mist', () => { buildAtmosphere(); buildLeafFall(); buildWisps(); }],

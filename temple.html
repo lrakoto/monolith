@@ -3324,6 +3324,32 @@ function roofGeo(A, B, R, Hr, thick, flare) {
   return g;
 }
 
+/* the lettering belongs to the timber, so its cut has a normal and a dark
+   upper lip. a glowing logo here would compete with the paper windows. */
+function texTemplePlaque() {
+  const W = 768, H = 480, c = cvs(W, H), x = c.getContext('2d');
+  const h = cvs(W, H), hx = h.getContext('2d');
+  const wood = postWood(), rnd = mulberry32(305);
+  x.drawImage(wood.map, 0, 0, W, H);
+  x.fillStyle = 'rgba(12,10,8,.30)'; x.fillRect(0, 0, W, H);
+  hx.fillStyle = '#999'; hx.fillRect(0, 0, W, H);
+  [x, hx].forEach(ctx => {
+    ctx.font = '600 280px Onest, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  });
+  x.fillStyle = '#94764d'; x.fillText('305', W / 2, H * .53 + 3);
+  x.fillStyle = '#17120e'; x.fillText('305', W / 2, H * .53 - 3);
+  x.fillStyle = '#aa8755'; x.fillText('305', W / 2, H * .53);
+  hx.fillStyle = '#3b3b3b'; hx.fillText('305', W / 2, H * .53);
+  /* the grain crosses the cut as well as the face; the marks should not look
+     like three freshly printed numbers on old wood. */
+  for (let i = 0; i < 200; i++) {
+    x.fillStyle = 'rgba(18,13,8,' + (.015 + rnd() * .045) + ')';
+    x.fillRect(rnd() * W, rnd() * H, .4 + rnd(), 12 + rnd() * 80);
+  }
+  return { map: c, normal: normalFromHeight(h, 2.1) };
+}
+
 function buildTemple() {
   const g = new THREE.Group();
   /* One board library, sampled at two scales: the hall's flanks want the grain
@@ -3407,11 +3433,23 @@ function buildTemple() {
   }
   for (let i = 0; i < 4; i++)
     bay(1.0, 1.35, -4.5 + i * 3.0, F + 9.5, TEMPLE_Z + 3.06);
-  /* the plaque */
-  const plq = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.30, .16), gold);
-  plq.position.set(0, F + 9.7, TEMPLE_Z + 3.12); g.add(plq);
-  const plqIn = new THREE.Mesh(new THREE.BoxGeometry(1.52, .98, .18), timber);
-  plqIn.position.set(0, F + 9.7, TEMPLE_Z + 3.16); g.add(plqIn);
+  /* four real frame bars leave a recess for the timber face. the original
+     solid brass box would hide any lettering pushed behind its front. */
+  const plaque = new THREE.Group(); plaque.name = 'temple-305-plaque';
+  const frameParts = [];
+  [-1, 1].forEach(s => {
+    frameParts.push(new THREE.BoxGeometry(1.90, .10, .18).translate(0, s * .60, 0));
+    frameParts.push(new THREE.BoxGeometry(.10, 1.10, .18).translate(s * .90, 0, 0));
+  });
+  const frame = new THREE.Mesh(mergeGeos(frameParts), gold);
+  frame.castShadow = true; frame.receiveShadow = true; plaque.add(frame);
+  const backing = new THREE.Mesh(new THREE.BoxGeometry(1.70, 1.10, .10), timber);
+  backing.position.z = -.025; plaque.add(backing);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(1.69, 1.09),
+    surface(lib('templePlaque', texTemplePlaque), [1, 1],
+      { color: 0xffffff, roughness: .79, metalness: .08, normal: .72, env: 1.25 }));
+  face.position.z = .027; face.receiveShadow = true; plaque.add(face);
+  plaque.position.set(0, F + 9.7, TEMPLE_Z + 3.19); g.add(plaque);
   brackets(5.2, 3.3, F + 11.2, 1.30);
 
   /* ---- the main roof: the silhouette the whole page hangs on ----------- */
@@ -4190,10 +4228,11 @@ function injectLampGlow(sh, o) {
    most of it, the bough a little less, and the rocks almost none — stone does
    not transmit, and a boulder with a lit edge reads as a mistake where a blade
    of grass reads as backlit. */
-function cutoutMaterial(canvasEl, sway, glow) {
+function cutoutMaterial(canvasEl, sway, tint, glow) {
   const mat = new THREE.MeshBasicMaterial({
     map: tx(canvasEl, { aniso: 16 }), transparent: true, depthWrite: true,
-    alphaTest: .012, side: THREE.DoubleSide, fog: true, color: 0xffffff
+    alphaTest: .012, side: THREE.DoubleSide, fog: true,
+    color: tint === undefined ? 0xffffff : tint
   });
   mat.onBeforeCompile = sh => {
     sh.uniforms.uT = WORLD.uT;
@@ -4211,7 +4250,15 @@ function cutoutMaterial(canvasEl, sway, glow) {
        edges lets each one dissolve into the scene instead of being cut out of
        it. Sides get the widest margin because that is where a bank of grass
        is read as ending; the crest needs none, the blades already taper. */
-    if (glow) injectLampGlow(sh, { glow: CUR_UNI.grassGlow, weight: glow, mix: 0, rangeMul: .58 });
+    /* The lamp, as translucency. These sheets are unlit MeshBasicMaterial, so
+       there is no normal to work with and nothing would respond to a light at
+       all — but a blade of grass is thin enough that what a near light really
+       does to it is come *through* it, brightest where the sheet is thinnest.
+       The alpha channel already describes that: the middle of a blade is
+       opaque, its edges are feathered, so the partial-alpha band is exactly
+       the edge to light. Falloff is squared over distance and gated on the
+       pointer, so the effect exists only while the lamp is near and on. */
+    injectLampGlow(sh, { glow: CUR_UNI.grassGlow, weight: glow, mix: 0, rangeMul: 0.58 });
     sh.fragmentShader = sh.fragmentShader.replace('#include <alphatest_fragment>',
       'float feX = smoothstep(0.0, 0.11, vUv.x) * (1.0 - smoothstep(0.89, 1.0, vUv.x));\n' +
       'float feY = smoothstep(0.0, 0.07, vUv.y);\n' +
@@ -4226,21 +4273,45 @@ function buildForeground() {
      26-unit sheet two metres from the lens only shows its middle tenth */
   const layers = [
     /* name        canvas                                                                     x     y     z     w     h   sway */
-    ['grassFar',  texGrassCutout(101, { crest: .30, peak: .46, wide: .42, blades: 11000, len: 34, warm: .70, crest2: .46, crest3: .40 }),
-                  -3.4,  2.85, -0.4, 24, 12, .040],
+    /* Every one of these was dropped by about a metre. They used to close
+       the bottom of the hero completely — a continuous bank of grass from the
+       lower edge of the frame up to the podium — and with the court behind it
+       there was no ground on screen at any waypoint on the page. That was
+       fine for a scene lit by paper lanterns and nothing else. It is not fine
+       for a wet one: the reflection, the puddles and most of the specular
+       work all live on a surface the composition had walled off. Lowering the
+       banks opens a strip of standing water either side of the flight and
+       keeps the grass reading as foreground. */
+    /* lower crests and wider shoulders let the planting ease into the court;
+       moving the sheets down alone left the same steep little hills. */
+    ['grassFar',  texGrassCutout(101, { crest: .25, peak: .36, wide: .43, blades: 10500, len: 34, warm: .70, crest2: .46, crest3: .40 }),
+                  -3.4,  1.85, -0.4, 24, 12, .040],
     ['rockLeft',  texRockCutout(404, { blobs: [[.24, .78, .48, .38], [.58, .94, .46, .30], [.84, 1.06, .42, .28]] }),
-                  -7.2,  2.55,  1.8, 17, 11.3, .010],
-    ['grassMid',  texGrassCutout(202, { crest: .60, peak: .55, wide: .40, blades: 13000, len: 40, warm: .95, crest2: -.44, crest3: .34 }),
-                   3.9,  2.86,  3.6, 15,  7.5, .062],
-    ['grassNear', texGrassCutout(303, { crest: .42, peak: .62, wide: .48, blades: 16000, len: 50, warm: .85, crest2: .42, crest3: .44 }),
-                  -1.9,  2.92,  5.6, 12,  6, .092],
-    ['bough',     texBranchCutout(505), 4.6, 2.95, 6.4, 13, 8.7, .045],
+                  -7.2,  1.80,  1.8, 17, 11.3, .010],
+    /* The two near banks were raised again to close more of the bottom edge.
+       Only these two: grassFar stays low, because the metre they were all
+       dropped by is what opened the strip of standing water either side of
+       the flight, and lifting the far bank as well walls the court off again
+       and takes the reflection with it. */
+    ['grassMid',  texGrassCutout(202, { crest: .69, peak: .42, wide: .44, blades: 12000, len: 43, warm: .95, crest2: -.44, crest3: .34 }),
+                   3.9,  2.42,  3.6, 15,  8.8, .062],
+    ['grassNear', texGrassCutout(303, { crest: .28, peak: .44, wide: .46, blades: 14000, len: 48, warm: .85, crest2: .42, crest3: .44 }),
+                  -1.9,  2.38,  5.6, 12,  7.4, .092],
+    /* the bough hangs overhead and was never in the way — it stays put */
+    ['bough',     texBranchCutout(505, { dry: true }), 4.6, 2.95, 6.4, 13, 8.7, .045],
     ['rockNear',  texRockCutout(606, { blobs: [[.18, .86, .54, .44], [.54, 1.02, .50, .36], [.86, .92, .40, .32]] }),
-                  -6.6,  1.70,  6.0, 9, 6, .008]
+                  -6.6,  0.85,  6.0, 9, 6, .008]
   ];
+  /* the rocks keep their own tone; only the growing things get dried out */
+  const DRY = 0x59635c, STONE = 0x8f9698;
+  const tints = { grassFar: DRY, grassMid: DRY, grassNear: DRY, bough: 0x5d6360,
+                  rockLeft: STONE, rockNear: STONE };
+  /* stone does not transmit; the growing things do */
+  const glows = { grassFar: .55, grassMid: 1.0, grassNear: 1.15, bough: .5,
+                  rockLeft: .10, rockNear: .10 };
   WORLD.fg = [];
   layers.forEach(L => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(L[5], L[6], 12, 12), cutoutMaterial(L[1], L[7], L[0].startsWith('grass') ? 1 : (L[0] === 'bough' ? .5 : 0)));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(L[5], L[6], 12, 12), cutoutMaterial(L[1], L[7], tints[L[0]], glows[L[0]]));
     m.position.set(L[2], L[3], L[4]);
     m.renderOrder = 20 + WORLD.fg.length;
     m.name = L[0];

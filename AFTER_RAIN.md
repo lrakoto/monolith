@@ -131,3 +131,33 @@ and machine-readable content; independent tuning-save destinations; sky seam
 continuity, moon-off behavior and stale asynchronous bakes. The suite has 42
 passing tests. Desktop and narrow-view browser checks include both scenes,
 with screenshot artifacts kept locally under `artifacts/`.
+
+
+## Temple planting, 305 and the redwood grove
+
+Temple now uses Monolith's lower, broader foreground silhouettes, quiet
+winter grass tint and per-layer cursor light response. Its puddle shaders,
+positions, wet paving and water values already matched; the lower banks expose
+those pools. The second-floor blank plaque now has a recessed timber face,
+height-mapped 305 lettering and four separate brass frame bars. It adds no
+new light source and leaves the original roof silhouette intact.
+
+Monolith's five standing stones are replaced by a procedural redwood grove.
+The trees keep the lateral scatter, with tall tapering trunks, fluted root
+flares, broken low limbs, drooping boughs and individual modeled needle sprays.
+The nearest branches stay outside the approach. A shared bark atlas carries
+vertical fissures and fine fibres; merged wood and instanced foliage keep the
+whole grove to two meshes, with 92,180 triangles in high quality and 27,920 in
+low quality. Foliage receives light and appears in the reflections; solid wood
+casts shadows while fine needles do not add noise to the shadow map.
+
+A narrow band on thin cloud edges now catches cool silver moonlight. Spherical
+distance keeps the rim strongest near the moon, with dense cloud interiors
+remaining dark. The effect follows moon brightness, and the same sphere drives
+the reflected sky. No new texture assets or per-frame cloud work were added.
+
+Validation: the 42-test suite passes, including loopback server checks; real
+Three.js geometry checks confirm finite attributes and valid indices in both
+grove quality modes. Browser checks cover both desktop scenes and narrow
+layouts. Review PNGs are kept under artifacts. The preceding scene checkpoint
+is e8832fc; this remains a local study, with no changes to Sol's Blender files.
