@@ -52,20 +52,23 @@ def format_value(value, template):
     return str(int(round(float(value))))
 
 
-def write_tune(values):
+def write_tune(values, scene="monolith"):
     # atomic replacement protects the file; the lock also keeps two partial
     # saves from both reading the old values and discarding each other's edit.
+    if scene not in ("monolith", "temple"):
+        raise ValueError("unknown scene")
+    target = INDEX if scene == "monolith" else INDEX.with_name("temple.html")
     with SAVE_LOCK:
-        return _write_tune(values)
+        return _write_tune(values, target)
 
 
-def _write_tune(values):
+def _write_tune(values, target):
     if not isinstance(values, dict):
         raise ValueError("expected a JSON object of tuning values")
-    src = INDEX.read_text(encoding="utf-8")
+    src = target.read_text(encoding="utf-8")
     match = TUNE_RE.search(src)
     if not match:
-        raise ValueError("could not find the `const TUNE = { ... };` block in index.html")
+        raise ValueError("could not find the tuning block in " + target.name)
 
     # Replace supplied numeric literals without losing omitted settings,
     # comments or settings added since the browser tab loaded.
@@ -93,12 +96,12 @@ def _write_tune(values):
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
-                                         dir=INDEX.parent, prefix=".tune-",
+                                         dir=target.parent, prefix=".tune-",
                                          delete=False) as staged:
             temporary = Path(staged.name)
-            os.fchmod(staged.fileno(), INDEX.stat().st_mode & 0o777)
+            os.fchmod(staged.fileno(), target.stat().st_mode & 0o777)
             staged.write(updated)
-        os.replace(temporary, INDEX)
+        os.replace(temporary, target)
     finally:
         if temporary is not None and temporary.exists():
             temporary.unlink()
@@ -118,13 +121,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(HERE), **kwargs)
 
     def do_POST(self):  # noqa: N802 — http.server's naming
-        if self.path != "/__tune/save":
+        scenes = {"/__tune/save": "monolith", "/__tune/temple/save": "temple"}
+        if self.path not in scenes:
             self.send_error(404)
             return
+        scene = scenes[self.path]
         try:
             length = int(self.headers.get("content-length", 0))
             values = json.loads(self.rfile.read(length) or b"{}")
-            count = write_tune(values)
+            count = write_tune(values, scene)
         except Exception as err:  # report it to the panel rather than 500-ing silently
             body = str(err).encode()
             self.send_response(400 if isinstance(err, ValueError) else 500)
@@ -140,7 +145,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("content-length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
-        print(f"[tune] wrote {count} values into index.html")
+        print(f"[tune] wrote {count} values into {scene}")
 
     def end_headers(self):
         # the page is edited constantly while tuning; never serve it from cache

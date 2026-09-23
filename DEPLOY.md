@@ -22,7 +22,8 @@ served straight off disk with no rule of its own.
 
 ## Publishing an update
 
-The whole site is `index.html` plus `assets/`. Upload over the top — cPanel
+The scene pages are `index.html` (Monolith) and `temple.html` (Temple), sharing
+`assets/`. Include both pages when publishing the scene selector. Upload over the top — cPanel
 File Manager, tick **Overwrite existing files**. Usually only `index.html`
 changes, and it is one 336KB file.
 

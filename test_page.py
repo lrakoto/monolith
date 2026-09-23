@@ -25,8 +25,8 @@ PLATES_RE = re.compile(r"const CARD_PLATES = \[(.*?)\];", re.S)
 LLMS = INDEX.parent / "root" / "llms.txt"
 
 
-def inline_script():
-    bodies = SCRIPT_RE.findall(SOURCE)
+def inline_script(source=SOURCE):
+    bodies = SCRIPT_RE.findall(source)
     assert bodies, "index.html has no inline <script>"
     return bodies[-1]
 
@@ -34,12 +34,13 @@ def inline_script():
 class InlineScriptTests(unittest.TestCase):
     @unittest.skipIf(shutil.which("node") is None, "node is not installed")
     def test_inline_script_parses(self):
-        with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as staged:
-            staged.write(inline_script())
-            staged.flush()
-            result = subprocess.run(["node", "--check", staged.name],
-                                    capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
+        for page in (INDEX, INDEX.with_name("temple.html")):
+            with self.subTest(page=page.name), tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as staged:
+                staged.write(inline_script(page.read_text()))
+                staged.flush()
+                result = subprocess.run(["node", "--check", staged.name],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
 
 
 class TuningPanelTests(unittest.TestCase):
@@ -49,10 +50,12 @@ class TuningPanelTests(unittest.TestCase):
     `undefined`, and a TUNE entry with no schema row is invisible but still
     saved back into the file."""
 
+    source = SOURCE
+
     def setUp(self):
-        self.values = set(re.findall(r"^\s*(\w+)\s*:", TUNE_RE.search(SOURCE).group(1), re.M))
-        self.schema = set(re.findall(r"^\s*\['(\w+)'", SCHEMA_RE.search(SOURCE).group(1), re.M))
-        self.handlers = set(re.findall(r"^\s*(\w+)\s*:", HANDLERS_RE.search(SOURCE).group(1), re.M))
+        self.values = set(re.findall(r"^\s*(\w+)\s*:", TUNE_RE.search(self.source).group(1), re.M))
+        self.schema = set(re.findall(r"^\s*\['(\w+)'", SCHEMA_RE.search(self.source).group(1), re.M))
+        self.handlers = set(re.findall(r"^\s*(\w+)\s*:", HANDLERS_RE.search(self.source).group(1), re.M))
 
     def test_every_slider_has_a_value(self):
         self.assertEqual(self.schema - self.values, set())
@@ -66,7 +69,7 @@ class TuningPanelTests(unittest.TestCase):
     def test_schema_groups_stay_contiguous(self):
         """The panel prints a heading whenever the group changes as it walks the
         schema, so a group split in two prints its heading twice."""
-        groups = re.findall(r"^\s*\['\w+',[^\]]*'([^']+)'\]", SCHEMA_RE.search(SOURCE).group(1), re.M)
+        groups = re.findall(r"^\s*\['\w+',[^\]]*'([^']+)'\]", SCHEMA_RE.search(self.source).group(1), re.M)
         runs = [g for i, g in enumerate(groups) if i == 0 or g != groups[i - 1]]
         self.assertEqual(len(runs), len(set(runs)), f"a group is split: {runs}")
 
@@ -79,16 +82,18 @@ class WorkCardTests(unittest.TestCase):
     does not open, and a plate keyed to nothing falls back to the drawing, which
     looks deliberate."""
 
+    source = SOURCE
+
     def setUp(self):
-        self.cards = set(re.findall(r'data-work="(\w+)"', SOURCE))
+        self.cards = set(re.findall(r'data-work="(\w+)"', self.source))
         self.src_keys = set(re.findall(r"^\s*(\w+):\s*'assets/work/",
-                                       SRC_RE.search(SOURCE).group(1), re.M))
-        self.info = set(re.findall(r"^  (\w+): \{", INFO_RE.search(SOURCE).group(1), re.M))
-        self.plates = set(re.findall(r"'(\w+)'\]", PLATES_RE.search(SOURCE).group(1)))
+                                       SRC_RE.search(self.source).group(1), re.M))
+        self.info = set(re.findall(r"^  (\w+): \{", INFO_RE.search(self.source).group(1), re.M))
+        self.plates = set(re.findall(r"'(\w+)'\]", PLATES_RE.search(self.source).group(1)))
         # the same kind again, inside each WORK_INFO entry, where it picks the
         # drawing the detail panel falls back to when a capture is missing
         self.info_plates = set(re.findall(r"plate: \[[^\]]*'(\w+)'\]",
-                                          INFO_RE.search(SOURCE).group(1)))
+                                          INFO_RE.search(self.source).group(1)))
 
     def test_every_card_has_panel_copy(self):
         self.assertEqual(self.cards - self.info, set())
@@ -115,9 +120,11 @@ class MachineReadableTests(unittest.TestCase):
     the part that is silently wrong when it drifts: whether the same projects
     are named, and whether they point at the same places."""
 
+    source = SOURCE
+
     def setUp(self):
         blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>',
-                            SOURCE, re.S)
+                            self.source, re.S)
         self.assertTrue(blocks, "the head has no JSON-LD block")
         self.graph = json.loads(blocks[0])["@graph"]
         self.parts = [p for n in self.graph if n["@type"] == "ProfilePage"
@@ -130,23 +137,35 @@ class MachineReadableTests(unittest.TestCase):
         self.assertTrue(self.parts, "no projects in the JSON-LD")
 
     def test_json_ld_links_match_the_cards(self):
-        hrefs = set(re.findall(r'<a class="card" href="([^"]+)"', SOURCE))
+        hrefs = set(re.findall(r'<a class="card" href="([^"]+)"', self.source))
         for part in self.parts:
             self.assertIn(part["url"], hrefs,
                           f"{part['name']} points somewhere no card does")
 
     def test_noscript_names_every_featured_project(self):
-        noscript = re.search(r"<noscript>(.*?)</noscript>", SOURCE, re.S)
+        noscript = re.search(r"<noscript>(.*?)</noscript>", self.source, re.S)
         self.assertIsNotNone(noscript, "the noscript fallback is gone")
         body = noscript.group(1)
-        for title in re.findall(r"title: '([^']+)'", INFO_RE.search(SOURCE).group(1)):
+        for title in re.findall(r"title: '([^']+)'", INFO_RE.search(self.source).group(1)):
             self.assertIn(title, body, f"{title} is missing from the noscript block")
 
     @unittest.skipUnless(LLMS.exists(), "root/llms.txt is published from main")
     def test_llms_txt_names_every_featured_project(self):
         text = LLMS.read_text(encoding="utf-8")
-        for title in re.findall(r"title: '([^']+)'", INFO_RE.search(SOURCE).group(1)):
+        for title in re.findall(r"title: '([^']+)'", INFO_RE.search(self.source).group(1)):
             self.assertIn(title, text, f"{title} is missing from llms.txt")
+
+
+class TempleTuningPanelTests(TuningPanelTests):
+    source = INDEX.with_name("temple.html").read_text()
+
+
+class TempleWorkCardTests(WorkCardTests):
+    source = INDEX.with_name("temple.html").read_text()
+
+
+class TempleMachineReadableTests(MachineReadableTests):
+    source = INDEX.with_name("temple.html").read_text()
 
 
 class BootTests(unittest.TestCase):

@@ -1,5 +1,6 @@
 """Tuning-save regressions; all writes use a temporary source file."""
 import http.client
+import json
 import socket
 import threading
 import tempfile
@@ -72,7 +73,51 @@ class TuneSaveTests(unittest.TestCase):
             serve.write_tune({"first": .25})
         self.assertEqual(self.index.read_text(), "portfolio without settings")
 
+    def test_scene_save_cannot_overwrite_the_other_scene(self):
+        temple = self.index.with_name("temple.html")
+        temple.write_text(SOURCE)
+        serve.write_tune({"first": .75}, "temple")
+        self.assertEqual(self.index.read_text(), SOURCE)
+        self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+        serve.write_tune({"second": 2})
+        self.assertEqual(self.index.read_text(), SOURCE.replace("second: 1.00", "second: 2.00"))
+        self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+
+    def test_scene_names_are_allowlisted(self):
+        for name in ("../index", "index.html", "forest", None):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                serve.write_tune({"first": .25}, name)
+        self.assertEqual(self.index.read_text(), SOURCE)
+
 class PreviewConnectionTests(unittest.TestCase):
+    def test_temple_save_endpoint_targets_temple_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            index = Path(directory, "index.html")
+            temple = Path(directory, "temple.html")
+            index.write_text(SOURCE)
+            temple.write_text(SOURCE)
+            with patch.object(serve, "HERE", Path(directory)), patch.object(serve, "INDEX", index):
+                try:
+                    server = serve.PreviewServer(("127.0.0.1", 0), serve.Handler)
+                except PermissionError:
+                    self.skipTest("local socket binding is unavailable in this sandbox")
+                worker = threading.Thread(target=server.serve_forever, daemon=True)
+                worker.start()
+                request = http.client.HTTPConnection(*server.server_address, timeout=2)
+                try:
+                    request.request("POST", "/__tune/temple/save", json.dumps({"first": .75}),
+                                    {"content-type": "application/json"})
+                    response = request.getresponse()
+                    self.assertEqual(response.status, 200)
+                    response.read()
+                    self.assertEqual(index.read_text(), SOURCE)
+                    self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+                finally:
+                    request.close()
+                    server.shutdown()
+                    worker.join(2)
+                    server.server_close()
+
     def test_idle_browser_connection_does_not_block_page_request(self):
         accepted = threading.Event()
 

@@ -16,10 +16,11 @@ permissions, so the website files are copied into that temporary directory.
 No login item or permanent LaunchAgent was installed.
 
 After editing the page, refresh the snapshot with
-`cp index.html /private/tmp/monolith-after-rain-preview/index.html` and reload.
+`cp index.html temple.html /private/tmp/monolith-after-rain-preview/` and reload.
 Copy changed assets there too. This snapshot rejects tuning saves so edits
 cannot silently land in the wrong copy. For SAVE TO CODE, run
-`python3 serve.py 5186` in this source worktree and use port 5186.
+`python3 serve.py 5186` in this source worktree and use port 5186. Monolith
+and Temple have separate save endpoints and update their own source files.
 Stop the snapshot server with
 `launchctl remove local.codex.monolith-after-rain-5193`.
 
@@ -93,8 +94,40 @@ by 12.5% while retaining all seven role stops and the existing dwell rhythm.
 The three grass silhouettes have lower peaks and broader shoulders, giving
 the foreground more gradual slopes without increasing geometry or draw calls.
 
-The next proposed scene pass is a clearing storm: dark cloud overhead, one
-soft silver-blue opening, a partly veiled moon, and restrained stars. The
-visible sky and reflection environment currently use separate generators;
-they should share the same composition and light direction. This sky pass
-is a proposal, not implemented in this checkpoint.
+The clearing-storm sky is now implemented in Monolith. A spherical painting
+contains the cloud opening, sparse stars and a smaller partly veiled moon;
+the same texture drives both the visible background and PMREM reflections.
+The broad cloud light follows the key-light direction. It is generated once,
+in short asynchronous batches so the loader can keep responding. Resizes and
+moon tuning debounce a new bake; stale results cannot replace the latest sky.
+The high/low paths use 2048 by 1024 and 1024 by 512 textures. No extra per-frame
+cloud passes or image downloads were added. Courtyard particles are quieter.
+
+## Temple restoration
+
+`temple.html` restores the original Kage procedural architecture, vermilion
+torii, stone lanterns, maple trees, falling leaves, foreground and blood moon.
+The recovered source is `public/landing-pages/kage.html` from MengTo/threeui,
+commit `326580429881c2abe7893bee53c62cbb31b6ee49`, blob
+`9f96c15b52a140e386a40c0178723f17ab7d8a13`, also present locally in the threeui
+checkout. The shared MIT license retains Meng To's copyright. No reference
+artwork was substituted for the procedural scene, and no new bitmap assets
+are needed.
+
+This is the original scene restored into the current portfolio, not an old
+copy of the portfolio itself. Work content, games, accessible navigation,
+View scene, the shorter seven-role timeline and wet-ground improvements remain.
+The original six-waypoint Kage camera cannot drive the current seven chapters,
+so the current route stays, with Kage's original hero pose. Original material
+colors and warm lighting are retained; the reflected moon is also warm.
+The Lova note in README remains unchanged.
+
+The selector links Monolith and Temple locally; Forest retains its existing
+published URL. Nothing has been pushed or deployed. `d91a56f` preserves the
+previous After Rain scene before this sky/restoration pass.
+
+Validation now covers both pages' script syntax, tuning keys, project cards
+and machine-readable content; independent tuning-save destinations; sky seam
+continuity, moon-off behavior and stale asynchronous bakes. The suite has 42
+passing tests. Desktop and narrow-view browser checks include both scenes,
+with screenshot artifacts kept locally under `artifacts/`.
