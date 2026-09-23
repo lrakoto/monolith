@@ -48,7 +48,8 @@ class SceneRoutingTests(unittest.TestCase):
         for page, current in ((INDEX, "Temple"), (INDEX.with_name("redwoods.html"), "Redwoods"),
                               (INDEX.with_name("forest.html"), "Forest")):
             source = page.read_text()
-            self.assertIn("['Raising the temple', () => buildTemple()]", source)
+            builder = "buildTempleStudy" if page == INDEX else "buildTemple"
+            self.assertTrue(f"['Raising the temple', () => {builder}()]" in source, page.name)
             self.assertNotIn("function buildMonolith()", source)
             picker = re.search(r'<nav class="scene-picker".*?</nav>', source, re.S).group(0)
             links = re.findall(r'<a href="([^"]+)"([^>]*)>([^<]+)</a>', picker)

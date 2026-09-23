@@ -81,7 +81,7 @@ function gardenSurface(mat, kind) {
   mat.customProgramCacheKey=()=> 'garden-surface-'+kind+'-1';
   return mat;
 }
-function gardenWind(mat, strength) {
+function gardenWind(mat, strength, leaf = false) {
   mat.onBeforeCompile=sh=>{
     sh.uniforms.uGardenTime=WET_TIME;
     sh.vertexShader='uniform float uGardenTime;\n'+sh.vertexShader;
@@ -90,9 +90,16 @@ function gardenWind(mat, strength) {
       float gust=sin(uGardenTime*.66+root.x*.34+root.z*.23)*.65+sin(uGardenTime*1.7+root.x*1.4)*.35;
       float stem=clamp(position.y,0.,1.);
       transformed.x+=gust*stem*stem*${strength.toFixed(3)};
-      transformed.z+=cos(uGardenTime*.84+root.z*.83)*stem*${(strength*.45).toFixed(3)};`);
+      transformed.z+=cos(uGardenTime*.84+root.z*.83)*stem*${(strength*.45).toFixed(3)};
+      ${leaf ? `
+      /* broad gusts arrive together, with a smaller out-of-phase flutter at
+         each leaf tip. the shared clock also freezes both for reduced motion. */
+      float flutter=sin(uGardenTime*5.1+root.x*3.7+root.z*4.3);
+      float flutter2=sin(uGardenTime*3.8+root.y*5.2-root.z*2.1);
+      transformed.z+=(flutter*.12+flutter2*.045)*( .65+.35*gust)*stem*stem;
+      transformed.x+=flutter2*.045*stem;` : ''}`);
   };
-  mat.customProgramCacheKey=()=> 'garden-wind-'+strength;
+  mat.customProgramCacheKey=()=> 'garden-wind-'+strength+'-'+leaf;
   return mat;
 }
 function buildGardenMaple(seed,x,z,scale,background=false) {
@@ -296,14 +303,14 @@ function buildLandscapeStudy() {
   const lp=GARDEN.leafGeo.attributes.position;
   for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
   GARDEN.leafGeo.computeVertexNormals();
-  GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.11);
+  GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
   buildGardenTerrain();
   GARDEN.trees.forEach(args=>buildGardenMaple(...args));
   [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],[814,28,-58,2.15]].forEach(args=>buildGardenMaple(...args,true));
   buildGardenAtmosphere();
   buildGardenLeafRafts();
   gardenEdit(WORLD.pond,'material',gardenWaterMaterial(WORLD.pond.material));
-  if(typeof qs==='function' && qs('studyStats','0')==='1'){
+  if(typeof qs==='function' && qs('studyStats','0')==='1' && document.querySelector('.study-controls')){
     GARDEN.stats=document.createElement('output');GARDEN.stats.id='study-performance';GARDEN.stats.className='study-status';
     GARDEN.stats.textContent='Measuring…';document.querySelector('.study-controls').appendChild(GARDEN.stats);
   }

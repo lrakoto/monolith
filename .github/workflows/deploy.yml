@@ -72,6 +72,7 @@ jobs:
             DEPLOY.md
             AFTER_RAIN.md
             artifacts/**
+            tools/**
             after-rain-baseline.html
             assets/materials/weathered-wood/**
             root/**

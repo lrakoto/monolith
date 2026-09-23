@@ -1,7 +1,7 @@
 /* keep the study's footprint tied to the approved scene, not a second set of measurements. */
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),THREE=require(path.join(root,'assets/three.min.js'));
-const src=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const src=fs.readFileSync(path.join(root,'tools/templates/temple-original.html'),'utf8');
 function fn(name){const m=src.match(new RegExp('function '+name+'\\([^\\n]*\\) \\{[\\s\\S]*?\\n\\}'));if(!m)throw Error(name);return m[0];}
 const WORLD={},scene=new THREE.Scene();
 const texture=()=>new THREE.Texture();

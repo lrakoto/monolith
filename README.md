@@ -5,10 +5,10 @@ designer in Los Angeles — built over a live WebGL temple above a forty-step
 flight and reflective pond. Three settings surround the same timber hall:
 red maples, a redwood grove and a planted forest.
 
-Rendered live in Three.js. Every piece of geometry and every texture *in the
-scene* is generated in JavaScript at load — no model files, no image assets.
-The exceptions are deliberate and both live outside the scene: the studio mark
-in `assets/brand/`, and captures of the work in `assets/work/`.
+Rendered live in Three.js. Temple combines a detailed Blender building and
+baked materials with a procedural garden, water and sky. Redwoods and Forest
+retain their browser-generated scenes. The studio mark lives in
+`assets/brand/`, and captures of the work in `assets/work/`.
 
 Temple is the opening scene in `index.html`, followed by Redwoods in
 `redwoods.html` and Forest in `forest.html`. The old `temple.html` link redirects
@@ -20,7 +20,9 @@ to the homepage. Open `index.html` through a local server and scroll.
 restores the approved scene, Temple shows the Blender building in the original
 garden, and Study adds the complete landscape pass. All three share the camera
 path. Wide / Pond / Close jump between viewpoints; View scene
-hides the portfolio copy. The three main scene pages remain unchanged.
+hides the portfolio copy. The approved full garden also runs in the live Temple
+homepage, with gusts and individual leaf flutter. Redwoods and Forest are
+unchanged. Future study edits stay isolated until explicitly promoted.
 
 The garden adds gently sloping planted banks, curved maple branches and roots,
 fuller red canopies with individual leaf silhouettes, distant trees, sedges,
@@ -52,6 +54,8 @@ Rebuild from this checkout:
 node tools/extract_temple_geometry.cjs
 /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --threads 4 --python tools/build_temple_study.py
 python3 tools/create_temple_study.py
+# only when approving a study version for the live Temple:
+python3 tools/create_temple_study.py --production
 python3 -B -m unittest discover -p 'test_*.py'
 ```
 
@@ -61,12 +65,19 @@ indirect-light PNG from `assets/temple-study/`; the other images are retained
 as editable bake outputs. The manifest records the approved source commit,
 geometry hash and asset budget: 150,382 triangles, five material groups,
 6.36 MB GLB plus roughly 95 KB of indirect light. Both full and low quality
-use this model; broader phone/GPU performance profiling is still needed
-before replacing the main scenes.
+use this model; physical phone/GPU performance profiling remains useful.
+The original building is retained as a fallback if the model cannot load.
 
 The study uses 24-bit depth for the main view and pond reflections, keeping
 closely layered paper and timber stable at the wide camera distance.
-The comparison's tuning endpoint cannot overwrite the original Temple.
+The comparison's tuning endpoint cannot overwrite the live Temple. The page
+generator reads `tools/templates/temple-original.html`, a frozen copy of the
+approved original scene, so rebuilding the study never reads back its own
+changes. `--production` is the only generator option that replaces `index.html`.
+After manual live copy or tuning edits, carry those changes into the template
+before the next promotion. The templates and authoring scripts do not deploy.
+Promotion also snapshots the model, bounce map and loader into `assets/temple/`;
+later Blender study bakes cannot change the live model accidentally.
 Tests cover JavaScript syntax, camera/settings parity, GLB geometry/UV/material
 integrity, successful swaps and a failed-load fallback. The matching r149
 GLTFLoader is vendored from Three.js under the adjacent MIT license.

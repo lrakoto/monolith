@@ -21,7 +21,7 @@ class TempleStudyTests(unittest.TestCase):
         self.assertEqual(result.returncode,0,result.stderr)
 
     def test_comparison_preserves_camera_and_window_settings(self):
-        original=(ROOT/'index.html').read_text();study=PAGE.read_text()
+        original=(ROOT/'tools/templates/temple-original.html').read_text();study=PAGE.read_text()
         for pattern in [r'const CAM = \[.*?\n\];',r'const TUNE = \{.*?\n\};',r'function buildTemple\(\) \{.*?\n\}',r'function applyCamera\(\) \{.*?\n\}']:
             self.assertEqual(re.search(pattern,original,re.S).group(),re.search(pattern,study,re.S).group())
         self.assertIn("fetch('/__tune/study/save'",study)
@@ -68,28 +68,37 @@ class TempleStudyTests(unittest.TestCase):
     def test_swap_and_failed_load_leave_original_windows_and_weather(self):
         source=PAGE.read_text();start=source.index('const TEMPLE_STUDY =');end=source.index('\nfunction buildMaple',start)
         code=source[start:end]
+        live=(ROOT/'index.html').read_text()
+        live_code=live[live.index('const TEMPLE_STUDY ='):live.index('\nfunction buildMaple',live.index('const TEMPLE_STUDY ='))]
+        self.assertNotIn('<aside class="study-controls"',live)
+        self.assertNotIn('name="robots" content="noindex',live)
+        self.assertIn("fetch('/__tune/temple/save'",live)
+        self.assertNotIn('assets/temple-study/',live)
+        for asset in ('temple-quality.glb','temple-bounce.png','GLTFLoader.r149.js','THREE-LICENSE.txt'):
+            self.assertTrue((ROOT/'assets/temple'/asset).is_file(),asset)
+        cases=[[code,True],[live_code,False]]
         harness=r"""
 const assert=require('node:assert/strict'),vm=require('node:vm');
 const THREE=require('./assets/three.min.js');
-(async()=>{for(const fail of [false,true]){
+(async()=>{for(const [CODE,controls] of CASES)for(const fail of [false,true]){
  const scene=new THREE.Scene(),temple=new THREE.Group(),WORLD={temple,key:{shadow:{needsUpdate:false}}};
  const original=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());
  const paper=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshBasicMaterial());temple.add(original,paper);scene.add(temple);
  const mist=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshBasicMaterial());scene.add(mist);
  const model=new THREE.Group();const enhanced=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());model.add(enhanced);
- const elements={};const document={getElementById:id=>elements[id]||(elements[id]={addEventListener(){},setAttribute(k,v){this[k]=v}})};
+ const elements={};const document={getElementById:id=>controls?(elements[id]||(elements[id]={addEventListener(){},setAttribute(k,v){this[k]=v}})):null};
  class Loader{loadAsync(){return fail?Promise.reject(Error('offline')):Promise.resolve({scene:model})}}
  class Textures{loadAsync(){return Promise.resolve(new THREE.Texture())}}
  const ctx={THREE:{...THREE,GLTFLoader:Loader,TextureLoader:Textures},scene,WORLD,document,maxAniso:4,buildTemple(){},applyTempleDepth(){},console:{warn(){}}};
  vm.createContext(ctx);vm.runInContext(CODE,ctx);await ctx.buildTempleStudy();
  assert.equal(paper.visible,true);assert.equal(mist.visible,true);
- if(fail){assert.equal(original.visible,true);assert.equal(scene.children.length,2);assert.match(elements['study-status'].textContent,/unavailable/);continue;}
- assert.equal(original.visible,false);assert.equal(model.visible,true);assert(enhanced.geometry.attributes.uv2);assert.equal(elements['study-model'].disabled,false);
+ if(fail){assert.equal(original.visible,true);assert.equal(scene.children.length,2);if(controls)assert.match(elements['study-status'].textContent,/unavailable/);continue;}
+ assert.equal(original.visible,false);assert.equal(model.visible,true);assert(enhanced.geometry.attributes.uv2);if(controls)assert.equal(elements['study-model'].disabled,false);
  ctx.setTempleStudy(false);assert.equal(original.visible,true);assert.equal(model.visible,false);
  ctx.setTempleStudy(true);assert.equal(original.visible,false);assert.equal(model.visible,true);assert.equal(WORLD.key.shadow.needsUpdate,true);
 }})().catch(e=>{console.error(e);process.exitCode=1});
 """
-        result=subprocess.run(['node','-e','const CODE='+json.dumps(code)+';\n'+harness],cwd=ROOT,capture_output=True,text=True,timeout=10)
+        result=subprocess.run(['node','-e','const CASES='+json.dumps(cases)+';\n'+harness],cwd=ROOT,capture_output=True,text=True,timeout=10)
         self.assertEqual(result.returncode,0,result.stderr)
 
 if __name__=='__main__':unittest.main()

@@ -1,7 +1,11 @@
-"""Refresh the isolated comparison page from the approved Temple scene."""
+"""Refresh the study; --production explicitly promotes it to the homepage."""
+import argparse
 from pathlib import Path
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--production",action="store_true",help="also replace the live Temple page")
+args=parser.parse_args()
 root=Path(__file__).resolve().parents[1]
-s=(root/'index.html').read_text()
+s=(root/'tools/templates/temple-original.html').read_text()
 css='''
 /* the comparison stays reachable when the portfolio copy is hidden. */
 .study-controls{position:fixed;z-index:120;left:20px;bottom:20px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(8,13,16,.92);border:1px solid rgba(223,231,224,.20);border-radius:16px;color:#dfe7e0;font:12px Onest,sans-serif;backdrop-filter:blur(14px);}
@@ -41,18 +45,18 @@ function setTempleStudy(active, landscape = active) {
   setGardenStudy(TEMPLE_STUDY.landscape);
   TEMPLE_STUDY.original.forEach(m => { m.visible = !active; });
   if (TEMPLE_STUDY.model) TEMPLE_STUDY.model.visible = active;
-  document.getElementById('study-original').setAttribute('aria-pressed', String(!active));
-  document.getElementById('study-model').setAttribute('aria-pressed', String(active && landscape));
-  document.getElementById('study-temple').setAttribute('aria-pressed', String(active && !landscape));
-  document.getElementById('study-status').textContent = active ? (landscape ? 'Full garden · moonlit landscape' : 'Temple model · original garden') : 'Original scene · same camera';
+  document.getElementById('study-original')?.setAttribute('aria-pressed', String(!active));
+  document.getElementById('study-model')?.setAttribute('aria-pressed', String(active && landscape));
+  document.getElementById('study-temple')?.setAttribute('aria-pressed', String(active && !landscape));
+  if (document.getElementById('study-status')) document.getElementById('study-status').textContent = active ? (landscape ? 'Full garden · moonlit landscape' : 'Temple model · original garden') : 'Original scene · same camera';
   if (WORLD.key) WORLD.key.shadow.needsUpdate = true;
 }
-document.getElementById('study-original').addEventListener('click', () => setTempleStudy(false));
-document.getElementById('study-temple').addEventListener('click', () => setTempleStudy(true, false));
-document.getElementById('study-model').addEventListener('click', () => setTempleStudy(true));
-document.getElementById('study-wide').addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
-document.getElementById('study-pond').addEventListener('click', () => scrollTo({ top: anchors[1] || 0, behavior: 'smooth' }));
-document.getElementById('study-close').addEventListener('click', () => scrollTo({ top: document.getElementById('eternity').offsetTop - 40, behavior: 'smooth' }));
+document.getElementById('study-original')?.addEventListener('click', () => setTempleStudy(false));
+document.getElementById('study-temple')?.addEventListener('click', () => setTempleStudy(true, false));
+document.getElementById('study-model')?.addEventListener('click', () => setTempleStudy(true));
+document.getElementById('study-wide')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
+document.getElementById('study-pond')?.addEventListener('click', () => scrollTo({ top: anchors[1] || 0, behavior: 'smooth' }));
+document.getElementById('study-close')?.addEventListener('click', () => scrollTo({ top: document.getElementById('eternity').offsetTop - 40, behavior: 'smooth' }));
 async function buildTempleStudy() {
   buildTemple();
   WORLD.temple.traverse(m => { if (m.isMesh && m.material.isMeshStandardMaterial) TEMPLE_STUDY.original.push(m); });
@@ -78,18 +82,19 @@ async function buildTempleStudy() {
       applyTempleDepth(mat);
     });
     TEMPLE_STUDY.model = gltf.scene; scene.add(gltf.scene);
-    document.getElementById('study-model').disabled = false;
-    document.getElementById('study-temple').disabled = false;
+    if (document.getElementById('study-model')) document.getElementById('study-model').disabled = false;
+    if (document.getElementById('study-temple')) document.getElementById('study-temple').disabled = false;
     setTempleStudy(TEMPLE_STUDY.active);
   } catch (error) {
     setTempleStudy(false);
-    document.getElementById('study-status').textContent = 'Model unavailable · original shown';
+    if (document.getElementById('study-status')) document.getElementById('study-status').textContent = 'Model unavailable · original shown';
     console.warn('[305 study] Model could not load', error);
   }
 }
 '''
 js += (root/'tools/temple_landscape.js').read_text()
 replacements={
+'in a portfolio whose every surface is generated in the browser at load.':'in a live moonlit garden with a detailed timber temple.',
 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n}': 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  /* additive upsampling must retain the sharper bloom already in the target. */\n  const autoClear = renderer.autoClear;\n  renderer.autoClear = false;\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n  renderer.autoClear = autoClear;\n}',
 'uBloom: { value: .34 }': 'uBloom: { value: 0 }',
 'POST.up.uniforms.tS.value = L[i - 1].a;': 'POST.up.uniforms.tS.value = L[i - 1].a.texture;',
@@ -123,4 +128,25 @@ for a,b in replacements.items():
  assert s.count(a)==1,(a,s.count(a))
  s=s.replace(a,b)
 (root/'temple-study.html').write_text(s)
-print('Created temple-study.html; original page untouched.')
+print('Created temple-study.html; live page unchanged unless --production is supplied.')
+if args.production:
+ # promotion is explicit so the next study pass cannot silently change the live scene.
+ for a,b in {
+  css:'',html:'',
+  '<title>Temple garden study — ThreeOhFive Studios</title>\n<meta name="robots" content="noindex,nofollow">':'<title>Lova Rakoto — Web developer and designer in Los Angeles</title>',
+  "fetch('/__tune/study/save'":"fetch('/__tune/temple/save'",
+  'this Temple study combines':'this scene combines',
+  'This Temple study combines':'This scene combines',
+ }.items():
+  assert s.count(a)==1,(a,s.count(a))
+  s=s.replace(a,b)
+ # pin the model as well as the page; another Blender bake belongs to the study
+ # until the next deliberate promotion, even if both are deployed together.
+ assets=('temple-quality.glb','temple-bounce.png','GLTFLoader.r149.js','THREE-LICENSE.txt')
+ (root/'assets/temple').mkdir(exist_ok=True)
+ for asset in assets:
+  (root/'assets/temple'/asset).write_bytes((root/'assets/temple-study'/asset).read_bytes())
+ assert s.count('assets/temple-study/')==3
+ s=s.replace('assets/temple-study/','assets/temple/')
+ (root/'index.html').write_text(s)
+ print('Promoted the approved study to index.html without comparison controls.')

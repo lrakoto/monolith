@@ -27,8 +27,11 @@ The scene pages are `index.html` (Temple, the homepage), `redwoods.html`
 old links to the homepage; `monolith.html` redirects to Redwoods. Both preserve
 query settings and section anchors.
 Include all five HTML files when publishing the scene selector. The page cache
-rule covers all five. All scene materials are generated locally; the archived
-photographic wood maps and local study notes are excluded from deployment.
+rule covers all five. Temple now requires `assets/temple/temple-quality.glb`,
+`temple-bounce.png`, and `GLTFLoader.r149.js` (with its MIT license). The study
+stays at `temple-study.html`; promotion strips its controls from `index.html`.
+The `tools/` templates, archived photographic wood maps and local study notes
+are excluded from deployment.
 Upload over the top — cPanel File Manager, tick **Overwrite existing files**.
 
 **Purge the Cloudflare cache afterwards** or the old file lingers.
