@@ -6,3 +6,7 @@ __pycache__/
 # not the worker
 .wrangler/
 node_modules/
+
+# local comparisons stay with this study
+artifacts/
+after-rain-baseline.html

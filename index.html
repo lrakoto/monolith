@@ -835,7 +835,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
 @media (max-width:520px){ .cards-arch{ grid-template-columns:1fr; } }
 
 .card-fr::after{ content:''; position:absolute; inset:0;
-  background:linear-gradient(transparent 46%, rgba(4,6,9,.80)); pointer-events:none; }
+  background:linear-gradient(transparent 58%, rgba(4,6,9,.64)); pointer-events:none; }
 /* The fabric overdraws its card by CL_BLEED on every side so the billow and
    the contact shadow have somewhere to go, so the frame cannot clip it. The
    card's outline is not here at all: it is drawn in the cloth shader, where it
@@ -1353,6 +1353,33 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 }
 @media (prefers-reduced-motion:reduce){ .scene-options a{ transition:none; } }
 
+/* visibility preserves the scroll route while the portfolio is put away. */
+.scene-view-controls{ position:fixed; right:var(--gut); bottom:24px; z-index:85;
+  display:flex; align-items:center; gap:16px; }
+#scene-view{ min-height:42px; padding:0 18px; border:1px solid rgba(223,231,224,.25);
+  border-radius:24px; color:#e2e9e7; background:rgba(7,13,17,.88);
+  font:500 11px var(--font-sans, sans-serif); letter-spacing:.06em; cursor:pointer;
+  backdrop-filter:blur(12px); }
+#scene-view:hover{ background:rgba(31,43,48,.96); border-color:rgba(223,231,224,.55); }
+#scene-view:focus-visible{ outline:2px solid #f0a48c; outline-offset:4px; }
+.scene-view-hint{ display:none; color:#d2dcd8; font-size:10px; letter-spacing:.15em; text-transform:uppercase; }
+.scene-only .scene-view-hint{ display:block; }
+.scene-only .page,.scene-only #nav,.scene-only #prog{ visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
+.scene-only #cursor{ visibility:hidden; }
+body.scene-only,body.scene-only *{ cursor:auto !important; }
+.no-webgl .scene-view-controls{ display:none; }
+@media(max-width:520px){
+  .nav{ gap:8px; padding-inline:16px; }
+  .brand{ gap:8px; }
+  .brand-tx b{ font-size:10px; letter-spacing:.10em; }
+  .brand-tx i{ font-size:7px; }
+  .nav-cv{ width:36px; min-width:36px; padding:0; margin-left:auto; justify-content:center; }
+  .nav-cv span,.nav-icon{ display:none; }
+  .nav-burger{ flex:0 0 44px; margin-left:0; }
+  body[data-layout-hero="b"] .hero-side{ display:none; }
+  .scene-view-controls{ bottom:16px; gap:10px; }
+  .scene-view-hint{ font-size:9px; }
+}
 </style>
 </head>
 <body data-layout-hero="b" data-layout-story="b" data-layout-gallery="b"
@@ -1402,7 +1429,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
     <a class="nav-link" href="#experience" data-cursor><span>Experience</span><span class="alt">04</span></a>
     <a class="nav-link" href="#eternity" data-cursor><span>Contact</span><span class="alt">05</span></a>
   </nav>
-  <a class="nav-cv" href="/wp-content/uploads/2026/03/Lova_Resume_2026.pdf" download data-cursor>
+  <a class="nav-cv" href="/wp-content/uploads/2026/03/Lova_Resume_2026.pdf" aria-label="Download résumé" download data-cursor>
     <i></i>
     <svg viewBox="0 0 14 14" fill="none" width="12" height="12" aria-hidden="true" focusable="false">
       <path d="M7 2v8M3.6 6.6 7 10l3.4-3.4M2.5 12h9" stroke="currentColor" stroke-width="1.3"
@@ -1767,6 +1794,11 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 
 </div><!-- /.page -->
 
+<div class="scene-view-controls">
+  <span class="scene-view-hint" aria-hidden="true">Scroll to explore</span>
+  <button id="scene-view" type="button" aria-pressed="false" aria-controls="top nav" hidden>View scene</button>
+</div>
+
 
 <dialog class="wmodal" id="wmodal" aria-labelledby="wmodal-title">
   <div class="wmodal-in">
@@ -1807,6 +1839,27 @@ const qs     = (k, d) => { const v = Q.get(k); return v === null ? d : v; };
 const qn     = (k, d) => { const v = Q.get(k); return v === null ? d : parseFloat(v); };
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const COARSE = matchMedia('(hover: none)').matches;
+let sceneOnly = false;
+const sceneView = document.getElementById('scene-view');
+function setSceneView(value) {
+  sceneOnly = value;
+  if (value) {
+    document.getElementById('nav').classList.remove('menu-open');
+    const burger = document.querySelector('.nav-burger');
+    burger.classList.remove('active'); burger.setAttribute('aria-expanded', 'false');
+    document.documentElement.classList.remove('nav-open');
+  }
+  document.body.classList.toggle('scene-only', value);
+  document.querySelector('.page').inert = value;
+  document.getElementById('nav').inert = value;
+  sceneView.setAttribute('aria-pressed', String(value));
+  sceneView.textContent = value ? 'Return to portfolio' : 'View scene';
+  document.dispatchEvent(new Event('sceneviewchange'));
+}
+sceneView.addEventListener('click', () => setSceneView(!sceneOnly));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sceneOnly) { setSceneView(false); sceneView.focus(); }
+});
 
 const clamp  = (v, a, b) => v < a ? a : (v > b ? b : v);
 const sat    = v => clamp(v, 0, 1);
@@ -1878,9 +1931,9 @@ const TUNE = {
   stairFilmRough:   0.050,
   stairEdgeShine:   0.480,
   envIntensity:     1.15,
-  slotBright:       3.000,
-  moonBright:       0.460,
-  moonSize:         1.00,
+  slotBright:       2.450,
+  moonBright:       0.285,
+  moonSize:         0.76,
   lampBright:       8.00,
   lampReach:        30.50,
   nearReach:        12.60,
@@ -2911,7 +2964,7 @@ function initGL() {
      moved the hall by 0.18 of a luminance unit, the fog colour moves it
      properly. And it reaches by distance, so the foreground does not
      follow it down. */
-  scene.fog = new THREE.FogExp2(0x050a0e, 0.0168);
+  scene.fog = new THREE.FogExp2(0x070e13, 0.0154);
   scene.background = new THREE.Color(0x060a0d);
   camera = new THREE.PerspectiveCamera(36, vpW() / vpH(), .35, 220);
   scene.add(camera);
@@ -3126,17 +3179,129 @@ const SLOT_RGB = [1.00, 0.75, 0.38];
    canvases and six normal-map passes for a surface nobody sees twice. */
 const concreteTex = () => lib('concrete', () => texStone(23, { base: [58, 63, 67], moss: 0, relief: 2.3 }));
 
+/* the facade gets one full height casting, so the grain crosses the jambs
+   at the same scale as the rest of the wall. the shared stone has fractures
+   and large mineral flecks; those made this pour look quarried up close. */
+function texCastConcrete() {
+  const W = LOW ? 512 : 1024, H = W * 2, rnd = mulberry32(30526);
+  const c = cvs(W, H), x = c.getContext('2d');
+  const h = cvs(W, H), hx = h.getContext('2d');
+  const r = cvs(W, H), rx = r.getContext('2d');
+  x.fillStyle = '#535958'; x.fillRect(0, 0, W, H);
+  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
+  rx.fillStyle = '#d9d9d9'; rx.fillRect(0, 0, W, H);
+  const cloud = fbmCanvas(512, 1024, 305, 5, 5, 1.2);
+  [[x, .12], [hx, .06], [rx, .10]].forEach(([ctx, alpha]) => {
+    ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = alpha;
+    ctx.drawImage(cloud, 0, 0, W, H);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  });
+
+  const tooth = fbmCanvas(512, 1024, 306, 2, 256, .8);
+  [[x, .055], [hx, .018]].forEach(([ctx, alpha]) => {
+    ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = alpha;
+    ctx.drawImage(tooth, 0, 0, W, H);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  });
+
+  /* timber leaves a direction in the cement, not a picture of wood. narrow
+     tonal changes survive at distance; the fibres arrive on the approach. */
+  const board = W * .78 / MONO.w;
+  for (let px = 0; px < W; px += board) {
+    x.fillStyle = 'rgba(' + (rnd() > .5 ? '210,214,205,' : '16,23,24,') + (.009 + rnd() * .016) + ')';
+    x.fillRect(px, 0, board - 1, H);
+    hx.fillStyle = 'rgba(0,0,0,.10)'; hx.fillRect(px, 0, .65, H);
+  }
+  for (let i = 0; i < 2200; i++) {
+    const px = rnd() * W, py = rnd() * H, len = 5 + rnd() * 90;
+    x.fillStyle = rnd() < .5 ? 'rgba(215,217,208,.028)' : 'rgba(10,18,20,.035)';
+    x.fillRect(px, py, .45 + rnd() * .65, len);
+    hx.fillStyle = 'rgba(0,0,0,.065)'; hx.fillRect(px, py, .6, len);
+  }
+
+  /* lift lines are impressions in the pour. raised bars looked like cladding
+     and divided the mass into equal shelves from the opening camera. */
+  for (let y = 3.24; y < MONO.h - .5; y += 3.24) {
+    const py = H * (1 - y / MONO.h);
+    x.fillStyle = 'rgba(12,18,20,.22)'; x.fillRect(0, py, W, 1.4);
+    x.fillStyle = 'rgba(190,196,185,.055)'; x.fillRect(0, py + 1.5, W, 1);
+    hx.fillStyle = '#686868'; hx.fillRect(0, py, W, 1.8);
+    for (let j = 0; j < 11; j++) {
+      const px = rnd() * W, len = 22 + rnd() * 140;
+      const g = x.createLinearGradient(0, py, 0, py + len);
+      g.addColorStop(0, 'rgba(18,26,26,.075)'); g.addColorStop(1, 'rgba(18,26,26,0)');
+      x.fillStyle = g; x.fillRect(px, py, 1 + rnd() * 3, len);
+    }
+  }
+  for (let y = 1.62; y < MONO.h - 1; y += 3.24) {
+    for (const px of [W * .19, W * .40, W * .60, W * .81]) {
+      const py = H * (1 - y / MONO.h), rad = 3.0;
+      const shade = x.createRadialGradient(px, py, .6, px, py, rad);
+      shade.addColorStop(0, 'rgba(12,20,22,.34)'); shade.addColorStop(1, 'rgba(12,20,22,0)');
+      x.fillStyle = shade; x.fillRect(px-rad, py-rad, rad*2, rad*2);
+      hx.fillStyle = '#555555'; hx.beginPath(); hx.arc(px, py, rad * .65, 0, TAU); hx.fill();
+    }
+  }
+  for (let i = 0; i < 5200; i++) {
+    const px = rnd() * W, py = rnd() * H, a = .4 + rnd() * rnd() * 1.8;
+    x.fillStyle = 'rgba(13,21,22,.28)'; x.beginPath(); x.ellipse(px, py, a, a * .7, 0, 0, TAU); x.fill();
+    hx.fillStyle = '#656565'; hx.beginPath(); hx.ellipse(px, py, a, a * .7, 0, 0, TAU); hx.fill();
+  }
+  /* moisture gathers at the foot. keeping it in the map leaves the upper
+     face matte and avoids a uniformly lacquered twenty metre wall. */
+  [[x, 'rgba(16,28,28,.24)'], [rx, 'rgba(30,30,30,.34)']].forEach(([ctx, tone]) => {
+    const g = ctx.createLinearGradient(0, H * .76, 0, H);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, tone);
+    ctx.fillStyle = g; ctx.fillRect(0, H * .76, W, H * .24);
+  });
+  return { map: c, normal: normalFromHeight(h, 1.7), rough: r };
+}
+
+function texSlotLight() {
+  const c = cvs(256, 64), x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 64);
+  g.addColorStop(0, '#34312b'); g.addColorStop(.30, '#aaa28f');
+  g.addColorStop(.75, '#fff3d8'); g.addColorStop(1, '#d4c5a4');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 64);
+  return c;
+}
+
+function castUV(geo) {
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const nx = Math.abs(n.getX(i)), ny = Math.abs(n.getY(i)), nz = Math.abs(n.getZ(i));
+    const u = nx > nz ? p.getZ(i) : p.getX(i);
+    const v = ny > Math.max(nx, nz) ? MONO.h - MONO.d - 1 + p.getZ(i) : p.getY(i);
+    uv.setXY(i, u / MONO.w + .5, clamp(v / MONO.h, .001, .999));
+  }
+  return geo;
+}
+
+function castGeometry(w, h, d, bevel, opening) {
+  const shape = new THREE.Shape(), hw = w / 2;
+  shape.moveTo(-hw + bevel, bevel); shape.lineTo(hw - bevel, bevel);
+  shape.lineTo(hw - bevel, h - bevel); shape.lineTo(-hw + bevel, h - bevel); shape.closePath();
+  if (opening) {
+    const hole = new THREE.Path(), half = opening.w / 2;
+    hole.moveTo(-half - bevel, opening.lo - bevel);
+    hole.lineTo(-half - bevel, opening.hi + bevel);
+    hole.lineTo(half + bevel, opening.hi + bevel);
+    hole.lineTo(half + bevel, opening.lo - bevel); hole.closePath();
+    shape.holes.push(hole);
+  }
+  return new THREE.ExtrudeGeometry(shape, { depth: d - bevel * 2, steps: 1,
+    bevelEnabled: true, bevelSegments: 2, bevelSize: bevel, bevelThickness: bevel,
+    curveSegments: 1 }).translate(0, 0, -d / 2 + bevel);
+}
+
 function buildMonolith() {
   const g = new THREE.Group();
-  /* One library at two scales: the mass wants the aggregate small and far
-     apart so twenty-five metres reads as a single pour, the reveals and the
-     coping want it tight enough to catch the key light on an edge. */
-  /* Damp, not polished. Concrete standing out in a mountain fog holds a wet
-     sheen on the faces the light rakes across, and dropping the roughness is
-     what puts the slot's spill onto the mass around it — at .94 the slab was
-     lit but had no surface, and the light in the cut fell on nothing. */
-  const face  = surface(concreteTex(), [2.4, 4.8], { color: 0x515860, roughness: .60, metalness: .04, normal: 1.35, env: 1.05 });
-  const trim  = surface(concreteTex(), [1.1, 1.1], { color: 0x363d43, roughness: .34, metalness: .06, normal: 1.05, env: 1.35 });
+  const cast = lib('cast-concrete', texCastConcrete);
+  const face = surface(cast, [1, 1], { color: 0x687075, roughness: .84, metalness: 0, normal: .62, env: .85 });
+  const reveal = face.clone();
+  reveal.color.setHex(0x51595d); reveal.roughness = .78;
+  reveal.normalScale.set(.48, .48); reveal.envMapIntensity = .8;
+  const trim = surface(concreteTex(), [1.1, 1.1], { color: 0x363d43, roughness: .48, metalness: .03, normal: .7, env: 1.05 });
   /* the arris strips are the one genuinely metal thing on the slab, and the
      only place a hard, tight highlight belongs */
   const steel = new THREE.MeshStandardMaterial({ color: 0x2a3034, roughness: .18, metalness: .82, envMapIntensity: 2.2 });
@@ -3149,26 +3314,18 @@ function buildMonolith() {
      gives the sampled pink, and the slot has to stay a warm light source.
      SLOT_RGB is shared with the tuning panel's live handler — split them and
      the first drag of the slider snaps the colour back. */
-  const lit = new THREE.MeshBasicMaterial({ color: hdr(TUNE.slotBright * SLOT_RGB[0], TUNE.slotBright * SLOT_RGB[1], TUNE.slotBright * SLOT_RGB[2]), fog: true, toneMapped: false });
+  const lit = new THREE.MeshBasicMaterial({ map: tx(texSlotLight()), color: hdr(TUNE.slotBright * SLOT_RGB[0], TUNE.slotBright * SLOT_RGB[1], TUNE.slotBright * SLOT_RGB[2]), fog: true, toneMapped: false });
   WORLD.slot = lit; WORLD.paper = lit;
 
   const HW = MONO.w / 2, HD = MONO.d / 2;
   const sLo = MONO.slotY - MONO.slotH / 2;      /* the cut's soffit */
   const sHi = MONO.slotY + MONO.slotH / 2;      /* its head         */
 
-  /* ---- the mass, in four pieces around the void -------------------------
-     There is no CSG here, so the slot is not cut — it is the gap the four
-     pieces leave. The jambs are what make that read as taken out of a solid
-     rather than as two blocks floating one above the other. */
-  const lower = new THREE.Mesh(new THREE.BoxGeometry(MONO.w, sLo, MONO.d), face);
-  lower.position.y = sLo / 2; lower.castShadow = true; lower.receiveShadow = true; g.add(lower);
-  const upper = new THREE.Mesh(new THREE.BoxGeometry(MONO.w, MONO.h - sHi, MONO.d), face);
-  upper.position.y = sHi + (MONO.h - sHi) / 2; upper.castShadow = true; upper.receiveShadow = true; g.add(upper);
-  [-1, 1].forEach(s => {
-    const j = new THREE.Mesh(new THREE.BoxGeometry(MONO.inset, MONO.slotH, MONO.d), face);
-    j.position.set(s * (HW - MONO.inset / 2), MONO.slotY, 0);
-    j.castShadow = true; j.receiveShadow = true; g.add(j);
-  });
+  /* one continuous extrusion keeps the bevel around the opening, without
+     inventing joints where four separately softened boxes would meet. */
+  const mass = new THREE.Mesh(castUV(castGeometry(MONO.w, MONO.h, MONO.d, .065,
+    { w: MONO.w - MONO.inset * 2, lo: sLo, hi: sHi })), [face, reveal]);
+  mass.name = 'cast-monolith'; mass.castShadow = true; mass.receiveShadow = true; g.add(mass);
   /* the back of the recess — without it the slot is a hole onto the sky */
   const back = new THREE.Mesh(new THREE.BoxGeometry(MONO.w - MONO.inset * 2, MONO.slotH, .5), trim);
   back.position.set(0, MONO.slotY, -HD + .25); g.add(back);
@@ -3183,30 +3340,16 @@ function buildMonolith() {
   /* a hairline of steel along the head and the soffit of the cut — a concrete
      arris chips, and the line is what makes the opening look intended */
   [sLo + .045, sHi - .045].forEach(y => {
-    const e = new THREE.Mesh(new THREE.BoxGeometry(sw + .30, .07, .10), steel);
-    e.position.set(0, y, HD - .05); g.add(e);
+    const e = new THREE.Mesh(new THREE.BoxGeometry(sw + .18, .035, .12), steel);
+    e.position.set(0, y, HD - .13); g.add(e);
   });
 
-  /* ---- board-form seams --------------------------------------------------
-     Concrete poured against timber shuttering carries the lift lines, and at
-     this distance they are the only thing telling the eye how big the slab
-     is — without them it could be three metres tall or thirty. Merged: forty
-     grooves is forty draw calls for a seven-centimetre shadow. */
-  const seams = [];
-  for (let y = 1.62; y < MONO.h - .5; y += 1.62) {
-    if (y > sLo - .35 && y < sHi + .35) continue;        /* not across the void */
-    seams.push(new THREE.BoxGeometry(MONO.w + .02, .055, .05).translate(0, y, HD));
-    [-1, 1].forEach(s => seams.push(
-      new THREE.BoxGeometry(.05, .055, MONO.d + .02).translate(s * HW, y, 0)));
-  }
-  const seam = new THREE.Mesh(mergeGeos(seams), trim);
-  seam.castShadow = false; g.add(seam);
-
-  /* the coping: a slab projecting a hand's width all round, so the top of the
-     silhouette terminates on a line instead of fading into the fog */
-  const cap = new THREE.Mesh(new THREE.BoxGeometry(MONO.w + .55, .62, MONO.d + .55), trim);
-  cap.position.y = MONO.h + .31; cap.castShadow = true; g.add(cap);
-  WORLD.templeTop = PODIUM + MONO.h + .62;
+  /* the coping keeps a small shadow joint, but its softened perimeter
+     catches the sky instead of finishing in a razor edged black shelf. */
+  const cap = new THREE.Mesh(castUV(castGeometry(MONO.w + .36, .38, MONO.d + .36, .045)
+    .translate(0, MONO.h + .025, 0)), [face, reveal]);
+  cap.castShadow = true; cap.receiveShadow = true; g.add(cap);
+  WORLD.templeTop = PODIUM + MONO.h + .405;
 
   /* ---- the two flanking blocks ------------------------------------------
      The hall had wings and the slab needs them for the same reason: one mass
@@ -3217,8 +3360,8 @@ function buildMonolith() {
      knowing which of the three it is supposed to be looking at. A monolith
      has one light in it or it is not a monolith.                         */
   [-1, 1].forEach(s => {
-    const w = new THREE.Mesh(new THREE.BoxGeometry(7.2, 4.6, 5.0), face);
-    w.position.set(s * 11.4, 2.3, 1.4); w.castShadow = true; w.receiveShadow = true; g.add(w);
+    const w = new THREE.Mesh(castUV(castGeometry(7.2, 4.6, 5.0, .045).translate(s * 11.4, 0, 1.4)), [face, reveal]);
+    w.position.set(0, 0, 0); w.castShadow = true; w.receiveShadow = true; g.add(w);
     const wc = new THREE.Mesh(new THREE.BoxGeometry(7.7, .34, 5.5), trim);
     wc.position.set(s * 11.4, 4.77, 1.4); wc.castShadow = true; g.add(wc);
   });
@@ -3242,7 +3385,7 @@ function buildMonolith() {
      washed out reads as light; dark and saturated reads as paint. */
   const spill = new THREE.Mesh(new THREE.PlaneGeometry(34, 18),
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(255,232,194,.82)', 'rgba(255,210,148,.13)')),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .30 }));
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .16 }));
   spill.position.set(0, PODIUM + MONO.slotY, TEMPLE_Z + 5.2); spill.renderOrder = 2;
   scene.add(spill); WORLD.hallHalo = spill;
 
@@ -3285,6 +3428,7 @@ function buildMoon() {
     new THREE.MeshBasicMaterial({ map: tx(texDisc()), color: hdr(TUNE.moonBright, TUNE.moonBright * 1.26, TUNE.moonBright * 1.65),
       transparent: true, depthWrite: false, fog: false, toneMapped: false }));
   disc.position.set(MOON.x, MOON.y, MOON.z); disc.renderOrder = 1;
+  disc.scale.setScalar(TUNE.moonSize);
   scene.add(disc); WORLD.moon = disc;
 
   /* the air around it — a wide, weak corona that the bloom picks up */
@@ -3292,6 +3436,7 @@ function buildMoon() {
     new THREE.MeshBasicMaterial({ map: tx(texGlow('rgba(172,206,232,.90)', 'rgba(78,124,168,.26)')),
       transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .22 }));
   halo.position.set(MOON.x, MOON.y, MOON.z - .3); halo.renderOrder = 0;
+  halo.scale.setScalar(TUNE.moonSize);
   scene.add(halo); WORLD.moonHalo = halo;
 }
 /* On a tall frame the rig steps back and its horizontal reach narrows, which
@@ -3441,7 +3586,9 @@ function buildRocks() {
      facets of the icosahedron they are built from caught the sky and none of
      it was hidden any more. Wet, but only just, and the environment barely
      touches them. */
-  const mat = new THREE.MeshStandardMaterial({ color: 0x0d1214, roughness: .46, metalness: .06, envMapIntensity: .55, flatShading: false });
+  const mat = new THREE.MeshStandardMaterial({ color: 0x10171a, roughness: .68, metalness: .02, envMapIntensity: .40,
+    normalMap: tx(concreteTex().normal, { wrap: THREE.RepeatWrapping, repeat: [1.8, 1.8], srgb: false }),
+    normalScale: new THREE.Vector2(.9, .9), flatShading: false });
   const rnd = mulberry32(404), n = noise2D(88);
   const spots = [[-6.2, -5.4, .95], [-7.4, -2.1, .7], [6.6, -7.2, .8], [8.0, -4.0, 1.05],
                  [-9.0, -8.4, 1.15], [9.6, -9.2, .9], [3.4, -7.8, .55], [-3.2, -8.6, .6]];
@@ -3599,7 +3746,7 @@ function buildForeground() {
        work all live on a surface the composition had walled off. Lowering the
        banks opens a strip of standing water either side of the flight and
        keeps the grass reading as foreground. */
-    ['grassFar',  texGrassCutout(101, { crest: .30, peak: .46, wide: .42, blades: 11000, len: 34, warm: .70, crest2: .46, crest3: .40 }),
+    ['grassFar',  texGrassCutout(101, { crest: .25, peak: .43, wide: .32, blades: 10500, len: 34, warm: .70, crest2: .46, crest3: .40 }),
                   -3.4,  1.85, -0.4, 24, 12, .040],
     ['rockLeft',  texRockCutout(404, { blobs: [[.24, .78, .48, .38], [.58, .94, .46, .30], [.84, 1.06, .42, .28]] }),
                   -7.2,  1.80,  1.8, 17, 11.3, .010],
@@ -3608,9 +3755,9 @@ function buildForeground() {
        dropped by is what opened the strip of standing water either side of
        the flight, and lifting the far bank as well walls the court off again
        and takes the reflection with it. */
-    ['grassMid',  texGrassCutout(202, { crest: .60, peak: .55, wide: .40, blades: 13000, len: 40, warm: .95, crest2: -.44, crest3: .34 }),
+    ['grassMid',  texGrassCutout(202, { crest: .69, peak: .53, wide: .31, blades: 12000, len: 43, warm: .95, crest2: -.44, crest3: .34 }),
                    3.9,  2.42,  3.6, 15,  8.8, .062],
-    ['grassNear', texGrassCutout(303, { crest: .42, peak: .62, wide: .48, blades: 16000, len: 50, warm: .85, crest2: .42, crest3: .44 }),
+    ['grassNear', texGrassCutout(303, { crest: .28, peak: .56, wide: .34, blades: 14000, len: 48, warm: .85, crest2: .42, crest3: .44 }),
                   -1.9,  2.38,  5.6, 12,  7.4, .092],
     /* the bough hangs overhead and was never in the way — it stays put */
     ['bough',     texBranchCutout(505, { dry: true }), 4.6, 2.95, 6.4, 13, 8.7, .045],
@@ -3839,7 +3986,7 @@ function buildAtmosphere() {
 
   /* rain in the slot of open sky */
   if (!LOW) {
-    const D = 900, rp = new Float32Array(D * 2 * 3), rt = new Float32Array(D * 2), rs = new Float32Array(D * 2), rl = new Float32Array(D * 2);
+    const D = 320, rp = new Float32Array(D * 2 * 3), rt = new Float32Array(D * 2), rs = new Float32Array(D * 2), rl = new Float32Array(D * 2);
     for (let i = 0; i < D; i++) {
       const x = (rnd() - .5) * 40, z = -30 + rnd() * 34, y = rnd() * 17, sp = 7 + rnd() * 9, ln = .30 + rnd() * .55;
       for (let k = 0; k < 2; k++) {
@@ -3863,7 +4010,7 @@ function buildAtmosphere() {
         ' p.y = y + aTop*aLen;\n' +
         ' vA = smoothstep(0.0,3.0,y)*smoothstep(17.0,11.0,y);\n' +
         ' gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0); }',
-      fragmentShader: 'varying float vA;\nvoid main(){ gl_FragColor = vec4(0.55,0.74,0.82, vA*0.024); }'
+      fragmentShader: 'varying float vA;\nvoid main(){ gl_FragColor = vec4(0.55,0.74,0.82, vA*0.016); }'
     }));
     rain.frustumCulled = false; rain.renderOrder = 6;
     scene.add(rain); WORLD.rain = rain;
@@ -4493,7 +4640,7 @@ function createCloth(output, plate, options) {
   let raf = 0, last = performance.now(), debt = 0, running = false, visible = false, dead = false;
   function frame(now) {
     if (dead) return;
-    if (!visible) { running = false; return; }
+    if (!visible || sceneOnly || document.hidden) { running = false; return; }
     const delta = Math.min((now - last) / 1000, 1 / 20);
     last = now;
     const width = Math.max(wrapper.clientWidth, 1), height = Math.max(wrapper.clientHeight, 1);
@@ -4519,7 +4666,7 @@ function createCloth(output, plate, options) {
     raf = requestAnimationFrame(frame);
   }
   function start() {
-    if (dead || running || !visible) return;
+    if (dead || running || !visible || sceneOnly || document.hidden) return;
     running = true; last = performance.now(); raf = requestAnimationFrame(frame);
   }
 
@@ -4541,25 +4688,24 @@ function createCloth(output, plate, options) {
   wrapper.addEventListener('pointerleave', onLeave, { passive: true });
   const onHidden = () => { if (document.hidden) { running = false; cancelAnimationFrame(raf); } else start(); };
   document.addEventListener('visibilitychange', onHidden);
+  document.addEventListener('sceneviewchange', () => {
+    if (sceneOnly) { running = false; cancelAnimationFrame(raf); } else start();
+  });
 
   syncSize(); upload(); compose(Math.max(wrapper.clientWidth, 1), Math.max(wrapper.clientHeight, 1));
   return { refresh(){ syncSize(); upload(); start(); }, wake: start,
            setEdge(v){ edgeTo = v; start(); } };
 }
 
-/* the plate: the card's own still, cover-cropped, carrying the two scrims the
-   CSS used to lay over it — baked in so they ripple with the cloth instead of
-   sitting flat on top of it */
+/* one shade behind the label travels with the cloth. stacking three full
+   image scrims had halved the work's brightness before any lighting ran. */
 function clothPlate(img, w, h) {
   const c = cvs(Math.max(1, w | 0), Math.max(1, h | 0)), x = c.getContext('2d');
   const s = Math.max(c.width / img.width, c.height / img.height);
   const dw = img.width * s, dh = img.height * s;
   x.drawImage(img, (c.width - dw) / 2, (c.height - dh) / 2, dw, dh);
-  let g = x.createLinearGradient(0, 0, 0, c.height);
-  g.addColorStop(.36, 'rgba(3,6,9,.05)'); g.addColorStop(1, 'rgba(3,6,9,.73)');
-  x.fillStyle = g; x.fillRect(0, 0, c.width, c.height);
-  g = x.createLinearGradient(0, 0, 0, c.height);
-  g.addColorStop(.46, 'rgba(4,6,9,0)'); g.addColorStop(1, 'rgba(4,6,9,.80)');
+  const g = x.createLinearGradient(0, 0, 0, c.height);
+  g.addColorStop(.58, 'rgba(4,6,9,0)'); g.addColorStop(1, 'rgba(4,6,9,.64)');
   x.fillStyle = g; x.fillRect(0, 0, c.width, c.height);
   return c;
 }
@@ -4846,7 +4992,7 @@ function texCardPlate(seed, gx, gy, kind) {
 
   /* a vignette, so the drape has somewhere dark to fall away into */
   const v = x.createLinearGradient(0, 0, 0, H);
-  v.addColorStop(0, 'rgba(4,7,10,.10)'); v.addColorStop(1, 'rgba(4,7,10,.62)');
+  v.addColorStop(0, 'rgba(4,7,10,.02)'); v.addColorStop(1, 'rgba(4,7,10,.10)');
   x.fillStyle = v; x.fillRect(0, 0, W, H);
   return c;
 }
@@ -5420,7 +5566,7 @@ function buildCardCloth() {
   $$('.cards .card-fr').forEach((fr, i) => {
     const src = texCardPlate.apply(null, CARD_PLATES[i % CARD_PLATES.length]);
     fr.style.backgroundImage =
-      'linear-gradient(180deg,rgba(3,6,9,.04) 36%,rgba(3,6,9,.72) 100%), url(' +
+      'url(' +
       src.toDataURL('image/jpeg', .86) + ')';
     fr.style.backgroundSize = 'cover';
     fr.style.backgroundPosition = 'center';
@@ -5450,15 +5596,15 @@ function buildCardCloth() {
 function buildLights() {
   scene.add(new THREE.HemisphereLight(0x53838f, 0x060a08, .13));
 
-  const key = new THREE.DirectionalLight(0xb6dbe4, 1.22);
-  key.position.set(2.6, 21, 2.5);
+  const key = new THREE.DirectionalLight(0xc4d9e2, 1.38);
+  key.position.set(-15, 25, 3);
   key.target.position.set(0, 2.2, -12.5); scene.add(key.target);
   if (WANT_SHADOW) {
     key.castShadow = true;
     const S = LOW ? 1024 : 2048;
     key.shadow.mapSize.set(S, S);
     const c = key.shadow.camera;
-    c.left = -26; c.right = 26; c.top = 34; c.bottom = -16; c.near = 3; c.far = 78;
+    c.left = -30; c.right = 26; c.top = 39; c.bottom = -16; c.near = 3; c.far = 78;
     key.shadow.bias = -0.0012; key.shadow.normalBias = .035; key.shadow.radius = 2.2;
   }
   scene.add(key); WORLD.key = key;
@@ -5488,7 +5634,7 @@ function buildLights() {
   /* The slot's own spill. It sits at the cut rather than down on the podium,
      and its range stops well short of the coping — a light that reaches the
      top turns the whole slab into a lantern and the silhouette disappears. */
-  const hallL = new THREE.PointLight(0xffd49c, 1.9, 15, 2);
+  const hallL = new THREE.PointLight(0xffd49c, 1.35, 12, 2);
   hallL.position.set(0, PODIUM + MONO.slotY, TEMPLE_Z + 5.4); scene.add(hallL); WORLD.hallLight = hallL;
   [-1, 1].forEach(s => {
     const w = new THREE.PointLight(0xffcf96, 2.0, 11, 2);
@@ -6271,7 +6417,7 @@ function initTuning() {
 
 /* ================================================= 8 · the camera rig */
 const CAM = [
-  { p: [  0.0, 4.05, 13.6 ], t: [  0.0, 6.60, -18.0 ], fov: 36 },  /* 0 hero        */
+  { p: [  0.0, 4.05, 17.2 ], t: [  0.0, 7.45, -18.0 ], fov: 38 },  /* 0 hero        */
   { p: [ -5.6, 2.35, 11.6 ], t: [  1.2, 5.60, -14.0 ], fov: 48 },  /* 1 the slab     */
   { p: [  1.2, 3.60,  2.2 ], t: [ -0.6, 7.50, -22.0 ], fov: 40 },  /* 2 gardens     */
   { p: [  5.2, 2.10, -3.4 ], t: [ -2.6, 7.00, -20.0 ], fov: 46 },  /* 3 craft       */
@@ -6876,6 +7022,7 @@ function cardAlpha(el) {
   return a;
 }
 function renderCards(rt) {
+  if (sceneOnly) return;
   if (!CARDS.length) return;
   let drew = false;
   for (let i = 0; i < CARDS.length; i++) {
@@ -6952,10 +7099,10 @@ function updateWorld(dt) {
   RIG.focusAmt = damp(RIG.focusAmt, RIG.focus >= 0 ? 1 : 0, 5, dt);
   const pulse = Math.sin(clock * 1.9) * .5 + .5;
   const f = RIG.focusAmt;
-  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .30 + f * .14 + Math.sin(clock * .6) * .035;
-  if (WORLD.hallLight) WORLD.hallLight.intensity = 3.4 * (1 + f * .30) * (1 + Math.sin(clock * .43) * .045);
+  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .12 + f * .05 + Math.sin(clock * .6) * .015;
+  if (WORLD.hallLight) WORLD.hallLight.intensity = 1.35 * (1 + f * .18) * (1 + Math.sin(clock * .43) * .025);
   /* the moon only breathes — the haze in front of it is what actually moves */
-  if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .44 + f * .10 + Math.sin(clock * .34) * .05;
+  if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .23 + f * .045 + Math.sin(clock * .34) * .025;
   if (WORLD.lanternLights) WORLD.lanternLights.forEach((l, i) => {
     l.intensity = 2.6 * (1 + f * .55) * (.86 + .22 * Math.sin(clock * (2.3 + i * .7) + i * 2.1) + .1 * pulse);
   });
@@ -7168,6 +7315,7 @@ function boot() {
 }
 
 function fallback(err) {
+  setSceneView(false); sceneView.hidden = true;
   document.documentElement.classList.add('no-webgl');
   document.body.classList.add('no-webgl');
   document.body.classList.remove('is-locked');
@@ -7190,6 +7338,7 @@ function fallback(err) {
 }
 
 function start() {
+  sceneView.hidden = false;
   addEventListener('resize', () => { resize(); }, { passive: true });
   addEventListener('orientationchange', () => setTimeout(resize, 250));
   document.addEventListener('visibilitychange', () => {
