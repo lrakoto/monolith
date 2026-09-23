@@ -21,7 +21,8 @@ for(const LOW of [false,true]){
  water.onBeforeCompile=sh=>{sh.fragmentShader+='normal=normalize((viewMatrix*vec4(pondN,0.)).xyz);';};
  const WORLD={key,pond:new THREE.Mesh(new THREE.PlaneGeometry(),water),fg:[new THREE.Group()],haze:[],embers:new THREE.Group()};
  const clock={value:0};
- const ctx={THREE,scene,WORLD,LOW,WET_TIME:clock,SKY:{moonAzimuth:.2,moonElevation:.305},TEMPLE_STUDY:{landscape:true},aspectFix:()=>.5,tx:()=>new THREE.Texture(),texGlow:()=>null,
+ const POST={comp:{uniforms:{uBloom:{value:0}}},bright:{uniforms:{uThr:{value:.86},uKnee:{value:.50}}}};
+ const ctx={THREE,scene,WORLD,POST,LOW,WET_TIME:clock,SKY:{moonAzimuth:.2,moonElevation:.305},TEMPLE_STUDY:{landscape:true},aspectFix:()=>.5,tx:()=>new THREE.Texture(),texGlow:()=>null,
  buildMaple(){const t=new THREE.Group();scene.add(t);return t;},buildRocks(){scene.add(new THREE.Mesh(new THREE.SphereGeometry(),new THREE.MeshStandardMaterial()));}};
  vm.createContext(ctx);vm.runInContext(helpers+'\n'+fn('mergeGeos')+'\n'+fn('erodedRockGeo')+'\n'+garden,ctx);
  vm.runInContext(`
@@ -40,7 +41,9 @@ for(const LOW of [false,true]){
  const shader={uniforms:{},vertexShader:'',fragmentShader:''};WORLD.pond.material.onBeforeCompile(shader);
  assert.equal(shader.uniforms.uGardenTime,clock);assert(shader.fragmentShader.includes('float calm='));
  const studyWater=WORLD.pond.material;
+ assert(POST.comp.uniforms.uBloom.value>0);assert(POST.bright.uniforms.uThr.value<.86);
  ctx.setGardenStudy(false);assert.equal(g.visible,false);assert.equal(WORLD.fg[0].visible,true);assert.equal(WORLD.pond.material,water);assert.equal(key.intensity,1.22);assert.equal(scene.fog.density,.0154);
+ assert.equal(POST.comp.uniforms.uBloom.value,0);assert.equal(POST.bright.uniforms.uThr.value,.86);
  ctx.setGardenStudy(true);assert.equal(g.visible,true);assert.equal(WORLD.fg[0].visible,false);assert.equal(WORLD.pond.material,studyWater);assert(key.intensity<1.22);assert.equal(key.shadow.needsUpdate,true);
  // The approach stays open and banks taper below water instead of ending at a vertical edge.
  vm.runInContext(`for(const z of [-7,-1,5,10]){if(gardenGround(0,z)>-.4)throw Error('reflection corridor blocked');}
@@ -49,6 +52,25 @@ for(const LOW of [false,true]){
 assert(budgets[1]<budgets[0]*.65,JSON.stringify(budgets));console.log(JSON.stringify({triangles:budgets}));
 """
         result=subprocess.run(['node','-e',code],cwd=ROOT,capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    @unittest.skipIf(shutil.which('node') is None, 'node unavailable')
+    def test_bloom_chain_binds_textures_at_every_pass(self):
+        code=r"""
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),THREE=require('./assets/three.min.js');
+const source=fs.readFileSync('temple-study.html','utf8');
+const code=source.match(/function pass\(mat, target, additive\) \{[\s\S]*?\n\}/)[0]+'\n'+source.match(/function renderPost\(\) \{[\s\S]*?\n\}/)[0];
+const mat=(...keys)=>({uniforms:Object.fromEntries(keys.map(k=>[k,{value:k==='uDir'?new THREE.Vector2():null}]))});
+const POST={scene:new THREE.WebGLRenderTarget(32,32),levels:Array.from({length:4},(_,i)=>({a:new THREE.WebGLRenderTarget(16>>i,16>>i),b:new THREE.WebGLRenderTarget(16>>i,16>>i),w:16>>i,h:16>>i})),bright:mat('tS'),blur:mat('tS','uDir'),up:mat('tS','uAmt'),comp:mat('tS','tB')};
+let passes=0,clears=0;POST.quad={};
+const renderer={autoClear:true,setRenderTarget(){},clear(){clears++;},render(){
+ assert.equal(this.autoClear,false,'do not clear accumulated bloom');const m=POST.quad.material;
+ for(const key of ['tS','tB'])if(m.uniforms[key])assert.equal(m.uniforms[key].value.isTexture,true,key+' must sample a Texture');passes++;
+}};
+const ctx={THREE,POST,renderer};
+vm.createContext(ctx);vm.runInContext(code+'\nrenderPost();',ctx);assert.equal(passes,16);assert.equal(clears,13);assert.equal(renderer.autoClear,true);
+"""
+        result=subprocess.run(['node','-e',code],cwd=ROOT,capture_output=True,text=True,timeout=10)
         self.assertEqual(result.returncode,0,result.stderr)
 
 if __name__=='__main__':unittest.main()

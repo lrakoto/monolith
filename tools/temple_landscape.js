@@ -257,6 +257,13 @@ function buildGardenAtmosphere() {
     const position=rim.target.position.clone().addScaledVector(direction,75);
     for(const axis of ['x','y','z'])gardenEdit(rim.position,axis,position[axis]);
   }
+  /* the old sampler chain produced no bloom. keep that visual baseline in
+     the comparison, then let only the lit paper and wet peaks soften here. */
+  if(typeof POST!=='undefined' && POST.comp && POST.bright){
+    gardenEdit(POST.comp.uniforms.uBloom,'value',.46);
+    gardenEdit(POST.bright.uniforms.uThr,'value',.42);
+    gardenEdit(POST.bright.uniforms.uKnee,'value',.32);
+  }
   gardenEdit(scene.fog,'density',scene.fog.density*.92);
   if(WORLD.studyStairMat){gardenEdit(WORLD.studyStairMat,'roughness',.72);gardenEdit(WORLD.studyStairMat,'envMapIntensity',.62);}
   if(WORLD.embers)GARDEN.original.push(WORLD.embers);

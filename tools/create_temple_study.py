@@ -90,6 +90,13 @@ async function buildTempleStudy() {
 '''
 js += (root/'tools/temple_landscape.js').read_text()
 replacements={
+'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n}': 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  /* additive upsampling must retain the sharper bloom already in the target. */\n  const autoClear = renderer.autoClear;\n  renderer.autoClear = false;\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n  renderer.autoClear = autoClear;\n}',
+'uBloom: { value: .34 }': 'uBloom: { value: 0 }',
+'POST.up.uniforms.tS.value = L[i - 1].a;': 'POST.up.uniforms.tS.value = L[i - 1].a.texture;',
+'POST.blur.uniforms.tS.value = L[i].a;': 'POST.blur.uniforms.tS.value = L[i].a.texture;',
+'POST.blur.uniforms.tS.value = L[i].b;': 'POST.blur.uniforms.tS.value = L[i].b.texture;',
+'POST.up.uniforms.tS.value = L[i].a;': 'POST.up.uniforms.tS.value = L[i].a.texture;',
+'POST.comp.uniforms.tB.value = L[0].a;': 'POST.comp.uniforms.tB.value = L[0].a.texture;',
 "function erodedRockGeo(radius, seed) {": "function erodedRockGeo(radius, seed, detail = LOW ? 3 : 6) {",
 "  const geo = new THREE.IcosahedronGeometry(radius, LOW ? 3 : 6);": "  const geo = new THREE.IcosahedronGeometry(radius, detail);",
 "  if (!PERF.locked && clock > 2.2) {": "  recordGardenFrame(raw);\n  if (!PERF.locked && clock > 2.2) {",

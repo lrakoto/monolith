@@ -28,7 +28,9 @@ ferns, moss and weathered shoreline stones. A quieter central water surface
 preserves the reflection, with a local ripple and small groups of fallen leaves
 near the bank. Existing submerged planting stays visible. Moon-directed rim
 light, restrained stone highlights and low mist tie the landscape to the
-existing cloud painting. Wind and water use the shared reduced-motion clock.
+existing cloud painting. A soft bloom pass lifts warm windows, lanterns and
+wet highlights; the two baseline modes preserve their previous appearance.
+Wind and water use the shared reduced-motion clock.
 
 The landscape is authored in `tools/temple_landscape.js` and included by the
 page generator. It uses instanced geometry and shared materials, with no extra

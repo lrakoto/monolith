@@ -3962,6 +3962,13 @@ function buildGardenAtmosphere() {
     const position=rim.target.position.clone().addScaledVector(direction,75);
     for(const axis of ['x','y','z'])gardenEdit(rim.position,axis,position[axis]);
   }
+  /* the old sampler chain produced no bloom. keep that visual baseline in
+     the comparison, then let only the lit paper and wet peaks soften here. */
+  if(typeof POST!=='undefined' && POST.comp && POST.bright){
+    gardenEdit(POST.comp.uniforms.uBloom,'value',.46);
+    gardenEdit(POST.bright.uniforms.uThr,'value',.42);
+    gardenEdit(POST.bright.uniforms.uKnee,'value',.32);
+  }
   gardenEdit(scene.fog,'density',scene.fog.density*.92);
   if(WORLD.studyStairMat){gardenEdit(WORLD.studyStairMat,'roughness',.72);gardenEdit(WORLD.studyStairMat,'envMapIntensity',.62);}
   if(WORLD.embers)GARDEN.original.push(WORLD.embers);
@@ -7042,7 +7049,7 @@ function initPost() {
   POST.comp = new THREE.ShaderMaterial({
     uniforms: {
       tS: { value: null }, tB: { value: null }, uRes: { value: new THREE.Vector2(w, h) },
-      uT: { value: 0 }, uBloom: { value: .34 }, uCA: { value: 1 }, uGrain: { value: TUNE.filmGrain },
+      uT: { value: 0 }, uBloom: { value: 0 }, uCA: { value: 1 }, uGrain: { value: TUNE.filmGrain },
       uVig: { value: 1 }, uExp: { value: .62 }, uFade: { value: 1 }, uSat: { value: 1.05 }
     },
     vertexShader: QUAD_VS,
@@ -7083,22 +7090,26 @@ function initPost() {
 function pass(mat, target, additive) {
   POST.quad.material = mat;
   renderer.setRenderTarget(target || null);
+  /* additive upsampling must retain the sharper bloom already in the target. */
+  const autoClear = renderer.autoClear;
+  renderer.autoClear = false;
   if (!additive) renderer.clear(true, false, false);
   renderer.render(POST.qScene, POST.cam);
+  renderer.autoClear = autoClear;
 }
 function renderPost() {
   const L = POST.levels;
   POST.bright.uniforms.tS.value = POST.scene.texture;
   pass(POST.bright, L[0].a);
   for (let i = 0; i < L.length; i++) {
-    if (i > 0) { POST.up.blending = THREE.NoBlending; POST.up.uniforms.uAmt.value = 1; POST.up.uniforms.tS.value = L[i - 1].a; pass(POST.up, L[i].a); }
-    POST.blur.uniforms.tS.value = L[i].a; POST.blur.uniforms.uDir.value.set(1 / L[i].w, 0); pass(POST.blur, L[i].b);
-    POST.blur.uniforms.tS.value = L[i].b; POST.blur.uniforms.uDir.value.set(0, 1 / L[i].h); pass(POST.blur, L[i].a);
+    if (i > 0) { POST.up.blending = THREE.NoBlending; POST.up.uniforms.uAmt.value = 1; POST.up.uniforms.tS.value = L[i - 1].a.texture; pass(POST.up, L[i].a); }
+    POST.blur.uniforms.tS.value = L[i].a.texture; POST.blur.uniforms.uDir.value.set(1 / L[i].w, 0); pass(POST.blur, L[i].b);
+    POST.blur.uniforms.tS.value = L[i].b.texture; POST.blur.uniforms.uDir.value.set(0, 1 / L[i].h); pass(POST.blur, L[i].a);
   }
   POST.up.blending = THREE.AdditiveBlending; POST.up.uniforms.uAmt.value = .52;
-  for (let i = L.length - 1; i > 0; i--) { POST.up.uniforms.tS.value = L[i].a; pass(POST.up, L[i - 1].a, true); }
+  for (let i = L.length - 1; i > 0; i--) { POST.up.uniforms.tS.value = L[i].a.texture; pass(POST.up, L[i - 1].a, true); }
   POST.comp.uniforms.tS.value = POST.scene.texture;
-  POST.comp.uniforms.tB.value = L[0].a;
+  POST.comp.uniforms.tB.value = L[0].a.texture;
   pass(POST.comp, null);
 }
 
