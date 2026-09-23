@@ -545,9 +545,9 @@ h1,h2,h3{ font-weight:400; margin:0; letter-spacing:-.005em; }
    long scroll belongs to that climb. A static list needs only the space its
    rows take, or phones spend several empty screens getting to contact. */
 /* the approach ends near the section's top, not halfway through its height.
-   the remaining scroll keeps the seven role dwells without an empty runway. */
+   fourteen screens keep the seven dwells but take some effort out of the climb. */
 #experience{ min-height:100svh; }
-body.xp-3d #experience{ min-height:1600vh; }
+body.xp-3d #experience{ min-height:1400vh; }
 /* No scrim here. A chapter's scrim exists to hold its copy off the scene, but
    this chapter's copy is standing *in* the scene on the steps, each panel
    carrying its own ground — so the radial wash was only dimming the flight
@@ -3746,7 +3746,9 @@ function buildForeground() {
        work all live on a surface the composition had walled off. Lowering the
        banks opens a strip of standing water either side of the flight and
        keeps the grass reading as foreground. */
-    ['grassFar',  texGrassCutout(101, { crest: .25, peak: .43, wide: .32, blades: 10500, len: 34, warm: .70, crest2: .46, crest3: .40 }),
+    /* lower crests and wider shoulders let the planting ease into the court;
+       moving the sheets down alone left the same steep little hills. */
+    ['grassFar',  texGrassCutout(101, { crest: .25, peak: .36, wide: .43, blades: 10500, len: 34, warm: .70, crest2: .46, crest3: .40 }),
                   -3.4,  1.85, -0.4, 24, 12, .040],
     ['rockLeft',  texRockCutout(404, { blobs: [[.24, .78, .48, .38], [.58, .94, .46, .30], [.84, 1.06, .42, .28]] }),
                   -7.2,  1.80,  1.8, 17, 11.3, .010],
@@ -3755,9 +3757,9 @@ function buildForeground() {
        dropped by is what opened the strip of standing water either side of
        the flight, and lifting the far bank as well walls the court off again
        and takes the reflection with it. */
-    ['grassMid',  texGrassCutout(202, { crest: .69, peak: .53, wide: .31, blades: 12000, len: 43, warm: .95, crest2: -.44, crest3: .34 }),
+    ['grassMid',  texGrassCutout(202, { crest: .69, peak: .42, wide: .44, blades: 12000, len: 43, warm: .95, crest2: -.44, crest3: .34 }),
                    3.9,  2.42,  3.6, 15,  8.8, .062],
-    ['grassNear', texGrassCutout(303, { crest: .28, peak: .56, wide: .34, blades: 14000, len: 48, warm: .85, crest2: .42, crest3: .44 }),
+    ['grassNear', texGrassCutout(303, { crest: .28, peak: .44, wide: .46, blades: 14000, len: 48, warm: .85, crest2: .42, crest3: .44 }),
                   -1.9,  2.38,  5.6, 12,  7.4, .092],
     /* the bough hangs overhead and was never in the way — it stays put */
     ['bough',     texBranchCutout(505, { dry: true }), 4.6, 2.95, 6.4, 13, 8.7, .045],

@@ -7,11 +7,24 @@ The Forest checkout and Sol's external-drive Blender study were not edited.
 
 ## Preview
 
-Run `python3 serve.py 5186` here, then open <http://127.0.0.1:5186/>.
-The current session already has that server running. No build is needed.
+The current preview is <http://127.0.0.1:5193/>. It serves a local snapshot
+from `/private/tmp/monolith-after-rain-preview`, managed by the temporary
+macOS job `local.codex.monolith-after-rain-5193`. The earlier command-launched
+servers disappeared between task turns, including a detached process.
+An independent job cannot read the Documents folder under the current macOS
+permissions, so the website files are copied into that temporary directory.
+No login item or permanent LaunchAgent was installed.
+
+After editing the page, refresh the snapshot with
+`cp index.html /private/tmp/monolith-after-rain-preview/index.html` and reload.
+Copy changed assets there too. This snapshot rejects tuning saves so edits
+cannot silently land in the wrong copy. For SAVE TO CODE, run
+`python3 serve.py 5186` in this source worktree and use port 5186.
+Stop the snapshot server with
+`launchctl remove local.codex.monolith-after-rain-5193`.
+
 `after-rain-baseline.html` is a local, ignored copy of the starting page; it
-uses the same assets. It can be reopened at
-<http://127.0.0.1:5186/after-rain-baseline.html> for comparison.
+uses the same assets and can be opened on the source server for comparison.
 The baseline and screenshots are not included in a clone; the source baseline
 is available from commit `177352b`.
 
@@ -72,3 +85,16 @@ so concurrent partial saves preserve one another. The loopback bind remains.
 A regression opens an idle connection first, then verifies a separate page
 request succeeds. The corrected server was restarted on port 5186, and the
 page was reloaded and visually checked in the in-app browser.
+
+## Pacing and planting follow-up
+
+The 3D experience chapter is 1400vh instead of 1600vh, shortening the scroll
+by 12.5% while retaining all seven role stops and the existing dwell rhythm.
+The three grass silhouettes have lower peaks and broader shoulders, giving
+the foreground more gradual slopes without increasing geometry or draw calls.
+
+The next proposed scene pass is a clearing storm: dark cloud overhead, one
+soft silver-blue opening, a partly veiled moon, and restrained stars. The
+visible sky and reflection environment currently use separate generators;
+they should share the same composition and light direction. This sky pass
+is a proposal, not implemented in this checkpoint.
