@@ -69,6 +69,7 @@ function buildGardenRedwoods() {
     metalness: 0, side: THREE.DoubleSide, envMapIntensity: .65 });
   const groveTime = WET_TIME;
   gardenSurface(bark, 'bark');
+  refineRedwoodBark(bark);
   needles.onBeforeCompile = sh => {
     sh.uniforms.uBreeze = groveTime;
     sh.vertexShader = 'uniform float uBreeze;\n' + sh.vertexShader.replace('#include <begin_vertex>',
@@ -129,7 +130,11 @@ function buildGardenRedwoods() {
     for (let i = 0; i < branches; i++) {
       const t = .27 + i / (branches - 1) * .69, y = height * t + (rnd() - .5) * .7;
       const a = i * 2.39996 + rnd() * .65 + seed;
-      const length = (1.0 + 4.8 * Math.pow(1 - t, .65)) * (.76 + rnd() * .36);
+      /* broad, uneven crown sectors keep the spiral scaffold from reading as
+         a stack of identical tiers. sparse gaps expose the living boughs. */
+      if(i>2 && i<branches-2 && rnd()<.09)continue;
+      const sector=.83+.23*Math.sin(a+seed*.71)+.12*Math.sin(a*3.+seed);
+      const length = (1.0 + 4.8 * Math.pow(1 - t, .65)) * (.68 + rnd() * .50)*sector;
       const p0 = point(a, radius * (1 - t) * .60, y);
       const drop = .25 + rnd() * .80;
       const p1 = point(a, length * .38, y - drop);

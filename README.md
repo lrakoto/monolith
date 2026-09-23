@@ -30,6 +30,10 @@ climbing stair planting and keeps the central reflection corridor open.
 `forest-study.html` redirects to Pond, preserving query flags and section links. The Temple study continues with subtle stone joints, weathering and moss
 at the approach; leaf shading and midribs now accompany the existing flutter.
 These new refinements are study-only, including Temple's stonework.
+The next detail pass adds fine lacquer grain and restrained brass patina to
+Temple's torii, uneven crown sectors and damp-root variation to Redwoods, and
+three to seven muted water lilies with a pebble transition at Pond's shoreline.
+`tools/garden_details.js` owns these reversible material and planting details.
 
 `tools/temple_landscape.js` authors the common ground and canopy;
 `tools/woodland_studies.js` owns the woodland additions and stonework.

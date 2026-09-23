@@ -102,6 +102,7 @@ js = "const GARDEN_KIND = '"+kind+"';\n"+js
 js += (root/'tools/temple_landscape.js').read_text()
 js += (root/'tools/woodland_studies.js').read_text()
 js += (root/'tools/pond_study.js').read_text()
+js += (root/'tools/garden_details.js').read_text()
 replacements={
 'in a portfolio whose every surface is generated in the browser at load.':'in a live moonlit garden with a detailed timber temple.',
 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n}': 'function pass(mat, target, additive) {\n  POST.quad.material = mat;\n  renderer.setRenderTarget(target || null);\n  /* additive upsampling must retain the sharper bloom already in the target. */\n  const autoClear = renderer.autoClear;\n  renderer.autoClear = false;\n  if (!additive) renderer.clear(true, false, false);\n  renderer.render(POST.qScene, POST.cam);\n  renderer.autoClear = autoClear;\n}',

@@ -326,6 +326,8 @@ function buildLandscapeStudy() {
 
   }
   if(typeof buildGardenStonework==='function')buildGardenStonework();
+  refineGardenGate();
+  if(GARDEN_STYLE==='forest')addPondFlowersAndShore();
   if(GARDEN_STYLE==='redwoods')buildWoodlandUnderstory();
   buildGardenAtmosphere();
   buildGardenLeafRafts();

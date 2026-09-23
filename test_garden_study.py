@@ -10,7 +10,7 @@ class GardenStudyTests(unittest.TestCase):
     def test_geometry_budget_water_and_reversible_scene_modes(self):
         code=r"""
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),THREE=require('./assets/three.min.js');
-const page=fs.readFileSync('temple-study.html','utf8'),garden=fs.readFileSync('tools/temple_landscape.js','utf8')+'\n'+fs.readFileSync('tools/woodland_studies.js','utf8')+'\n'+fs.readFileSync('tools/pond_study.js','utf8');
+const page=fs.readFileSync('temple-study.html','utf8'),garden=fs.readFileSync('tools/temple_landscape.js','utf8')+'\n'+fs.readFileSync('tools/woodland_studies.js','utf8')+'\n'+fs.readFileSync('tools/pond_study.js','utf8')+'\n'+fs.readFileSync('tools/garden_details.js','utf8');
 const redwoods=fs.readFileSync('redwoods.html','utf8');
 const native= ['redwoodTrunkGeo','redwoodSprayGeo'].map(name=>redwoods.match(new RegExp('function '+name+'\\([^\\n]*\\) \\{[\\s\\S]*?\\n\\}'))[0]).join('\n');
 const helpers=page.slice(page.indexOf('const clamp  ='),page.indexOf('/* ------------------------------------------------------- 0b'));
@@ -24,6 +24,8 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  const WORLD={key,pond:new THREE.Mesh(new THREE.PlaneGeometry(),water),fg:[new THREE.Group()],haze:[],embers:new THREE.Group()};
  const stone=new THREE.MeshStandardMaterial({roughness:.44});
  const stair=new THREE.Mesh(new THREE.BoxGeometry(),stone);scene.add(stair);WORLD.studyStairMat=stone;
+ const gateMat=new THREE.MeshStandardMaterial({roughness:.87});
+ const gate=new THREE.Mesh(new THREE.BoxGeometry(),gateMat);WORLD.torii=new THREE.Group();WORLD.torii.add(gate);scene.add(WORLD.torii);
  const clock={value:0};
  const POST={comp:{uniforms:{uBloom:{value:0}}},bright:{uniforms:{uThr:{value:.86},uKnee:{value:.50}}}};
  const ctx={THREE,scene,WORLD,POST,LOW,GARDEN_KIND:kind,PODIUM:7,lib:()=>({}),texRedwoodBark:()=>({}),surface:()=>new THREE.MeshStandardMaterial(),WET_TIME:clock,SKY:{moonAzimuth:.2,moonElevation:.305},TEMPLE_STUDY:{landscape:true},aspectFix:()=>.5,tx:()=>new THREE.Texture(),texGlow:()=>null,
@@ -34,6 +36,8 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  rememberStudyRocks();buildLandscapeStudy();`,ctx);
  const g=scene.getObjectByName('complete garden study');assert(g.visible);
  assert.notEqual(stair.material,stone);
+ if(kind==='temple')assert.notEqual(gate.material,gateMat);else assert.equal(gate.material,gateMat);
+ if(kind==='forest'){assert(g.getObjectByName('quiet water lilies').count<=7);assert(g.getObjectByName('shoreline pebble transition').count>0);}
  if(kind==='forest'){assert(!g.getObjectByName('woodland tree'));assert(g.getObjectByName('emergent pond reeds').count>0);const pads=g.getObjectByName('pond lily pads');assert(pads.count>0);for(let i=0;i<pads.count;i++){const m=new THREE.Matrix4();pads.getMatrixAt(i,m);assert(Math.abs(m.elements[12])>=6.2);}}
  if(kind==='redwoods')assert(g.getObjectByName('detailed redwood grove'));
  const canopy=g.getObjectByName(kind==='redwoods'?'redwood-needle-sprays':(kind==='forest'?'pond shrub leaves':'garden maple'));
@@ -55,7 +59,7 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  assert.equal(shader.uniforms.uGardenTime,clock);assert(shader.fragmentShader.includes('float calm='));
  const studyWater=WORLD.pond.material;
  assert(POST.comp.uniforms.uBloom.value>0);assert(POST.bright.uniforms.uThr.value<.86);
- ctx.setGardenStudy(false);assert.equal(stair.material,stone);assert.equal(g.visible,false);assert.equal(WORLD.fg[0].visible,true);assert.equal(WORLD.pond.material,water);assert.equal(key.intensity,1.22);assert.equal(scene.fog.density,.0154);
+ ctx.setGardenStudy(false);assert.equal(gate.material,gateMat);assert.equal(stair.material,stone);assert.equal(g.visible,false);assert.equal(WORLD.fg[0].visible,true);assert.equal(WORLD.pond.material,water);assert.equal(key.intensity,1.22);assert.equal(scene.fog.density,.0154);
  assert.equal(POST.comp.uniforms.uBloom.value,0);assert.equal(POST.bright.uniforms.uThr.value,.86);
  ctx.setGardenStudy(true);assert.equal(g.visible,true);assert.equal(WORLD.fg[0].visible,false);assert.equal(WORLD.pond.material,studyWater);assert(key.intensity<1.22);assert.equal(key.shadow.needsUpdate,true);
  // The approach stays open and banks taper below water instead of ending at a vertical edge.
