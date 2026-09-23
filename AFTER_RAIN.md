@@ -16,11 +16,11 @@ permissions, so the website files are copied into that temporary directory.
 No login item or permanent LaunchAgent was installed.
 
 After editing the page, refresh the snapshot with
-`cp index.html temple.html /private/tmp/monolith-after-rain-preview/` and reload.
+`cp index.html temple.html forest.html /private/tmp/monolith-after-rain-preview/` and reload.
 Copy changed assets there too. This snapshot rejects tuning saves so edits
 cannot silently land in the wrong copy. For SAVE TO CODE, run
-`python3 serve.py 5186` in this source worktree and use port 5186. Monolith
-and Temple have separate save endpoints and update their own source files.
+`python3 serve.py 5186` in this source worktree and use port 5186. Monolith, Temple
+and Forest have separate save endpoints and update their own source files.
 Stop the snapshot server with
 `launchctl remove local.codex.monolith-after-rain-5193`.
 
@@ -161,3 +161,56 @@ Three.js geometry checks confirm finite attributes and valid indices in both
 grove quality modes. Browser checks cover both desktop scenes and narrow
 layouts. Review PNGs are kept under artifacts. The preceding scene checkpoint
 is e8832fc; this remains a local study, with no changes to Sol's Blender files.
+
+
+## Coordinated landscape and material pass
+
+The scene selector now stays within the study: index.html, temple.html and
+forest.html. Forest was copied from the main scene-vegetation checkout (page
+commit 46afc71), retaining its pond, ferns, broadleaf banks, hanging vines,
+stair planting and economical tree batches. The current portfolio UI, games,
+shorter role timeline and View scene are carried into it. Its pond-aware
+handlers and low-quality reflection safeguards remain, with its own tuning
+save endpoint. Main and the published Forest site remain untouched.
+
+All three scenes now share the clearing-storm sky. High quality uses a
+4096×2048 background and 16-bit cloud-density field; low quality uses 1024×512.
+The broad glow remains baked, with both broad edge terms shaded toward the
+moon using the density gradient. An additional HDR pass computes the fine rim
+after texture filtering, antialiases it with screen derivatives, and lights
+only boundaries whose density falls toward the moon. Two slow waves move the
+brightness along that rim. The real planar reflections include the shimmer;
+PMREM stays static. Reduced motion freezes the shimmer, redwood needle breeze
+and Forest canopy-light drift. Async row batches keep sky generation yielding
+to the page, and generation guards still protect against stale resize bakes.
+
+The five near redwoods are roughly 25% larger. Eight simpler background trees
+add depth on desktop; the low-quality path retains four of them. The grove
+still uses two meshes: merged wood and instanced needle sprays. Its triangle
+budget is 115,252 high and 32,328 low. Needle tips bend gently without per-frame
+CPU instance updates. The background trees stand at podium level and retain
+space around the main building. Forest's existing canopy now casts slowly
+drifting dapple through its material shader.
+
+Temple uses local, photographed weathered timber albedo, OpenGL normal and
+roughness maps from Poly Haven (CC0; credits in assets/materials/weathered-wood).
+A single-board crop serves columns and a stained variant serves the gate;
+procedural wood remains a loading fallback. The lit bays gain real timber
+returns, roof edges get sparse non-emissive wear, and the existing 305 plaque
+stays in place. Lanterns and hall spill are now restrained cream; red moon
+lights are replaced by cool moonlight. Maples have taller trunks, spreading
+branches and denser rounded leaf clusters. Their breeze also respects reduced
+motion. The architecture keeps its original silhouette.
+
+Monolith and Temple boulders use broader irregular erosion, slightly denser
+meshes, continuous normals averaged across shared corners, varied mineral
+color and matte stone maps. This removes the old triangular facets without
+turning them into polished spheres. Forest keeps its planted pond banks.
+
+Validation: 57 tests pass, including three-page syntax/content/tuning checks,
+Forest pond behavior with and without reflections, separate save endpoints,
+sky continuity, disabled moon, directional edge light and stale bakes. Direct geometry checks cover
+both redwood quality modes and shared rock normals. Desktop/narrow browser
+review covers all scenes; screenshots remain local review artifacts. This is
+still a local study, with no deployment and no Blender changes. 28cd03e preserves
+the preceding scene pass.

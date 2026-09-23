@@ -22,10 +22,11 @@ served straight off disk with no rule of its own.
 
 ## Publishing an update
 
-The scene pages are `index.html` (Monolith) and `temple.html` (Temple), sharing
-`assets/`. Include both pages when publishing the scene selector. Upload over the top — cPanel
-File Manager, tick **Overwrite existing files**. Usually only `index.html`
-changes, and it is one 336KB file.
+The scene pages are `index.html` (Monolith), `temple.html` (Temple), and
+`forest.html` (Forest), sharing `assets/`. Include all three pages when publishing
+the scene selector. Temple also needs the local maps in
+`assets/materials/weathered-wood/`; keep that folder with the shared assets.
+Upload over the top — cPanel File Manager, tick **Overwrite existing files**.
 
 **Purge the Cloudflare cache afterwards** or the old file lingers.
 

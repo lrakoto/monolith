@@ -74,28 +74,33 @@ class TuneSaveTests(unittest.TestCase):
         self.assertEqual(self.index.read_text(), "portfolio without settings")
 
     def test_scene_save_cannot_overwrite_the_other_scene(self):
-        temple = self.index.with_name("temple.html")
-        temple.write_text(SOURCE)
-        serve.write_tune({"first": .75}, "temple")
-        self.assertEqual(self.index.read_text(), SOURCE)
-        self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+        scenes = {name: self.index.with_name(name + ".html") for name in ("temple", "forest")}
+        for page in scenes.values():
+            page.write_text(SOURCE)
+        for name, page in scenes.items():
+            serve.write_tune({"first": .75}, name)
+            self.assertEqual(self.index.read_text(), SOURCE)
+            self.assertEqual(page.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
         serve.write_tune({"second": 2})
         self.assertEqual(self.index.read_text(), SOURCE.replace("second: 1.00", "second: 2.00"))
-        self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+        for page in scenes.values():
+            self.assertEqual(page.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
 
     def test_scene_names_are_allowlisted(self):
-        for name in ("../index", "index.html", "forest", None):
+        for name in ("../index", "index.html", "../../forest", None):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 serve.write_tune({"first": .25}, name)
         self.assertEqual(self.index.read_text(), SOURCE)
 
 class PreviewConnectionTests(unittest.TestCase):
-    def test_temple_save_endpoint_targets_temple_only(self):
+    def test_scene_save_endpoints_target_their_own_page(self):
         with tempfile.TemporaryDirectory() as directory:
             index = Path(directory, "index.html")
             temple = Path(directory, "temple.html")
             index.write_text(SOURCE)
             temple.write_text(SOURCE)
+            forest = Path(directory, "forest.html")
+            forest.write_text(SOURCE)
             with patch.object(serve, "HERE", Path(directory)), patch.object(serve, "INDEX", index):
                 try:
                     server = serve.PreviewServer(("127.0.0.1", 0), serve.Handler)
@@ -110,6 +115,15 @@ class PreviewConnectionTests(unittest.TestCase):
                     response = request.getresponse()
                     self.assertEqual(response.status, 200)
                     response.read()
+                    self.assertEqual(index.read_text(), SOURCE)
+                    self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
+                    self.assertEqual(forest.read_text(), SOURCE)
+                    request.request("POST", "/__tune/forest/save", json.dumps({"second": 3}),
+                                    {"content-type": "application/json"})
+                    response = request.getresponse()
+                    self.assertEqual(response.status, 200)
+                    response.read()
+                    self.assertEqual(forest.read_text(), SOURCE.replace("second: 1.00", "second: 3.00"))
                     self.assertEqual(index.read_text(), SOURCE)
                     self.assertEqual(temple.read_text(), SOURCE.replace("first: .50", "first: 0.75"))
                 finally:

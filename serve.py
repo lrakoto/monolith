@@ -55,9 +55,9 @@ def format_value(value, template):
 def write_tune(values, scene="monolith"):
     # atomic replacement protects the file; the lock also keeps two partial
     # saves from both reading the old values and discarding each other's edit.
-    if scene not in ("monolith", "temple"):
+    if scene not in ("monolith", "temple", "forest"):
         raise ValueError("unknown scene")
-    target = INDEX if scene == "monolith" else INDEX.with_name("temple.html")
+    target = INDEX if scene == "monolith" else INDEX.with_name(scene + ".html")
     with SAVE_LOCK:
         return _write_tune(values, target)
 
@@ -121,7 +121,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(HERE), **kwargs)
 
     def do_POST(self):  # noqa: N802 — http.server's naming
-        scenes = {"/__tune/save": "monolith", "/__tune/temple/save": "temple"}
+        scenes = {"/__tune/save": "monolith", "/__tune/temple/save": "temple", "/__tune/forest/save": "forest"}
         if self.path not in scenes:
             self.send_error(404)
             return

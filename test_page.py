@@ -34,7 +34,7 @@ def inline_script(source=SOURCE):
 class InlineScriptTests(unittest.TestCase):
     @unittest.skipIf(shutil.which("node") is None, "node is not installed")
     def test_inline_script_parses(self):
-        for page in (INDEX, INDEX.with_name("temple.html")):
+        for page in (INDEX, INDEX.with_name("temple.html"), INDEX.with_name("forest.html")):
             with self.subTest(page=page.name), tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as staged:
                 staged.write(inline_script(page.read_text()))
                 staged.flush()
@@ -166,6 +166,55 @@ class TempleWorkCardTests(WorkCardTests):
 
 class TempleMachineReadableTests(MachineReadableTests):
     source = INDEX.with_name("temple.html").read_text()
+
+
+class ForestTuningPanelTests(TuningPanelTests):
+    source = INDEX.with_name("forest.html").read_text()
+
+
+class ForestWorkCardTests(WorkCardTests):
+    source = INDEX.with_name("forest.html").read_text()
+
+
+class ForestMachineReadableTests(MachineReadableTests):
+    source = INDEX.with_name("forest.html").read_text()
+
+
+class ForestPondTests(unittest.TestCase):
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_pond_builds_with_and_without_planar_reflections(self):
+        import json
+        build = re.search(r"function buildPond\(\) \{.*?\n\}", inline_script(INDEX.with_name("forest.html").read_text()), re.S).group(0)
+        harness = r"""
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const THREE = require('./assets/three.min.js');
+for (const reflected of [false, true]) {
+  const scene = new THREE.Scene(), WORLD = {}, WET_TIME = {value: 0};
+  const MIRROR = {on: reflected, texMat: new THREE.Matrix4(),
+    target: reflected ? {texture: new THREE.Texture()} : null};
+  const TUNE = {puddleOpacity: 1, puddleRipple: .85, puddleShimmer: .32,
+    courtReflect: 1.5, courtFresnel: 0};
+  vm.runInNewContext(BUILD + '\nbuildPond();', {THREE, scene, WORLD, WET_TIME, MIRROR, TUNE});
+  const pond = WORLD.pond, mat = pond.material;
+  assert.equal(scene.children.length, 1);
+  assert.equal(pond.layers.mask, 2);
+  assert(pond.position.y > 0 && pond.position.y < 7 / 40);
+  assert(Object.hasOwn(mat.defines, 'PHYSICAL'));
+  assert.equal(Boolean(mat.defines.POND_REFLECTION), reflected);
+  const shader = {uniforms: {}, vertexShader: THREE.ShaderLib.physical.vertexShader,
+    fragmentShader: THREE.ShaderLib.physical.fragmentShader};
+  mat.onBeforeCompile(shader);
+  assert.equal(shader.uniforms.uPondTime, WET_TIME);
+  assert.equal(shader.uniforms.uPondRipple, WORLD.pondUniforms.uPondRipple);
+  assert(shader.fragmentShader.includes('if(pondEdge>1.) discard;'));
+  assert(shader.fragmentShader.includes('outgoingLight=mix(outgoingLight,pondReflection'));
+  assert(!shader.fragmentShader.includes('pow((vPondWorld.x'));
+}
+"""
+        result = subprocess.run(["node", "-e", "const BUILD = " + json.dumps(build) + ";\n" + harness],
+                                cwd=INDEX.parent, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 class BootTests(unittest.TestCase):
