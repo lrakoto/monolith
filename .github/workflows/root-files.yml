@@ -1,68 +1,57 @@
-# The files that have to sit at the domain root rather than in /portfolio/.
-#
-# llms.txt is only looked for at the root of a host. This page is a folder
-# inside a WordPress site, so deploy.yml cannot put it there: its server-dir is
-# the portfolio folder, and one level up from that is the WordPress document
-# root.
-#
-# Which is the whole reason this is curl and not the deploy action.
-# FTP-Deploy-Action mirrors a directory — it deletes remote files that are not
-# in the local one — and the directory it would be mirroring here is the
-# WordPress install. curl puts one named file and has no opinion about anything
-# else in the folder, so the worst case is a file that lands wrong rather than a
-# site that is gone.
-#
-# Manual dispatch only, for the same reason. Nothing at the document root should
-# move because someone pushed a commit.
-#
-# The path is relative to wherever the FTP account lands, which for the account
-# in use (hermes@pixelmix.co) is /home/<user>/public_html — so the domain root
-# is threeohfivestudios.com/ with no public_html in front of it. See DEPLOY.md;
-# that table is the thing to check if the credentials ever change.
 name: root-files
-
 on:
   workflow_dispatch:
-
 jobs:
-  publish:
+  update-resume:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Put llms.txt at the domain root
+      - name: Replace approved resume with verified backup
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          # --ssl-reqd is explicit FTPS, the same protocol deploy.yml asks for.
-          # No --ftp-create-dirs on purpose: if the path is ever wrong, failing
-          # is the right outcome, not building a stray tree on the host.
-          curl --fail --show-error --silent \
-               --ssl-reqd \
-               --user "$FTP_USERNAME:$FTP_PASSWORD" \
-               --upload-file root/llms.txt \
-               "ftp://$FTP_SERVER/threeohfivestudios.com/llms.txt"
-
-      - name: Confirm the host is serving it
+          python3 - <<'PYCODE'
+          import ftplib, io, os, ssl, hashlib
+          from pathlib import Path
+          after=Path('root/Lova_Resume_2026.pdf').read_bytes()
+          if not after.startswith(b'%PDF-'): raise RuntimeError('Invalid replacement PDF')
+          ftp=ftplib.FTP_TLS(context=ssl.create_default_context(),timeout=45)
+          ftp.connect(os.environ['FTP_SERVER'])
+          ftp.login(os.environ['FTP_USERNAME'],os.environ['FTP_PASSWORD'])
+          ftp.prot_p()
+          path='threeohfivestudios.com/wp-content/uploads/2026/03/Lova_Resume_2026.pdf'
+          def read(path):
+              out=io.BytesIO();ftp.retrbinary('RETR '+path,out.write);return out.getvalue()
+          before=read(path)
+          if not before.startswith(b'%PDF-'): raise RuntimeError('Existing file is not a PDF')
+          if before!=after:
+              backup=path.replace('.pdf','.before-20260923.pdf')
+              ftp.storbinary('STOR '+backup,io.BytesIO(before))
+              if read(backup)!=before: raise RuntimeError('Backup verification failed; original unchanged')
+              if read(path)!=before: raise RuntimeError('File changed during backup; stopping')
+              try:
+                  ftp.storbinary('STOR '+path,io.BytesIO(after))
+                  if read(path)!=after: raise RuntimeError('Upload verification failed')
+              except Exception:
+                  ftp.storbinary('STOR '+path,io.BytesIO(before))
+                  raise
+          ftp.quit()
+          print('Live resume verified. SHA256:',hashlib.sha256(after).hexdigest())
+          PYCODE
+      - name: Purge resume cache
+        env:
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
-          # Cloudflare sits in front, so give it a few tries before believing a
-          # miss. Only a non-200 fails the job — a body that differs is worth
-          # printing but is usually the cache still catching up, and a workflow
-          # that goes red for a host having a bad minute gets ignored.
-          code=000
-          for i in 1 2 3 4 5 6; do
-            code=$(curl -s -o /tmp/live.txt -w '%{http_code}' \
-                   https://threeohfivestudios.com/llms.txt || echo 000)
-            [ "$code" = "200" ] && break
-            sleep 10
-          done
-          echo "GET /llms.txt -> $code"
-          [ "$code" = "200" ]
-          if diff -q root/llms.txt /tmp/live.txt >/dev/null; then
-            echo "served copy matches the file in the repo"
-          else
-            echo "served copy differs from the repo — probably the edge cache:"
-            diff root/llms.txt /tmp/live.txt || true
-          fi
+          python3 - <<'PYCODE'
+          import json, os, urllib.request
+          url='https://api.cloudflare.com/client/v4/zones/'+os.environ['CF_ZONE_ID']+'/purge_cache'
+          body=json.dumps({'files':['https://threeohfivestudios.com/wp-content/uploads/2026/03/Lova_Resume_2026.pdf']}).encode()
+          request=urllib.request.Request(url,data=body,headers={'Authorization':'Bearer '+os.environ['CF_API_TOKEN'],'Content-Type':'application/json'})
+          with urllib.request.urlopen(request,timeout=30) as response:
+              result=json.load(response)
+          if not result.get('success'): raise RuntimeError('Cache purge failed')
+          print('Resume cache purged')
+          PYCODE
