@@ -306,7 +306,9 @@ function recordGardenFrame(raw) {
 }
 function buildLandscapeStudy() {
   GARDEN.group=new THREE.Group();GARDEN.group.name='complete garden study';scene.add(GARDEN.group);
-  GARDEN.original.push(...WORLD.fg);
+  /* keep the original grass framing and its scroll fade in every mode.
+     only the old rock and overhead cutouts give way to the modeled garden. */
+  GARDEN.original.push(...WORLD.fg.filter(o=>!/^grass(Far|Mid|Near)$/.test(o.name)));
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
   /* the silhouette is geometry rather than a rectangular alpha sheet. */
   const leaf=new THREE.Shape();

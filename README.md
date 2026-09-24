@@ -29,11 +29,14 @@ reeds rooted in the shallows and gently rocking lily pads. It retains the
 climbing stair planting and keeps the central reflection corridor open.
 `forest-study.html` redirects to Pond, preserving query flags and section links. The Temple study continues with subtle stone joints, weathering and moss
 at the approach; leaf shading and midribs now accompany the existing flutter.
-These new refinements are study-only, including Temple's stonework.
+Temple's stonework and gate refinements are included in the approved live scene;
+Redwoods and Pond refinements remain in the studies.
 The next detail pass adds fine lacquer grain and restrained brass patina to
 Temple's torii, uneven crown sectors and damp-root variation to Redwoods, and
 three to seven muted water lilies with a pebble transition at Pond's shoreline.
 `tools/garden_details.js` owns these reversible material and planting details.
+All three studies retain the original foreground grass layers, including their
+scroll fade and breeze. The live Temple includes this restored grass framing.
 
 `tools/temple_landscape.js` authors the common ground and canopy;
 `tools/woodland_studies.js` owns the woodland additions and stonework.

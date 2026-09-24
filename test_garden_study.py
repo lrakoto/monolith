@@ -22,6 +22,8 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  const water=new THREE.MeshPhysicalMaterial();water.defines.POND_REFLECTION=1;
  water.onBeforeCompile=sh=>{sh.fragmentShader+='normal=normalize((viewMatrix*vec4(pondN,0.)).xyz);';};
  const WORLD={key,pond:new THREE.Mesh(new THREE.PlaneGeometry(),water),fg:[new THREE.Group()],haze:[],embers:new THREE.Group()};
+ WORLD.fg[0].name='rockNear';
+ for(const name of ['grassFar','grassMid','grassNear']){const grass=new THREE.Group();grass.name=name;WORLD.fg.push(grass);scene.add(grass);}
  const stone=new THREE.MeshStandardMaterial({roughness:.44});
  const stair=new THREE.Mesh(new THREE.BoxGeometry(),stone);scene.add(stair);WORLD.studyStairMat=stone;
  const gateMat=new THREE.MeshStandardMaterial({roughness:.87});
@@ -57,11 +59,12 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  assert.equal(WORLD.pond.material.defines.POND_REFLECTION,1);
  const shader={uniforms:{},vertexShader:'',fragmentShader:''};WORLD.pond.material.onBeforeCompile(shader);
  assert.equal(shader.uniforms.uGardenTime,clock);assert(shader.fragmentShader.includes('float calm='));
+ const assertGrass=()=>WORLD.fg.slice(1).forEach(grass=>{assert.equal(grass.parent,scene);assert.equal(grass.visible,true);});assertGrass();
  const studyWater=WORLD.pond.material;
  assert(POST.comp.uniforms.uBloom.value>0);assert(POST.bright.uniforms.uThr.value<.86);
- ctx.setGardenStudy(false);assert.equal(gate.material,gateMat);assert.equal(stair.material,stone);assert.equal(g.visible,false);assert.equal(WORLD.fg[0].visible,true);assert.equal(WORLD.pond.material,water);assert.equal(key.intensity,1.22);assert.equal(scene.fog.density,.0154);
+ ctx.setGardenStudy(false);assertGrass();assert.equal(gate.material,gateMat);assert.equal(stair.material,stone);assert.equal(g.visible,false);assert.equal(WORLD.fg[0].visible,true);assert.equal(WORLD.pond.material,water);assert.equal(key.intensity,1.22);assert.equal(scene.fog.density,.0154);
  assert.equal(POST.comp.uniforms.uBloom.value,0);assert.equal(POST.bright.uniforms.uThr.value,.86);
- ctx.setGardenStudy(true);assert.equal(g.visible,true);assert.equal(WORLD.fg[0].visible,false);assert.equal(WORLD.pond.material,studyWater);assert(key.intensity<1.22);assert.equal(key.shadow.needsUpdate,true);
+ ctx.setGardenStudy(true);assertGrass();assert.equal(g.visible,true);assert.equal(WORLD.fg[0].visible,false);assert.equal(WORLD.pond.material,studyWater);assert(key.intensity<1.22);assert.equal(key.shadow.needsUpdate,true);
  // The approach stays open and banks taper below water instead of ending at a vertical edge.
  vm.runInContext(`for(const z of [-7,-1,5,10]){if(gardenGround(0,z)>-.4)throw Error('reflection corridor blocked');}
  for(const b of GARDEN_BANKS){if(gardenBankHeight(b,b[0]+b[2]*1.1,b[1])>-.9)throw Error('bank does not taper');}`,ctx);
