@@ -94,5 +94,6 @@ function buildPondGarden() {
     matrix.compose(new THREE.Vector3(x,.07,z),q,new THREE.Vector3(size,1,size*.85));pads.setMatrixAt(count,matrix);
     color.setHSL(.26+rnd()*.065,.28+rnd()*.14,.36+rnd()*.12);pads.setColorAt(count++,color);
   }
+  buildPondAnimal();
   pads.count=count;pads.name='pond lily pads';pads.layers.set(1);pads.renderOrder=5;pads.frustumCulled=false;GARDEN.group.add(pads);
 }

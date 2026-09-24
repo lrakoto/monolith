@@ -102,6 +102,7 @@ js = "const GARDEN_KIND = '"+kind+"';\n"+js
 js += (root/'tools/temple_landscape.js').read_text()
 js += (root/'tools/woodland_studies.js').read_text()
 js += (root/'tools/pond_study.js').read_text()
+js += (root/'tools/pond_animal.js').read_text()
 js += (root/'tools/garden_details.js').read_text()
 replacements={
 'in a portfolio whose every surface is generated in the browser at load.':'in a live moonlit garden with a detailed timber temple.',

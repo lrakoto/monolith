@@ -65,7 +65,7 @@ function gardenSurface(mat, kind) {
       float fleck=gn(vGardenP*31.);
       float moss=smoothstep(.43,.68,mottling)*smoothstep(.28,.85,vGardenN.y);
       diffuseColor.rgb*=mix(.72,1.17,mottling)*mix(.89,1.07,fleck);
-      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.025,.043,.012),moss*${kind==='soil'?'.85':'.64'});
+      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(${kind==='soil' && GARDEN_STYLE==='temple'?'.046,.073,.023':'.025,.043,.012'}),moss*${kind==='soil'?'.85':'.64'});
       float wet=1.-smoothstep(.08,.54,vGardenP.y);
       diffuseColor.rgb*=1.-wet*.22;`;
     sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+color);
@@ -148,7 +148,7 @@ function buildGardenMaple(seed,x,z,scale,background=false) {
     limb(new THREE.Vector3(.03,.38,0),new THREE.Vector3(Math.cos(a)*.85,.01,Math.sin(a)*.85),.18,.028);
   }
   const trunk=new THREE.Mesh(mergeGeos(parts),GARDEN.bark);trunk.castShadow=true;trunk.receiveShadow=true;
-  const count=tips.length*(background?9:(LOW?16:30));
+  const count=tips.length*(background?(GARDEN_STYLE==='forest'?8:9):(LOW?16:30));
   const leaves=new THREE.InstancedMesh(GARDEN.mapleGeo||GARDEN.leafGeo,GARDEN.leafMat,count);
   const color=new THREE.Color(),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();
   for(let i=0;i<count;i++){
@@ -211,7 +211,7 @@ function plantGardenBanks() {
   }
 }
 function buildGardenTerrain() {
-  const earth=gardenSurface(new THREE.MeshStandardMaterial({color:0x303323,roughness:.91,envMapIntensity:.65}), 'soil');
+  const earth=gardenSurface(new THREE.MeshStandardMaterial({color:GARDEN_STYLE==='temple'?0x4e6039:0x303323,roughness:.91,envMapIntensity:.65}), 'soil');
   GARDEN_BANKS.forEach(bank=>{
     const g=new THREE.PlaneGeometry(bank[2]*2.1,bank[3]*2.1,LOW?18:32,LOW?22:40);g.rotateX(-Math.PI/2);
     const p=g.attributes.position;
@@ -297,6 +297,7 @@ function buildGardenAtmosphere() {
   });
 }
 function recordGardenFrame(raw) {
+  updatePondAnimal();
   if(!GARDEN.stats || raw>.25)return;
   GARDEN.frames++;GARDEN.elapsed+=raw;
   if(GARDEN.elapsed>2){
@@ -321,6 +322,17 @@ function buildLandscapeStudy() {
       gardenEdit(o.position,'y',4.05+(o.position.y+lift-4.05)*.943-.20);
       gardenEdit(o.scale,'x',.943);gardenEdit(o.scale,'y',.943);
       if(o.material)gardenEdit(o.material,'color',new THREE.Color(0x8eaa78));
+      if(o.material){
+        const base=o.material.onBeforeCompile;
+        gardenEdit(o.material,'onBeforeCompile',sh=>{
+          base(sh);
+          sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+            float soilShade=1.-smoothstep(.015,.07,dot(diffuseColor.rgb,vec3(.2126,.7152,.0722)));
+            diffuseColor.rgb+=vec3(.007,.013,.003)*soilShade;`);
+        });
+        gardenEdit(o.material,'customProgramCacheKey',()=> 'temple-grass-soft-soil-1');
+      }
+
     }else if(lift)gardenEdit(o.position,'y',o.position.y+lift);
   });
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');

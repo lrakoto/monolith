@@ -10,7 +10,7 @@ class GardenStudyTests(unittest.TestCase):
     def test_geometry_budget_water_and_reversible_scene_modes(self):
         code=r"""
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),THREE=require('./assets/three.min.js');
-const page=fs.readFileSync('temple-study.html','utf8'),garden=fs.readFileSync('tools/temple_landscape.js','utf8')+'\n'+fs.readFileSync('tools/woodland_studies.js','utf8')+'\n'+fs.readFileSync('tools/pond_study.js','utf8')+'\n'+fs.readFileSync('tools/garden_details.js','utf8');
+const page=fs.readFileSync('temple-study.html','utf8'),garden=fs.readFileSync('tools/temple_landscape.js','utf8')+'\n'+fs.readFileSync('tools/woodland_studies.js','utf8')+'\n'+fs.readFileSync('tools/pond_study.js','utf8')+'\n'+fs.readFileSync('tools/garden_details.js','utf8')+'\n'+fs.readFileSync('tools/pond_animal.js','utf8');
 const redwoods=fs.readFileSync('redwoods.html','utf8');
 const native= ['redwoodTrunkGeo','redwoodSprayGeo'].map(name=>redwoods.match(new RegExp('function '+name+'\\([^\\n]*\\) \\{[\\s\\S]*?\\n\\}'))[0]).join('\n');
 const helpers=page.slice(page.indexOf('const clamp  ='),page.indexOf('/* ------------------------------------------------------- 0b'));
@@ -37,6 +37,12 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
  [[71,12.6,-13,1.05],[72,-11.8,-9.4,.95],[73,9.2,-19,.82],[74,-14.5,-17.5,1],[75,16.5,-6,.88]].forEach(a=>rememberStudyMaple(...a));
  rememberStudyRocks();buildLandscapeStudy();`,ctx);
  const g=scene.getObjectByName('complete garden study');assert(g.visible);
+ if(kind==='forest'){assert(g.getObjectByName('pond deer'));for(let t=0;t<120;t+=.05){clock.value=t;ctx.updatePondAnimal();}const deer=g.getObjectByName('pond deer');assert(Number.isFinite(deer.position.x));assert(deer.position.y>.06);assert(deer.position.x>-15 && deer.position.x<-10);
+ ctx.camera=new THREE.PerspectiveCamera(48,1.7,.1,200);ctx.camera.position.set(-6,4,10);ctx.camera.lookAt(-12.8,1,-11);ctx.camera.updateMatrixWorld();ctx.RIG={pointer:1,tmx:.1,tmy:-.15};ctx.COARSE=false;
+ for(let t=120;t<150;t+=.05){clock.value=t;ctx.updatePondAnimal();}
+ assert(deer.position.y>.06);assert(deer.position.x>-15 && deer.position.x<-10);
+ const held=deer.position.clone();ctx.updatePondAnimal();assert(deer.position.equals(held));
+ }
  assert.notEqual(stair.material,stone);
  if(kind==='temple')assert.notEqual(gate.material,gateMat);else assert.equal(gate.material,gateMat);
  if(kind==='forest'){assert(g.getObjectByName('quiet water lilies').count<=7);assert(g.getObjectByName('shoreline pebble transition').count>0);}
@@ -55,7 +61,7 @@ for(const kind of ['temple','redwoods','forest'])for(const LOW of [false,true]){
   const count=o.isInstancedMesh?o.count:1;triangles+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3*count;
   if(o.isInstancedMesh)for(const n of o.instanceMatrix.array)assert(Number.isFinite(n));
  });
- assert(triangles<500000,kind+triangles);assert(meshes<48,kind+meshes);budgets.push(triangles);
+ assert(triangles<500000,kind+triangles);assert(meshes<(kind==='forest'?76:48),kind+meshes);budgets.push(triangles);
  assert.equal(WORLD.pond.material.defines.POND_REFLECTION,1);
  const shader={uniforms:{},vertexShader:'',fragmentShader:''};WORLD.pond.material.onBeforeCompile(shader);
  assert.equal(shader.uniforms.uGardenTime,clock);assert(shader.fragmentShader.includes('float calm='));

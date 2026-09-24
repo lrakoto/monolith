@@ -44,6 +44,10 @@ of Redwoods despite its closer camera.
 `tools/temple_landscape.js` authors the common ground and canopy;
 `tools/woodland_studies.js` owns the woodland additions and stonework.
 `tools/pond_study.js` supplies the water garden and the shared slow breeze.
+`tools/pond_animal.js` adds a small doe prototype to the Pond study. She wanders
+on the dry left bank, approaches cursor rays near that bank, and smoothly
+looks toward the pointer. The shared reduced-motion clock freezes her pose.
+Temple uses slightly lighter green soil beneath its foreground grass and banks.
 Canopies, shrubs and redwood boughs sway together; faster tip flutter stays
 independent. Reeds bend from their roots, and pads rock at the water surface.
 All motion uses the existing reduced-motion clock with no per-frame geometry
