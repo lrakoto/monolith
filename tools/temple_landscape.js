@@ -324,7 +324,7 @@ function buildLandscapeStudy() {
   for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
   GARDEN.leafGeo.computeVertexNormals();
   GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
-  if(GARDEN_STYLE==='temple'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
+  if(GARDEN_STYLE!=='redwoods'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
   buildGardenTerrain();
   if(GARDEN_STYLE==='redwoods')buildGardenRedwoods();
   else if(GARDEN_STYLE==='forest')buildPondGarden();

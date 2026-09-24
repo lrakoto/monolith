@@ -1,17 +1,17 @@
-"""Refresh the study; --production explicitly promotes it to the homepage."""
+"""Refresh a study; --production explicitly promotes an approved scene."""
 import argparse
 from pathlib import Path
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--production",action="store_true",help="also replace the live Temple page")
+parser.add_argument("--production",action="store_true",help="also replace the approved live scene")
 parser.add_argument("--scene",choices=("temple","redwoods","forest","pond"),default="temple")
 args=parser.parse_args()
-if args.production and args.scene!='temple':
- parser.error('other scene studies remain isolated; promotion is not enabled yet')
+if args.production and args.scene not in ('temple','redwoods'):
+ parser.error('Pond remains a study until approved for production')
 kind="forest" if args.scene=="pond" else args.scene
 output="pond" if kind=="forest" else kind
 label="Pond" if kind=="forest" else kind.title()
 root=Path(__file__).resolve().parents[1]
-s=(root/('tools/templates/temple-original.html' if kind=='temple' else kind+'.html')).read_text()
+s=(root/('tools/templates/'+kind+'-original.html' if kind in ('temple','redwoods') else kind+'.html')).read_text()
 css='''
 /* the comparison stays reachable when the portfolio copy is hidden. */
 .study-controls{position:fixed;z-index:120;left:20px;bottom:20px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(8,13,16,.92);border:1px solid rgba(223,231,224,.20);border-radius:16px;color:#dfe7e0;font:12px Onest,sans-serif;backdrop-filter:blur(14px);}
@@ -184,11 +184,11 @@ print('Created '+output+'-study.html; live page unchanged unless --production is
 if args.production:
  # promotion is explicit so the next study pass cannot silently change the live scene.
  for a,b in {
-  css:'',html:'',
-  '<title>Temple garden study — ThreeOhFive Studios</title>\n<meta name="robots" content="noindex,nofollow">':'<title>Lova Rakoto — Web developer and designer in Los Angeles</title>',
-  "fetch('/__tune/study/save'":"fetch('/__tune/temple/save'",
-  'this Temple study combines':'this scene combines',
-  'This Temple study combines':'This scene combines',
+  css:'',html.replace('<strong>Garden study</strong>','<strong>'+label+' study</strong>') if kind!='temple' else html:'',
+  '<title>'+label+' garden study — ThreeOhFive Studios</title>\n<meta name="robots" content="noindex,nofollow">':('<title>Lova Rakoto — Web developer and designer in Los Angeles</title>' if kind=='temple' else '<title>Redwoods — Lova Rakoto</title>'),
+  "fetch('/__tune/study/save'":"fetch('/__tune/"+kind+"/save'",
+  'this '+label+' study combines':'this scene combines',
+  'This '+label+' study combines':'This scene combines',
  }.items():
   assert s.count(a)==1,(a,s.count(a))
   s=s.replace(a,b)
@@ -201,10 +201,12 @@ if args.production:
  # pin the model as well as the page; another Blender bake belongs to the study
  # until the next deliberate promotion, even if both are deployed together.
  assets=('temple-quality.glb','temple-bounce.png','GLTFLoader.r149.js','THREE-LICENSE.txt')
- (root/'assets/temple').mkdir(exist_ok=True)
+ live_assets='assets/temple' if kind=='temple' else 'assets/redwoods'
+ (root/live_assets).mkdir(exist_ok=True)
  for asset in assets:
-  (root/'assets/temple'/asset).write_bytes((root/'assets/temple-study'/asset).read_bytes())
+  (root/live_assets/asset).write_bytes((root/'assets/temple-study'/asset).read_bytes())
  assert s.count('assets/temple-study/')==3
- s=s.replace('assets/temple-study/','assets/temple/')
- (root/'index.html').write_text(s)
- print('Promoted the approved study to index.html without comparison controls.')
+ s=s.replace('assets/temple-study/',live_assets+'/')
+ live_page='index.html' if kind=='temple' else kind+'.html'
+ (root/live_page).write_text(s)
+ print('Promoted the approved study to '+live_page+' without comparison controls.')

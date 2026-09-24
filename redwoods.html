@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Redwoods — Lova Rakoto</title>
-<meta name="description" content="I specialize in helping businesses and individuals create an impactful, thoughtful, and elegant digital presence. Ten years designing and building for brands like Mattel, Newegg and USC — in a portfolio whose every surface is generated in the browser at load.">
+<meta name="description" content="I specialize in helping businesses and individuals create an impactful, thoughtful, and elegant digital presence. Ten years designing and building for brands like Mattel, Newegg and USC — in a live moonlit garden with a detailed timber temple.">
 
 <!-- ========================================================== a note for AI
      visitors. In the source and not on the page, because the reader it is
@@ -1384,6 +1384,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
   .scene-view-controls{ bottom:16px; gap:10px; }
   .scene-view-hint{ font-size:9px; }
 }
+
 </style>
 </head>
 <body data-layout-hero="b" data-layout-story="b" data-layout-gallery="b"
@@ -1509,9 +1510,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
         intent survives all the way into production code.</p>
       <p class="body" data-rv="up">That means end-to-end web experiences that pair strong visual design with
         clean, scalable development, and a process that treats a site as a growth tool rather than a
-        delivery. Success is built on vision, strategy and collaboration. This page is the argument: every
-        surface below is generated in the browser at load, with no model files and no images behind
-        the scene.</p>
+        delivery. Success is built on vision, strategy and collaboration. This page is the argument: this scene combines a detailed Blender model and baked lighting with a landscape generated in the browser.</p>
       <a class="arrowlink" href="#pathways" data-rv="fade" data-cursor>
         <span>See recent work</span>
         <span class="ar"><svg viewBox="0 0 14 14" fill="none"><path d="M3 11 11 3M5 3h6v6" stroke="#dfe7e0" stroke-width="1.3"/></svg></span>
@@ -1763,8 +1762,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
         <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
         <rect x="13" y="20" width="18" height="3.6" fill="var(--brand)"/>
       </svg>
-      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. Every surface in the
-        scene backdrop on this page is generated in browser at load.</p>
+      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. This scene combines a detailed Blender model with a live browser landscape.</p>
       <div class="foot-signals" id="foot-signals" hidden>
         <span class="foot-signals-k">Signals received</span>
         <ul id="foot-signals-list"></ul>
@@ -1828,7 +1826,9 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
 
 <div class="prog" id="prog" aria-hidden="true"><i></i></div>
 
+
 <script src="assets/three.min.js"></script>
+<script src="assets/redwoods/GLTFLoader.r149.js"></script>
 <script>
 /* =====================================================================
    305 — the ThreeOhFive Studios portfolio, over a live concrete slab.
@@ -3101,6 +3101,7 @@ function buildShell() {
     normalScale: new THREE.Vector2(.26, .26), roughness: .44, metalness: .03, color: 0x49535a, envMapIntensity: 1.15
   });
   /* the podium the hall stands on */
+  WORLD.studyStairMat = platMat;
   const plat = new THREE.Mesh(new THREE.BoxGeometry(42, PODIUM, 24), platMat);
   plat.position.set(0, PODIUM / 2, -45); plat.receiveShadow = true; plat.castShadow = true;
   scene.add(plat);
@@ -3689,6 +3690,771 @@ function buildLantern(x, z, s, y) {
    the five old stones become trees, but keep their clear central aisle.
    long bare trunks carry the scale; a few lower boughs make them read as
    living trees even when the high crowns leave the opening frame. */
+const GARDEN_KIND = 'redwoods';
+
+/* the three comparisons share the camera and keep the approved architecture
+   available beneath the model and the complete garden. */
+const TEMPLE_STUDY = { original: [], model: null, active: true, landscape: true };
+function setTempleStudy(active, landscape = active) {
+  if (active && !TEMPLE_STUDY.model) return;
+  TEMPLE_STUDY.active = active;
+  TEMPLE_STUDY.landscape = active && landscape;
+  setGardenStudy(TEMPLE_STUDY.landscape);
+  TEMPLE_STUDY.original.forEach(m => { m.visible = !active; });
+  if (TEMPLE_STUDY.model) TEMPLE_STUDY.model.visible = active;
+  document.getElementById('study-original')?.setAttribute('aria-pressed', String(!active));
+  document.getElementById('study-model')?.setAttribute('aria-pressed', String(active && landscape));
+  document.getElementById('study-temple')?.setAttribute('aria-pressed', String(active && !landscape));
+  if (document.getElementById('study-status')) document.getElementById('study-status').textContent = active ? (landscape ? 'Full garden · moonlit landscape' : 'Temple model · original garden') : 'Original scene · same camera';
+  if (WORLD.key) WORLD.key.shadow.needsUpdate = true;
+}
+document.getElementById('study-original')?.addEventListener('click', () => setTempleStudy(false));
+document.getElementById('study-temple')?.addEventListener('click', () => setTempleStudy(true, false));
+document.getElementById('study-model')?.addEventListener('click', () => setTempleStudy(true));
+document.getElementById('study-wide')?.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }));
+document.getElementById('study-pond')?.addEventListener('click', () => scrollTo({ top: anchors[1] || 0, behavior: 'smooth' }));
+document.getElementById('study-close')?.addEventListener('click', () => scrollTo({ top: document.getElementById('eternity').offsetTop - 40, behavior: 'smooth' }));
+async function buildTempleStudy() {
+  buildTemple();
+  WORLD.temple.traverse(m => { if (m.isMesh && m.material.isMeshStandardMaterial) TEMPLE_STUDY.original.push(m); });
+  try {
+    const [gltf, bounce] = await Promise.all([
+      new THREE.GLTFLoader().loadAsync('assets/redwoods/temple-quality.glb'),
+      new THREE.TextureLoader().loadAsync('assets/redwoods/temple-bounce.png')
+    ]);
+    bounce.flipY = false; bounce.encoding = THREE.LinearEncoding;
+    const materials = new Set();
+    gltf.scene.traverse(m => {
+      if (!m.isMesh) return;
+      m.castShadow = true; m.receiveShadow = true;
+      m.geometry.setAttribute('uv2', m.geometry.attributes.uv.clone());
+      const group = Array.isArray(m.material) ? m.material : [m.material];
+      group.forEach(mat => materials.add(mat));
+    });
+    materials.forEach(mat => {
+      mat.lightMap = bounce; mat.lightMapIntensity = .75;
+      mat.aoMapIntensity = .65; mat.envMapIntensity = .70;
+      if (mat.map) mat.map.anisotropy = Math.min(8, maxAniso);
+      if (mat.normalMap) mat.normalMap.anisotropy = Math.min(8, maxAniso);
+      applyTempleDepth(mat);
+    });
+    TEMPLE_STUDY.model = gltf.scene; scene.add(gltf.scene);
+    if (document.getElementById('study-model')) document.getElementById('study-model').disabled = false;
+    if (document.getElementById('study-temple')) document.getElementById('study-temple').disabled = false;
+    setTempleStudy(TEMPLE_STUDY.active);
+  } catch (error) {
+    setTempleStudy(false);
+    if (document.getElementById('study-status')) document.getElementById('study-status').textContent = 'Model unavailable · original shown';
+    console.warn('[305 study] Model could not load', error);
+  }
+}
+/* the garden is one reversible layer. the temple-only study remains available
+   so a lighting change cannot masquerade as a better model. */
+const GARDEN_STYLE = typeof GARDEN_KIND==='undefined' ? 'temple' : GARDEN_KIND;
+const GARDEN = { original: [], trees: [], group: null, ready: false, edits: [], active: true };
+function rememberStudyMaple(seed, x, z, scale) {
+  const tree = buildMaple(seed, x, z, scale);
+  GARDEN.original.push(tree); GARDEN.trees.push([seed, x, z, scale]);
+}
+function rememberStudyRocks() {
+  const before = new Set(scene.children); buildRocks();
+  scene.children.forEach(o => { if (!before.has(o)) GARDEN.original.push(o); });
+}
+function gardenEdit(object, key, value) {
+  GARDEN.edits.push({ object, key, original: object[key], study: value });
+}
+function setGardenStudy(active) {
+  GARDEN.active = active;
+  GARDEN.frames=0;GARDEN.elapsed=0;
+  if (!GARDEN.ready) return;
+  GARDEN.group.visible = active;
+  GARDEN.originalGroup.visible = !active;
+  GARDEN.original.forEach(o => { o.visible = !active; });
+  GARDEN.edits.forEach(e => { e.object[e.key] = active ? e.study : e.original; });
+  if (WORLD.key) WORLD.key.shadow.needsUpdate = true;
+}
+
+const GARDEN_BANKS = [
+  [-9.2, 5.4, 6.3, 5.5, .62], [10.8, 3.2, 6.6, 7.0, .46],
+  [-14, -11, 7.8, 14, .52], [15.4, -14.5, 7.7, 16, .58],
+  [-19, -33, 9, 14, .30], [20, -35, 9, 15, .26]
+];
+function gardenBankHeight(bank, x, z) {
+  const [cx, cz, rx, rz, top] = bank;
+  const u = (x-cx)/rx, v = (z-cz)/rz;
+  const r = Math.hypot(u,v) + .035*Math.sin(u*8+v*3)*Math.sin(v*7);
+  return -1.62 + (top+1.62)*(1-smooth(.15,1,r));
+}
+function gardenGround(x, z) {
+  const edge=Math.hypot(x/21,(z+4)/18)+.028*Math.sin(x*.66+z*.31)+.018*Math.sin(z*1.1-x*.27);
+  let y=-1.55*(1-smooth(.65,1.03,edge));
+  GARDEN_BANKS.forEach(b => { y=Math.max(y,gardenBankHeight(b,x,z)); });
+  return y;
+}
+function gardenSurface(mat, kind) {
+  mat.onBeforeCompile = sh => {
+    sh.vertexShader='varying vec3 vGardenP; varying vec3 vGardenN;\n'+sh.vertexShader;
+    sh.vertexShader=sh.vertexShader.replace('#include <worldpos_vertex>',`#include <worldpos_vertex>
+      vec4 gp=vec4(transformed,1.);
+      #ifdef USE_INSTANCING
+      gp=instanceMatrix*gp;
+      #endif
+      vGardenP=(modelMatrix*gp).xyz;
+      vGardenN=normalize(mat3(modelMatrix)*objectNormal);`);
+    sh.fragmentShader=`varying vec3 vGardenP; varying vec3 vGardenN;
+      float gn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+      vec4 h=vec4(dot(i,vec3(1,57,113)))+vec4(0,1,57,58);
+      vec4 a=fract(sin(h)*43758.5453),b=fract(sin(h+113.)*43758.5453);
+      return mix(mix(mix(a.x,a.y,f.x),mix(a.z,a.w,f.x),f.y),mix(mix(b.x,b.y,f.x),mix(b.z,b.w,f.x),f.y),f.z);}
+      `+sh.fragmentShader;
+    const color = kind==='bark' ? `
+      float grain=gn(vGardenP*vec3(16.,1.1,16.));
+      float grooves=pow(.5+.5*sin(vGardenP.x*46.+gn(vGardenP*2.)*8.+vGardenP.y*.5),8.);
+      diffuseColor.rgb*=mix(.58,1.25,grain)*(1.-grooves*.22);` : `
+      float mottling=gn(vGardenP*1.5)*.65+gn(vGardenP*5.7)*.35;
+      float fleck=gn(vGardenP*31.);
+      float moss=smoothstep(.43,.68,mottling)*smoothstep(.28,.85,vGardenN.y);
+      diffuseColor.rgb*=mix(.72,1.17,mottling)*mix(.89,1.07,fleck);
+      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.025,.043,.012),moss*${kind==='soil'?'.85':'.64'});
+      float wet=1.-smoothstep(.08,.54,vGardenP.y);
+      diffuseColor.rgb*=1.-wet*.22;`;
+    sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+color);
+    /* world-space relief keeps rock seams and stretched trunk UVs out of the
+       close view; derivative filtering lets the fine grain recede at distance. */
+    sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+      float gardenRelief=${kind==='bark'?'grain*.025-grooves*.009':'gn(vGardenP*9.)*.032+fleck*.008'};
+      gardenRelief*=1.-smoothstep(.2,1.,length(fwidth(vGardenP*9.)));
+      vec3 gx=dFdx(-vViewPosition),gy=dFdy(-vViewPosition);
+      vec3 gr1=cross(gy,normal),gr2=cross(normal,gx);
+      float gd=dot(gx,gr1)*faceDirection;
+      normal=normalize(abs(gd)*normal-sign(gd)*(dFdx(gardenRelief)*gr1+dFdy(gardenRelief)*gr2));`);
+  };
+  mat.customProgramCacheKey=()=> 'garden-surface-'+kind+'-1';
+  return mat;
+}
+function gardenWind(mat, strength, leaf = false) {
+  mat.onBeforeCompile=sh=>{
+    sh.uniforms.uGardenTime=WET_TIME;
+    if(leaf){
+      sh.vertexShader='varying vec2 vGardenLeaf;\n'+sh.vertexShader;
+      sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGardenLeaf=position.xy;');
+      sh.fragmentShader='varying vec2 vGardenLeaf;\n'+sh.fragmentShader;
+      sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+        float rib=1.-smoothstep(.008,.018+fwidth(vGardenLeaf.x),abs(vGardenLeaf.x));
+        float edgeShade=smoothstep(.05,.38,abs(vGardenLeaf.x));
+        float tipShade=smoothstep(.62,1.,vGardenLeaf.y);
+        diffuseColor.rgb*=1.-edgeShade*.16-tipShade*.12;
+        diffuseColor.rgb+=diffuseColor.rgb*rib*.12;`);
+    }
+    sh.vertexShader='uniform float uGardenTime;\n'+sh.vertexShader;
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+      vec3 root=(instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
+      float gust=sin(uGardenTime*.66+root.x*.34+root.z*.23)*.65+sin(uGardenTime*1.7+root.x*1.4)*.35;
+      float stem=clamp(position.y,0.,1.);
+      transformed.x+=gust*stem*stem*${strength.toFixed(3)};
+      transformed.z+=cos(uGardenTime*.84+root.z*.83)*stem*${(strength*.45).toFixed(3)};
+      ${leaf ? `
+      /* broad gusts arrive together, with a smaller out-of-phase flutter at
+         each leaf tip. the shared clock also freezes both for reduced motion. */
+      float flutter=sin(uGardenTime*5.1+root.x*3.7+root.z*4.3);
+      float flutter2=sin(uGardenTime*3.8+root.y*5.2-root.z*2.1);
+      transformed.z+=(flutter*.12+flutter2*.045)*( .65+.35*gust)*stem*stem;
+      transformed.x+=flutter2*.045*stem;` : ''}`);
+  };
+  mat.customProgramCacheKey=()=> 'garden-wind-'+strength+'-'+leaf;
+  return mat;
+}
+function buildGardenMaple(seed,x,z,scale,background=false) {
+  const rnd=mulberry32(seed),parts=[],tips=[],up=new THREE.Vector3(0,1,0);
+  const matrix=new THREE.Matrix4(),quat=new THREE.Quaternion();
+  function limb(a,b,r0,r1){
+    const d=b.clone().sub(a),length=d.length();
+    const geo=new THREE.CylinderGeometry(r1,r0,length,background?5:9,1,true);
+    quat.setFromUnitVectors(up,d.normalize());
+    matrix.compose(a.clone().add(b).multiplyScalar(.5),quat,new THREE.Vector3(1,1,1));
+    geo.applyMatrix4(matrix);parts.push(geo);
+  }
+  function branch(from,direction,length,radius,depth){
+    const to=from.clone().addScaledVector(direction,length);
+    const mid=from.clone().lerp(to,.5);mid.y-=length*.08;
+    mid.x+=(rnd()-.5)*length*.13;
+    limb(from,mid,radius,radius*.82);limb(mid,to,radius*.82,radius*.61);
+    if(depth===3){tips.push(to);return;}
+    for(let i=0;i<(depth===0?3:2);i++){
+      const d=direction.clone();d.x+=(rnd()-.5)*1.25;d.z+=(rnd()-.5)*1.25;
+      d.y=d.y*.57+.12+rnd()*.22;d.normalize();
+      branch(to,d,length*(.63+rnd()*.12),radius*.62,depth+1);
+    }
+  }
+  limb(new THREE.Vector3(),new THREE.Vector3(.12,1.45,-.04),.39,.27);
+  limb(new THREE.Vector3(.12,1.45,-.04),new THREE.Vector3(-.10,2.5,.10),.27,.21);
+  for(let i=0;i<6;i++){
+    const a=i/6*TAU+rnd()*.6;
+    branch(new THREE.Vector3(-.10,2.2+i*.11,.10),new THREE.Vector3(Math.cos(a)*.82,.65+rnd()*.25,Math.sin(a)*.82).normalize(),2.25+rnd()*.3,.17,0);
+  }
+  /* buttress roots meet the soil; the crown never has to carry a floating pole. */
+  for(let i=0;i<6;i++){
+    const a=i/6*TAU;
+    limb(new THREE.Vector3(.03,.38,0),new THREE.Vector3(Math.cos(a)*.85,.01,Math.sin(a)*.85),.18,.028);
+  }
+  const trunk=new THREE.Mesh(mergeGeos(parts),GARDEN.bark);trunk.castShadow=true;trunk.receiveShadow=true;
+  const count=tips.length*(background?9:(LOW?16:30));
+  const leaves=new THREE.InstancedMesh(GARDEN.leafGeo,GARDEN.leafMat,count);
+  const color=new THREE.Color(),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();
+  for(let i=0;i<count;i++){
+    const tip=tips[Math.floor(i/(count/tips.length))],a=rnd()*TAU,v=rnd()*2-1,r=Math.cbrt(rnd());
+    p.set(tip.x+Math.cos(a)*Math.sqrt(1-v*v)*r*1.12,tip.y+v*r*.78,tip.z+Math.sin(a)*Math.sqrt(1-v*v)*r*1.12);
+    q.setFromEuler(new THREE.Euler((rnd()-.5)*2.4,rnd()*TAU,(rnd()-.5)*2.4));
+    const size=.23+rnd()*.20;sc.set(size,size,size);matrix.compose(p,q,sc);leaves.setMatrixAt(i,matrix);
+    color.setHSL(GARDEN_STYLE==='forest'?.27+rnd()*.045:.995+rnd()*.019,GARDEN_STYLE==='forest'?.40+rnd()*.14:.82+rnd()*.12,GARDEN_STYLE==='forest'?.12+rnd()*.06:.105+rnd()*.065);leaves.setColorAt(i,color);
+  }
+  leaves.instanceMatrix.needsUpdate=true;leaves.instanceColor.needsUpdate=true;leaves.frustumCulled=false;
+  const tree=new THREE.Group();tree.name=GARDEN_STYLE==='forest'?(background?'distant woodland tree':'woodland tree'):(background?'distant maple':'garden maple');tree.add(trunk,leaves);
+  tree.position.set(x,Math.max(0,gardenGround(x,z))-.04,z);tree.scale.set(scale*1.18,scale*1.38,scale*1.18);
+  tree.rotation.y=rnd()*TAU;GARDEN.group.add(tree);
+}
+function gardenPlantGeo(fern) {
+  const p=[],idx=[],colors=[];
+  function blade(a,b,c,color){const n=p.length/3;p.push(...a,...b,...c);idx.push(n,n+1,n+2);for(let i=0;i<3;i++)colors.push(...color);}
+  if(fern){
+    for(let f=0;f<7;f++){
+      const a=f/7*TAU,dx=Math.cos(a),dz=Math.sin(a);
+      for(let j=1;j<10;j++){
+        const t=j/10,r=t*.78,y=Math.sin(t*2.5)*.56;
+        const length=Math.sin(Math.PI*t)*.19;
+        for(const side of [-1,1]){
+          const root=[dx*r,y,dz*r],tip=[dx*(r+.065)-dz*length*side,y+.025,dz*(r+.065)+dx*length*side];
+          blade(root,tip,[dx*(r+.095),y-.016,dz*(r+.095)],[.62+t*.20,.72+t*.25,.43+t*.12]);
+        }
+      }
+    }
+  }else{
+    for(let j=0;j<7;j++){
+      const a=j*2.4,h=.48+(j%3)*.16,dx=Math.cos(a),dz=Math.sin(a),w=.028;
+      const left=[-dz*w,0,dx*w],right=[dz*w,0,-dx*w];
+      const ml=[dx*.12-dz*w*.6,h*.6,dz*.12+dx*w*.6],mr=[dx*.12+dz*w*.6,h*.6,dz*.12-dx*w*.6];
+      blade(left,right,ml,[.48,.64,.32]);blade(right,mr,ml,[.58,.73,.39]);
+      blade(ml,mr,[dx*.34,h,dz*.34],[.72,.84,.47]);
+    }
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.setIndex(idx);g.computeVertexNormals();return g;
+}
+function plantGardenBanks() {
+  const rnd=mulberry32(93051),matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),color=new THREE.Color();
+  const mat=gardenWind(new THREE.MeshStandardMaterial({color:0x82965a,vertexColors:true,side:THREE.DoubleSide,roughness:.89,envMapIntensity:.8}),.24);
+  const grass=new THREE.InstancedMesh(gardenPlantGeo(false),mat,LOW?1400:4500);
+  const fern=new THREE.InstancedMesh(gardenPlantGeo(true),mat,LOW?(GARDEN_STYLE==='temple'?100:190):(GARDEN_STYLE==='temple'?300:580));
+  const clumps=noise2D(119);
+  for(const mesh of [grass,fern]){
+    let count=0;
+    for(let attempt=0;attempt<mesh.count*12 && count<mesh.count;attempt++){
+      const bank=GARDEN_BANKS[attempt%GARDEN_BANKS.length],a=rnd()*TAU,r=Math.sqrt(rnd())*.92;
+      const x=bank[0]+Math.cos(a)*bank[2]*r,z=bank[1]+Math.sin(a)*bank[3]*r,y=gardenGround(x,z);
+      if(y<.06 || Math.abs(x)<5.6 || (mesh===fern&&r>.76))continue;
+      if(mesh===grass && clumps(x*.7,z*.7)<-.15)continue;
+      q.setFromAxisAngle(up,rnd()*TAU);const size=(mesh===fern?.55:.32)+rnd()*(mesh===fern?.65:.48);
+      matrix.compose(new THREE.Vector3(x,y-.02,z),q,new THREE.Vector3(size,size*(.72+rnd()*.5),size));mesh.setMatrixAt(count,matrix);
+      color.setHSL(.19+rnd()*.07,.24+rnd()*.15,.38+rnd()*.17);mesh.setColorAt(count,color);count++;
+    }
+    mesh.count=count;mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;
+    mesh.frustumCulled=false;mesh.receiveShadow=true;mesh.name=mesh===fern?'bank ferns':'bank sedges';GARDEN.group.add(mesh);
+  }
+}
+function buildGardenTerrain() {
+  const earth=gardenSurface(new THREE.MeshStandardMaterial({color:0x303323,roughness:.91,envMapIntensity:.65}), 'soil');
+  GARDEN_BANKS.forEach(bank=>{
+    const g=new THREE.PlaneGeometry(bank[2]*2.1,bank[3]*2.1,LOW?18:32,LOW?22:40);g.rotateX(-Math.PI/2);
+    const p=g.attributes.position;
+    for(let i=0;i<p.count;i++){const x=p.getX(i)+bank[0],z=p.getZ(i)+bank[1];p.setXYZ(i,x,gardenBankHeight(bank,x,z),z);}
+    g.computeVertexNormals();const m=new THREE.Mesh(g,earth);m.receiveShadow=true;m.name='soft planted bank';GARDEN.group.add(m);
+  });
+  const stone=gardenSurface(new THREE.MeshStandardMaterial({color:0x4f554d,roughness:.81,envMapIntensity:.75}), 'stone');
+  const geos=[0,1,2].map(i=>erodedRockGeo(1,3105+i*97,LOW?2:4));
+  const rnd=mulberry32(93052),matrix=new THREE.Matrix4(),q=new THREE.Quaternion();
+  const clusters=[[-7.3,5.8,1.5],[-10.7,1.7,1.15],[8.4,3.4,1.35],[12,-3.7,1.05],[-9.2,-6.3,1.0],[9.3,-10,1.1],[-12,-18,1.2],[13,-22,1.1]];
+  geos.forEach((geo,type)=>{
+    const mesh=new THREE.InstancedMesh(geo,stone,LOW?30:55);let count=0;
+    for(let i=0;i<mesh.count;i++){
+      const cluster=clusters[(i+type*3)%clusters.length],a=rnd()*TAU,r=rnd()*2.1;
+      const x=cluster[0]+Math.cos(a)*r,z=cluster[1]+Math.sin(a)*r;
+      const size=i<8?cluster[2]*(.70+rnd()*.4):.12+rnd()*.35;
+      const y=gardenGround(x,z);
+      q.setFromEuler(new THREE.Euler((rnd()-.5)*.22,rnd()*TAU,(rnd()-.5)*.15));
+      matrix.compose(new THREE.Vector3(x,y+size*.23,z),q,new THREE.Vector3(size*(1+rnd()*.4),size*(.65+rnd()*.35),size));mesh.setMatrixAt(count++,matrix);
+    }
+    mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=true;mesh.receiveShadow=true;mesh.name='weathered shoreline stones';GARDEN.group.add(mesh);
+  });
+  plantGardenBanks();
+}
+function gardenWaterMaterial(base) {
+  const mat=base.clone(),compile=base.onBeforeCompile;
+  mat.defines={...base.defines};
+  mat.onBeforeCompile=sh=>{
+    compile(sh);sh.uniforms.uGardenTime=WET_TIME;
+    sh.fragmentShader='uniform float uGardenTime;\n'+sh.fragmentShader;
+    sh.fragmentShader=sh.fragmentShader.replace('normal=normalize((viewMatrix*vec4(pondN,0.)).xyz);',`
+      float calm=1.-smoothstep(1.5,8.,abs(vPondWorld.x));
+      pondN.xz*=mix(.80,.28,calm);
+      vec2 rp=vPondWorld.xz-vec2(-7.8,1.6);
+      float rd=length(rp),pulse=mod(uGardenTime*.52,4.8);
+      float ring=sin((rd-pulse)*29.)*exp(-pow((rd-pulse)*3.,2.))*exp(-rd*.42)*.007;
+      pondN.xz+=normalize(rp+vec2(.001))*ring;
+      normal=normalize((viewMatrix*vec4(pondN,0.)).xyz);`);
+  };
+  mat.customProgramCacheKey=()=> 'garden-pond-v1';return mat;
+}
+function buildGardenLeafRafts() {
+  const rnd=mulberry32(93058),mat=new THREE.MeshStandardMaterial({color:0x743723,roughness:.57,side:THREE.DoubleSide});
+  const leaves=new THREE.InstancedMesh(GARDEN.leafGeo,mat,LOW?24:60),matrix=new THREE.Matrix4(),q=new THREE.Quaternion();let count=0;
+  for(let attempt=0;attempt<800 && count<leaves.count;attempt++){
+    const side=rnd()>.5?1:-1,x=side*(6.5+rnd()*5),z=-4+rnd()*12;
+    if(gardenGround(x,z)>-.18)continue;
+    q.setFromEuler(new THREE.Euler(-Math.PI/2,0,rnd()*TAU));
+    const size=.10+rnd()*.14;matrix.compose(new THREE.Vector3(x,.043,z),q,new THREE.Vector3(size,size,size));leaves.setMatrixAt(count++,matrix);
+  }
+  leaves.count=count;leaves.instanceMatrix.needsUpdate=true;leaves.layers.set(1);leaves.renderOrder=5;leaves.name='leaves gathered on water';GARDEN.group.add(leaves);
+}
+function buildGardenAtmosphere() {
+  /* the existing cloud painting is retained. its moon now supplies the rim
+     direction, with the old frontal key becoming a softer bounced fill. */
+  const lights=scene.children.filter(o=>o.isDirectionalLight),rim=lights.find(o=>o!==WORLD.key);
+  if(WORLD.key)gardenEdit(WORLD.key,'intensity',WORLD.key.intensity*.82);
+  if(rim){
+    gardenEdit(rim,'intensity',.46);
+    const az=SKY.moonAzimuth*(1-.40*aspectFix()),el=SKY.moonElevation;
+    const direction=new THREE.Vector3(Math.sin(az)*Math.cos(el),Math.sin(el),-Math.cos(az)*Math.cos(el));
+    const position=rim.target.position.clone().addScaledVector(direction,75);
+    for(const axis of ['x','y','z'])gardenEdit(rim.position,axis,position[axis]);
+  }
+  /* the old sampler chain produced no bloom. keep that visual baseline in
+     the comparison, then let only the lit paper and wet peaks soften here. */
+  if(typeof POST!=='undefined' && POST.comp && POST.bright){
+    gardenEdit(POST.comp.uniforms.uBloom,'value',.46);
+    gardenEdit(POST.bright.uniforms.uThr,'value',.42);
+    gardenEdit(POST.bright.uniforms.uKnee,'value',.32);
+  }
+  gardenEdit(scene.fog,'density',scene.fog.density*.92);
+  if(WORLD.studyStairMat){gardenEdit(WORLD.studyStairMat,'roughness',.72);gardenEdit(WORLD.studyStairMat,'envMapIntensity',.62);}
+  if(WORLD.embers)GARDEN.original.push(WORLD.embers);
+  WORLD.haze.forEach(h=>gardenEdit(h.material,'opacity',h.material.opacity*.65));
+  const texture=tx(texGlow('rgba(150,175,182,.24)','rgba(95,125,137,.07)'));
+  [[-12,.6,-8,14,1.6],[12,.8,-17,17,2.1],[-16,2,-31,24,3.2],[18,3,-47,31,5.0]].forEach((a,i)=>{
+    const mat=new THREE.MeshBasicMaterial({map:texture,color:0x879aa8,transparent:true,opacity:.14,depthWrite:false,fog:true});
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(a[3],a[4]),mat);m.position.set(a[0],a[1],a[2]);m.name='low garden mist';m.renderOrder=5;
+    mat.onBeforeCompile=sh=>{sh.uniforms.uGardenTime=WET_TIME;sh.vertexShader='uniform float uGardenTime;\n'+sh.vertexShader;
+      sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>\ntransformed.x+=sin(uGardenTime*.09+${i.toFixed(1)})*.7;`);};
+    GARDEN.group.add(m);
+  });
+}
+function recordGardenFrame(raw) {
+  if(!GARDEN.stats || raw>.25)return;
+  GARDEN.frames++;GARDEN.elapsed+=raw;
+  if(GARDEN.elapsed>2){
+    GARDEN.stats.textContent=Math.round(GARDEN.frames/GARDEN.elapsed)+' fps · '+renderer.domElement.width+' × '+renderer.domElement.height+' px';
+    GARDEN.frames=0;GARDEN.elapsed=0;
+  }
+}
+function buildLandscapeStudy() {
+  GARDEN.group=new THREE.Group();GARDEN.group.name='complete garden study';scene.add(GARDEN.group);
+  /* keep the original grass framing and its scroll fade in every mode.
+     only the old rock and overhead cutouts give way to the modeled garden. */
+  GARDEN.original.push(...WORLD.fg.filter(o=>!/^grass(Far|Mid|Near)$/.test(o.name)));
+  /* a small lift brings the near blades into the hero's lower edge;
+     the far bank stays low so the water still opens toward the stairs. */
+  WORLD.fg.forEach(o=>{
+    const lift=o.name==='grassNear'?.40:o.name==='grassMid'?.30:0;
+    if(lift)gardenEdit(o.position,'y',o.position.y+lift);
+  });
+  GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
+  /* the silhouette is geometry rather than a rectangular alpha sheet. */
+  const leaf=new THREE.Shape();
+  (GARDEN_STYLE==='temple'?[[0,0],[-.20,.19],[-.50,.25],[-.30,.39],[-.43,.63],[-.18,.55],[0,1],[.18,.55],[.43,.63],[.30,.39],[.50,.25],[.20,.19]]:[[0,0],[-.22,.20],[-.30,.46],[-.20,.72],[0,1],[.20,.72],[.30,.46],[.22,.20]]).forEach((p,i)=>i?leaf.lineTo(...p):leaf.moveTo(...p));leaf.closePath();
+  GARDEN.leafGeo=new THREE.ShapeGeometry(leaf);
+  const lp=GARDEN.leafGeo.attributes.position;
+  for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
+  GARDEN.leafGeo.computeVertexNormals();
+  GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
+  if(GARDEN_STYLE!=='redwoods'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
+  buildGardenTerrain();
+  if(GARDEN_STYLE==='redwoods')buildGardenRedwoods();
+  else if(GARDEN_STYLE==='forest')buildPondGarden();
+  else {
+    GARDEN.trees.forEach(args=>buildGardenMaple(...args));
+    [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],[814,28,-58,2.15]].forEach(args=>buildGardenMaple(...args,true));
+
+  }
+  if(typeof buildGardenStonework==='function')buildGardenStonework();
+  refineGardenGate();
+  if(GARDEN_STYLE==='forest')addPondFlowersAndShore();
+  if(GARDEN_STYLE==='redwoods')buildWoodlandUnderstory();
+  buildGardenAtmosphere();
+  buildGardenLeafRafts();
+  gardenEdit(WORLD.pond,'material',gardenWaterMaterial(WORLD.pond.material));
+  if(typeof qs==='function' && qs('studyStats','0')==='1' && document.querySelector('.study-controls')){
+    GARDEN.stats=document.createElement('output');GARDEN.stats.id='study-performance';GARDEN.stats.className='study-status';
+    GARDEN.stats.textContent='Measuring…';document.querySelector('.study-controls').appendChild(GARDEN.stats);
+  }
+  /* the old foreground updates its own visibility every frame. a parent
+     switch keeps those cutouts hidden without changing their original fade. */
+  GARDEN.originalGroup=new THREE.Group();GARDEN.originalGroup.name='original garden';
+  GARDEN.original.forEach(o=>GARDEN.originalGroup.add(o));scene.add(GARDEN.originalGroup);
+  GARDEN.ready=true;setGardenStudy(TEMPLE_STUDY.landscape);
+}
+/* keep the original grove and planting intact for the comparison; the new
+   garden owns its replacements and can disappear with one parent switch. */
+function rememberStudyGrove() {
+  buildRedwoods(); GARDEN.original.push(WORLD.redwoods);
+}
+function rememberStudyStele(seed,x,z,scale) {
+  GARDEN.original.push(buildStele(seed,x,z,scale));
+  GARDEN.trees.push([seed,x,z,scale]);
+}
+function rememberStudyPond() {
+  buildPondPlanting(); GARDEN.original.push(...WORLD.pondPlanting);
+}
+function buildGardenStonework() {
+  const base=WORLD.studyStairMat;
+  if(!base)return;
+  const mat=base.clone();mat.roughness=.76;mat.envMapIntensity=.60;
+  mat.onBeforeCompile=sh=>{
+    sh.vertexShader='varying vec3 vMasonry; varying vec3 vMasonryN;\n'+sh.vertexShader;
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+      vMasonry=(modelMatrix*vec4(position,1.)).xyz;
+      vMasonryN=normalize(mat3(modelMatrix)*normal);`);
+    sh.fragmentShader='varying vec3 vMasonry; varying vec3 vMasonryN;\n'+sh.fragmentShader;
+    sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+      float top=smoothstep(.55,.9,abs(vMasonryN.y));
+      vec2 stoneUV=mix(vMasonry.xy*vec2(.55,1.65),vMasonry.xz*vec2(.55,.82),top);
+      stoneUV.x+=mod(floor(stoneUV.y),2.)*.5;
+      vec2 edge=abs(fract(stoneUV)-.5);
+      vec2 aa=max(fwidth(stoneUV),vec2(.002));
+      vec2 seam=smoothstep(vec2(.485)-aa,vec2(.495)+aa,edge);
+      float mortar=max(seam.x,seam.y);
+      float block=fract(sin(dot(floor(stoneUV),vec2(127.1,311.7)))*43758.5453);
+      float age=.5+.5*sin(vMasonry.x*2.1+sin(vMasonry.z*1.7)+vMasonry.y*.8);
+      float moss=smoothstep(5.2,8.2,abs(vMasonry.x))*smoothstep(.65,.92,age)*top;
+      diffuseColor.rgb*=mix(.87,1.06,block)*(1.-mortar*.26);
+      diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.65,.82,.46),moss*.42);`);
+  };
+  mat.customProgramCacheKey=()=> 'garden-stone-joints-1';
+  scene.traverse(o=>{if(o.isMesh && o.material===base)gardenEdit(o,'material',mat);});
+}
+function buildWoodlandUnderstory() {
+  if(GARDEN_STYLE==='temple')return;
+  const rnd=mulberry32(GARDEN_STYLE==='forest'?4810:4811),matrix=new THREE.Matrix4(),q=new THREE.Quaternion();
+  const mat=gardenWind(new THREE.MeshStandardMaterial({color:0x81985d,side:THREE.DoubleSide,roughness:.86,envMapIntensity:.7}),.14,true);
+  const mesh=new THREE.InstancedMesh(GARDEN.leafGeo,mat,LOW?650:1800),color=new THREE.Color();
+  let count=0;
+  for(let i=0;i<mesh.count*3 && count<mesh.count;i++){
+    const side=i%2?1:-1,cluster=Math.floor(i/24),angle=rnd()*TAU;
+    const cx=side*(9+Math.sin(cluster*8.3)*2.3+Math.floor(cluster/8)*.7),cz=-3-(cluster%15)*2.1;
+    const x=cx+Math.cos(angle)*rnd()*1.3,z=cz+Math.sin(angle)*rnd()*1.3,y=gardenGround(x,z);
+    if(y<.02)continue;
+    q.setFromEuler(new THREE.Euler(-.45+rnd()*1.1,rnd()*TAU,(rnd()-.5)*1.8));
+    const size=.22+rnd()*.30;
+    matrix.compose(new THREE.Vector3(x,y+.10+rnd()*.65,z),q,new THREE.Vector3(size,size*1.3,size));mesh.setMatrixAt(count,matrix);
+    color.setHSL(.23+rnd()*.06,.25+rnd()*.15,.22+rnd()*.14);mesh.setColorAt(count++,color);
+  }
+  mesh.count=count;mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;
+  mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.name='woodland understory leaves';GARDEN.group.add(mesh);
+  /* a single fallen limb interrupts the planted bank, well away from the
+     central reflection; broken ends stay dark instead of becoming white discs. */
+  const log=new THREE.Mesh(new THREE.CylinderGeometry(.24,.34,4.8,LOW?9:16,3),GARDEN.bark);
+  log.rotation.set(.16,0,1.34);log.position.set(-12.8,gardenGround(-12.8,-6.3)+.34,-6.3);
+  log.castShadow=true;log.receiveShadow=true;log.name='fallen bank limb';GARDEN.group.add(log);
+}
+
+function buildGardenRedwoods() {
+  const bark = surface(lib('redwoodBark', texRedwoodBark), [1, 1],
+    { color: 0x827669, roughness: .96, normal: .72, metalness: 0, env: .55 });
+  const needles = new THREE.MeshStandardMaterial({ color: 0x465b47, roughness: .94,
+    metalness: 0, side: THREE.DoubleSide, envMapIntensity: .65 });
+  const groveTime = WET_TIME;
+  gardenSurface(bark, 'bark');
+  refineRedwoodBark(bark);
+  needles.onBeforeCompile = sh => {
+    sh.uniforms.uBreeze = groveTime;
+    sh.vertexShader = 'uniform float uBreeze;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n' +
+      'vec3 base=(instanceMatrix*vec4(0.,0.,0.,1.)).xyz;\n' +
+      'float ph=base.x*.31+base.z*.23+base.y*.19;\n' +
+      'float tip=pow(clamp(position.z,0.,1.),1.3);\n' +
+      'transformed.x+=(sin(uBreeze*.64+ph)*.065+sin(uBreeze*3.1+ph*2.)*.032)*tip;\n' +
+      'transformed.y+=cos(uBreeze*.51+ph)*.048*tip;\n');
+  };
+  gardenSway(bark,8,38,.25);gardenSway(needles,8,38,.25);
+  const woodParts = [], sprays = [], specs = [
+    [71, 13.4, -13.0, 1.05, 43, 1.72], [72, -12.8, -9.4, .95, 46, 1.82],
+    [73, 10.0, -19.0, .90, 36, 1.44], [74, -15.5, -17.5, 1.0, 44, 1.65],
+    [75, 18.0, -6.0, .88, 49, 1.96],
+    [81, -23, -40, 1, 46, 1.45, true], [82, 24, -45, 1, 50, 1.60, true],
+    [83, -32, -61, 1, 56, 1.80, true], [84, 34, -65, 1, 58, 1.70, true],
+    [85, -15, -60, 1, 43, 1.28, true], [86, 16, -68, 1, 51, 1.40, true],
+    [87, -42, -74, 1, 60, 1.75, true], [88, 44, -79, 1, 63, 1.90, true]
+  ].filter((_, i) => !LOW || i < 9);
+  const up = new THREE.Vector3(0, 1, 0), orient = new THREE.Quaternion();
+  const twig = (a, b, ra, rb) => {
+    const d = b.clone().sub(a), len = d.length();
+    orient.setFromUnitVectors(up, d.normalize());
+    const geo = new THREE.CylinderGeometry(rb, ra, len, LOW ? 5 : 7, 1, true);
+    geo.applyQuaternion(orient).translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+    return geo;
+  };
+  specs.forEach(([seed, x, z, scale, height, radius, distant]) => {
+    const rnd = mulberry32(seed), parts = [redwoodTrunkGeo(height, radius, seed, distant)];
+    const trunkRnd = mulberry32(seed); trunkRnd();
+    const lean = (trunkRnd() - .5) * .8;
+    const world = new THREE.Matrix4().makeScale(scale, scale, scale); world.setPosition(x, distant ? PODIUM : 0, z);
+    const point = (a, distance, y) => {
+      const t = clamp(y / height, 0, 1);
+      const p = new THREE.Vector3(Math.cos(a) * distance + Math.sin(t * 2.4) * lean,
+        y, Math.sin(a) * distance + Math.sin(t * 3.6) * .24);
+      /* the inner tree's low limbs stay clear of the stair and the slot. */
+      if (y * scale < 20 && Math.abs(x + p.x * scale) < 7.3)
+        p.x = (Math.sign(x) * 7.3 - x) / scale;
+      return p;
+    };
+    /* broken low limbs and flared roots tell the scale before the canopy
+       enters the frame. they taper to the ground rather than sitting on it. */
+    for (let i = 0; i < (distant ? 0 : 7); i++) {
+      const a = i / 7 * TAU + rnd() * .25;
+      const a0 = point(a, radius * .65, 1.1 + rnd() * .6);
+      const a1 = point(a, radius * 1.42, .36);
+      const a2 = point(a + .1, radius * (1.9 + rnd() * .35), -.025);
+      parts.push(twig(a0, a1, .31, .19), twig(a1, a2, .19, .015));
+    }
+    for (let i = 0; i < (distant ? 2 : 6); i++) {
+      const a = rnd() * TAU, y = height * (.16 + rnd() * .24);
+      const a0 = point(a, radius * .65, y), a1 = point(a, radius + .7 + rnd() * .6, y + .2);
+      parts.push(twig(a0, a1, .17, .055));
+    }
+    const branches = distant ? (LOW ? 6 : 10) : (LOW ? 16 : 28);
+    for (let i = 0; i < branches; i++) {
+      const t = .27 + i / (branches - 1) * .69, y = height * t + (rnd() - .5) * .7;
+      const a = i * 2.39996 + rnd() * .65 + seed;
+      /* broad, uneven crown sectors keep the spiral scaffold from reading as
+         a stack of identical tiers. sparse gaps expose the living boughs. */
+      if(i>2 && i<branches-2 && rnd()<.09)continue;
+      const sector=.83+.23*Math.sin(a+seed*.71)+.12*Math.sin(a*3.+seed);
+      const length = (1.0 + 4.8 * Math.pow(1 - t, .65)) * (.68 + rnd() * .50)*sector;
+      const p0 = point(a, radius * (1 - t) * .60, y);
+      const drop = .25 + rnd() * .80;
+      const p1 = point(a, length * .38, y - drop);
+      const p2 = point(a + .07, length * .76, y - drop * .62);
+      const p3 = point(a + .13, length, y + .38 + rnd() * .5);
+      const thickness = .17 * (1 - t) + .028;
+      parts.push(twig(p0, p1, thickness, thickness * .72),
+        twig(p1, p2, thickness * .72, thickness * .40), twig(p2, p3, thickness * .40, .012));
+      const leafCount = distant ? (LOW ? 2 : 3) : (LOW ? 6 : 10);
+      for (let j = 0; j < leafCount; j++) {
+        const u = .14 + j / (leafCount - 1) * .82;
+        const centre = p1.clone().lerp(p3, u);
+        const s = j % 2 ? -1 : 1;
+        const side = new THREE.Vector3(-Math.sin(a), .05, Math.cos(a));
+        const tip = centre.clone().addScaledVector(side, s * (.35 + rnd() * .65) * (1 - u * .55));
+        parts.push(twig(centre, tip, .022, .007));
+        const obj = new THREE.Object3D();
+        obj.position.copy(tip).applyMatrix4(world);
+        obj.rotation.set((rnd() - .5) * 1.05, -a + s * .9 + (rnd() - .5) * .45, (rnd() - .5) * .80);
+        const leafScale = scale * (1.35 + rnd() * .80) * (1.1 - t * .35);
+        obj.scale.set(leafScale, leafScale, leafScale * (1.15 + rnd() * .5)); obj.updateMatrix();
+        sprays.push({ matrix: obj.matrix.clone(), color: new THREE.Color().setHSL(.27 + rnd() * .055, .17 + rnd() * .08, .50 + rnd() * .22) });
+      }
+    }
+    parts.forEach(geo => woodParts.push(geo.applyMatrix4(world)));
+  });
+  const group = new THREE.Group(); group.name = 'detailed redwood grove';
+  const wood = new THREE.Mesh(mergeGeos(woodParts), bark);
+  wood.name = 'redwood-trunks-and-boughs'; wood.castShadow = true; wood.receiveShadow = true; group.add(wood);
+  const foliage = new THREE.InstancedMesh(redwoodSprayGeo(), needles, sprays.length);
+  foliage.name = 'redwood-needle-sprays';
+  sprays.forEach((s, i) => { foliage.setMatrixAt(i, s.matrix); foliage.setColorAt(i, s.color); });
+  foliage.instanceMatrix.needsUpdate = true; foliage.instanceColor.needsUpdate = true;
+  foliage.receiveShadow = true; foliage.frustumCulled = false; group.add(foliage);
+  /* two draw calls for the grove; needle shadows at this distance only make
+     the static shadow map noisy, while the solid boughs carry its silhouette. */
+  GARDEN.group.add(group);
+}
+/* the near water stays open; taller bank shrubs lead to terrace trees
+   and a loose canopy behind the hall instead of enclosing the basin. */
+function gardenSway(mat, low, high, amount) {
+  const compile=mat.onBeforeCompile,key=mat.customProgramCacheKey();
+  mat.onBeforeCompile=sh=>{
+    compile(sh);sh.uniforms.uGardenSway=WET_TIME;
+    sh.vertexShader='uniform float uGardenSway;\n'+sh.vertexShader;
+    sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>',`
+      vec4 mvPosition=vec4(transformed,1.);
+      #ifdef USE_INSTANCING
+        mvPosition=instanceMatrix*mvPosition;
+      #endif
+      float swayHeight=smoothstep(${low.toFixed(2)},${high.toFixed(2)},mvPosition.y);
+      float breeze=sin(uGardenSway*.71+mvPosition.x*.12+mvPosition.z*.09)
+        +.24*sin(uGardenSway*1.19+mvPosition.z*.25);
+      mvPosition.x+=breeze*swayHeight*${amount.toFixed(3)};
+      mvPosition.z+=sin(uGardenSway*.53+mvPosition.x*.16)*swayHeight*${(amount*.38).toFixed(3)};
+      mvPosition=modelViewMatrix*mvPosition;
+      gl_Position=projectionMatrix*mvPosition;`);
+  };
+  mat.customProgramCacheKey=()=>key+'-sway-'+low+'-'+high+'-'+amount;
+  return mat;
+}
+function buildPondGarden() {
+  const rnd=mulberry32(305481),matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),color=new THREE.Color();
+  const shrubs=[[-10.2,2.6,1.3],[11.8,1.4,1.5],[-13,-8,1.7],[14,-10,1.6],[-11,-18,2.9],[12,-21,3.2],[-15,-23,3.5],[16,-26,3.0],[-19,-30,3.3],[20,-32,2.8]];
+  const twigs=[],locations=[];
+  shrubs.forEach(([x,z,height])=>{
+    const ground=Math.max(0,gardenGround(x,z));
+    for(let branch=0;branch<7;branch++){
+      const angle=rnd()*TAU,reach=(.5+rnd()*.8)*Math.max(1,height*.48);
+      const start=new THREE.Vector3(x,ground-.03,z),end=new THREE.Vector3(x+Math.cos(angle)*reach,ground+height*(.55+rnd()*.45),z+Math.sin(angle)*reach);
+      const d=end.clone().sub(start),g=new THREE.CylinderGeometry(.012,.045,d.length(),5,1,true);
+      q.setFromUnitVectors(up,d.clone().normalize());g.applyQuaternion(q).translate(...start.clone().lerp(end,.5).toArray());twigs.push(g);
+      for(let j=0;j<(LOW?18:42);j++){
+        const a=rnd()*TAU,r=Math.sqrt(rnd())*.68*Math.max(1,height*.43);
+        locations.push(new THREE.Vector3(end.x+Math.cos(a)*r,end.y+(rnd()-.5)*Math.max(.6,height*.33),end.z+Math.sin(a)*r));
+      }
+    }
+  });
+  const wood=new THREE.Mesh(mergeGeos(twigs),gardenSway(GARDEN.bark.clone(),.15,3.8,.12));wood.name='pond bank shrub branches';wood.receiveShadow=true;GARDEN.group.add(wood);
+  const leafMat=gardenSway(gardenWind(new THREE.MeshStandardMaterial({color:0x93ac6d,side:THREE.DoubleSide,roughness:.82,envMapIntensity:.7}),.24,true),.15,3.8,.12);
+  const leaves=new THREE.InstancedMesh(GARDEN.leafGeo,leafMat,locations.length);
+  locations.forEach((p,i)=>{
+    q.setFromEuler(new THREE.Euler((rnd()-.5)*1.7,rnd()*TAU,(rnd()-.5)*2));
+    const size=.22+rnd()*.23;matrix.compose(p,q,new THREE.Vector3(size,size*1.3,size));leaves.setMatrixAt(i,matrix);
+    color.setHSL(.24+rnd()*.07,.34+rnd()*.16,.22+rnd()*.12);leaves.setColorAt(i,color);
+  });
+  leaves.name='pond shrub leaves';leaves.frustumCulled=false;leaves.receiveShadow=true;GARDEN.group.add(leaves);
+
+  /* the middle trees root on the stone terrace outside the roof footprint.
+     rear crowns rise behind the roof, leaving the central facade readable. */
+  [[921,-18,-38,1.20,7],[922,18,-36,1.12,7],
+   [923,-17,-54,2.25,7],[924,17,-55,2.40,7],
+   [925,-27,-65,2.70,0],[926,26,-68,2.85,0]].forEach(([seed,x,z,size,y],i)=>{
+    buildGardenMaple(seed,x,z,size,true);
+    const tree=GARDEN.group.children[GARDEN.group.children.length-1];
+    tree.position.y=y-.04;tree.name=i<2?'pond terrace tree':'pond backdrop tree';
+  });
+
+  const reedParts=[];
+  for(let i=0;i<7;i++){
+    const a=i/7*TAU,h=.95+(i%3)*.23,g=new THREE.PlaneGeometry(.075,h,1,7),p=g.attributes.position;
+    for(let n=0;n<p.count;n++){
+      const t=(p.getY(n)+h/2)/h;
+      p.setXYZ(n,p.getX(n)*(1-t*.92)+Math.cos(a)*t*t*.38,t*h,Math.sin(a)*t*t*.38);
+    }
+    g.computeVertexNormals();reedParts.push(g);
+  }
+  const reedMat=gardenWind(new THREE.MeshStandardMaterial({color:0x536b32,roughness:.85,side:THREE.DoubleSide,envMapIntensity:.7}),.32);
+  const reeds=new THREE.InstancedMesh(mergeGeos(reedParts),reedMat,LOW?100:260);
+  let count=0;
+  for(let i=0;i<4000 && count<reeds.count;i++){
+    const side=i%2?1:-1,x=side*(6.7+rnd()*8),z=-15+rnd()*24,ground=gardenGround(x,z);
+    if(ground<-.72 || ground>-.06)continue;
+    const size=.75+rnd()*.55;
+    q.setFromAxisAngle(up,rnd()*TAU);matrix.compose(new THREE.Vector3(x,ground-.02,z),q,new THREE.Vector3(size,size,size));reeds.setMatrixAt(count++,matrix);
+  }
+  reeds.count=count;reeds.name='emergent pond reeds';reeds.receiveShadow=true;reeds.frustumCulled=false;GARDEN.group.add(reeds);
+
+  const pad=new THREE.Shape();pad.moveTo(0,0);
+  for(let i=0;i<=22;i++){const a=.19+i/22*(TAU-.38);pad.lineTo(Math.cos(a),Math.sin(a));}pad.closePath();
+  const padGeo=new THREE.ShapeGeometry(pad);padGeo.rotateX(-Math.PI/2);
+  const padMat=new THREE.MeshStandardMaterial({color:0x375537,roughness:.45,side:THREE.DoubleSide,envMapIntensity:.8});
+  padMat.onBeforeCompile=sh=>{sh.uniforms.uPadTime=WET_TIME;sh.vertexShader='uniform float uPadTime;\n'+sh.vertexShader;
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+      vec3 root=instanceMatrix[3].xyz;
+      transformed.y+=sin(uPadTime*.75+root.x*.7+root.z)*.009;
+      transformed.y+=position.x*sin(uPadTime*.63+root.z*.4)*.013;`);};
+  padMat.customProgramCacheKey=()=> 'pond-pad-rocking-1';
+  const pads=new THREE.InstancedMesh(padGeo,padMat,LOW?25:65);count=0;
+  const colonies=[[-7.8,5.0],[8.1,4.6],[-8.8,-3.5],[9,-8.7]];
+  for(let i=0;i<1500 && count<pads.count;i++){
+    const c=colonies[i%colonies.length],a=rnd()*TAU,r=Math.sqrt(rnd())*1.7,x=c[0]+Math.cos(a)*r,z=c[1]+Math.sin(a)*r;
+    if(Math.abs(x)<6.2 || gardenGround(x,z)>-.30)continue;
+    q.setFromAxisAngle(up,rnd()*TAU);const size=.20+rnd()*.26;
+    matrix.compose(new THREE.Vector3(x,.07,z),q,new THREE.Vector3(size,1,size*.85));pads.setMatrixAt(count,matrix);
+    color.setHSL(.26+rnd()*.065,.28+rnd()*.14,.36+rnd()*.12);pads.setColorAt(count++,color);
+  }
+  pads.count=count;pads.name='pond lily pads';pads.layers.set(1);pads.renderOrder=5;pads.frustumCulled=false;GARDEN.group.add(pads);
+}
+/* materials stay reversible: the comparison must keep the old gate exactly
+   as it was, including shared lacquer and metal materials. */
+function refineGardenGate() {
+  if(GARDEN_STYLE!=='temple' || !WORLD.torii)return;
+  const cache=new Map();
+  WORLD.torii.traverse(o=>{
+    if(!o.isMesh || !o.material.isMeshStandardMaterial)return;
+    const base=o.material;
+    if(!cache.has(base)){
+      const mat=base.clone(),metal=mat.metalness>.3;
+      mat.roughness=metal?.64:.76;
+      if(mat.normalScale)mat.normalScale.multiplyScalar(.72);
+      mat.onBeforeCompile=sh=>{
+        sh.vertexShader='varying vec3 vGateP;\n'+sh.vertexShader;
+        sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGateP=position;');
+        sh.fragmentShader='varying vec3 vGateP;\n'+sh.fragmentShader;
+        sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+          ${metal ? `
+          float patina=.5+.5*sin(vGateP.x*17.+sin(vGateP.y*23.)+vGateP.z*19.);
+          patina=smoothstep(.62,.96,patina);
+          diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.49,.66,.54),patina*.32);` : `
+          float axis=abs(vGateP.x)>1.?vGateP.y:vGateP.x;
+          float grain=.5+.5*sin(axis*185.+sin(vGateP.y*2.7+vGateP.x*.9)*2.);
+          float filterGrain=1.-smoothstep(.18,.9,fwidth(axis*185.));
+          diffuseColor.rgb*=1.-grain*filterGrain*.10;
+          diffuseColor.rgb*=vec3(1.035,.97,.94);`}`);
+      };
+      mat.customProgramCacheKey=()=> 'garden-gate-grain-patina-'+metal;
+      cache.set(base,mat);
+    }
+    gardenEdit(o,'material',cache.get(base));
+  });
+}
+function refineRedwoodBark(mat) {
+  const compile=mat.onBeforeCompile;
+  mat.onBeforeCompile=sh=>{
+    compile(sh);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+      float barkAge=gn(vGardenP*vec3(.65,.12,.65));
+      float dampFoot=1.-smoothstep(.3,3.8,vGardenP.y);
+      diffuseColor.rgb*=mix(.76,1.08,barkAge)*(1.-dampFoot*.15);
+      diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.77,.89,.66),dampFoot*barkAge*.22);`);
+  };
+  mat.customProgramCacheKey=()=> 'redwood-weathered-bark-2';
+}
+function addPondFlowersAndShore() {
+  const pads=GARDEN.group.getObjectByName('pond lily pads');
+  if(!pads || !pads.count)return;
+  const parts=[],matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0);
+  for(let ring=0;ring<2;ring++)for(let i=0;i<7;i++){
+    const shape=new THREE.Shape();shape.moveTo(0,0);shape.quadraticCurveTo(-.07,.12,0,.26);shape.quadraticCurveTo(.07,.12,0,0);
+    const geo=new THREE.ShapeGeometry(shape,4),p=geo.attributes.position;
+    for(let n=0;n<p.count;n++){const t=p.getY(n)/.26;p.setXYZ(n,p.getX(n),.02+t*t*(ring?.13:.075),p.getY(n)*(ring?.72:1));}
+    geo.rotateY(i/7*TAU+ring*.4);geo.computeVertexNormals();parts.push(geo);
+  }
+  const count=Math.min(LOW?3:7,pads.count);
+  const petalMat=new THREE.MeshStandardMaterial({color:0xc5a7a2,roughness:.67,side:THREE.DoubleSide,envMapIntensity:.6});
+  petalMat.onBeforeCompile=pads.material.onBeforeCompile;petalMat.customProgramCacheKey=()=> 'pond-petal-rocking-1';
+  const flowers=new THREE.InstancedMesh(mergeGeos(parts),petalMat,count);
+  const hearts=new THREE.InstancedMesh(new THREE.SphereGeometry(.04,8,5),new THREE.MeshStandardMaterial({color:0x977840,roughness:.83}),count);
+  for(let i=0;i<count;i++){
+    pads.getMatrixAt(Math.floor(i*pads.count/count),matrix);
+    const p=new THREE.Vector3().setFromMatrixPosition(matrix);p.y=.095;
+    q.setFromAxisAngle(up,i*2.399);matrix.compose(p,q,new THREE.Vector3(1,1,1));flowers.setMatrixAt(i,matrix);
+    p.y+=.045;matrix.compose(p,q,new THREE.Vector3(1,1,1));hearts.setMatrixAt(i,matrix);
+  }
+  for(const m of [flowers,hearts]){m.layers.set(1);m.renderOrder=6;m.frustumCulled=false;GARDEN.group.add(m);}
+  flowers.name='quiet water lilies';hearts.name='water lily centres';
+  const rnd=mulberry32(610305),stone=gardenSurface(new THREE.MeshStandardMaterial({color:0x41483b,roughness:.72,envMapIntensity:.6}),'stone');
+  const pebbles=new THREE.InstancedMesh(erodedRockGeo(1,4911,1),stone,LOW?75:190);let placed=0;
+  for(let i=0;i<5000 && placed<pebbles.count;i++){
+    const side=i%2?1:-1,x=side*(6.5+rnd()*8),z=-17+rnd()*28,y=gardenGround(x,z);
+    if(y<-.12 || y>.14)continue;
+    const size=.05+rnd()*.10;q.setFromAxisAngle(up,rnd()*TAU);
+    matrix.compose(new THREE.Vector3(x,y+size*.1,z),q,new THREE.Vector3(size*1.3,size*.55,size));pebbles.setMatrixAt(placed++,matrix);
+  }
+  pebbles.count=placed;pebbles.receiveShadow=true;pebbles.frustumCulled=false;pebbles.name='shoreline pebble transition';GARDEN.group.add(pebbles);
+}
+
 function texRedwoodBark() {
   const W = LOW ? 256 : 512, H = W * 2, rnd = mulberry32(1071);
   const c = cvs(W, H), x = c.getContext('2d');
@@ -3898,8 +4664,8 @@ function buildRedwoods() {
 
 /* broad erosion makes the silhouette, small grain belongs to the material.
    welded shading normals keep an eroded boulder from becoming a cut gem. */
-function erodedRockGeo(radius, seed) {
-  const geo = new THREE.IcosahedronGeometry(radius, LOW ? 3 : 6);
+function erodedRockGeo(radius, seed, detail = LOW ? 3 : 6) {
+  const geo = new THREE.IcosahedronGeometry(radius, detail);
   const p = geo.attributes.position, n = noise2D(seed), rnd = mulberry32(seed);
   const sx = .90 + rnd() * .30, sz = .82 + rnd() * .30;
   const colors = new Float32Array(p.count * 3);
@@ -6106,7 +6872,7 @@ function initMirror() {
     const [w, h] = mirrorSize(M);
     M.target = new THREE.WebGLRenderTarget(w, h, {
       minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
-      type: LOW ? THREE.UnsignedByteType : THREE.HalfFloatType, depthBuffer: true
+      type: LOW ? THREE.UnsignedByteType : THREE.HalfFloatType, depthBuffer: true, stencilBuffer: true
     });
     M.cam = new THREE.PerspectiveCamera();
     M.cam.layers.set(0);             /* layer 0 only — no grass, no letters */
@@ -6601,7 +7367,9 @@ function initPost() {
   if (!WANT_POST) return;
   const w = renderer.domElement.width, h = renderer.domElement.height;
   const O = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, type: THREE.HalfFloatType, depthBuffer: false, stencilBuffer: false };
-  POST.scene = new THREE.WebGLRenderTarget(w, h, Object.assign({}, O, { depthBuffer: true, samples: LOW ? 0 : 2 }));
+  /* the detailed facade has closely layered paper and timber. r149's default
+     offscreen depth is 16 bit; packed depth/stencil gives the view 24 bit. */
+  POST.scene = new THREE.WebGLRenderTarget(w, h, Object.assign({}, O, { depthBuffer: true, stencilBuffer: true, samples: LOW ? 0 : 2 }));
   let lw = Math.max(2, w >> 1), lh = Math.max(2, h >> 1);
   const N = 4;
   for (let i = 0; i < N; i++) {
@@ -6633,7 +7401,7 @@ function initPost() {
   POST.comp = new THREE.ShaderMaterial({
     uniforms: {
       tS: { value: null }, tB: { value: null }, uRes: { value: new THREE.Vector2(w, h) },
-      uT: { value: 0 }, uBloom: { value: .34 }, uCA: { value: 1 }, uGrain: { value: TUNE.filmGrain },
+      uT: { value: 0 }, uBloom: { value: 0 }, uCA: { value: 1 }, uGrain: { value: TUNE.filmGrain },
       uVig: { value: 1 }, uExp: { value: .62 }, uFade: { value: 1 }, uSat: { value: 1.05 }
     },
     vertexShader: QUAD_VS,
@@ -6674,22 +7442,26 @@ function initPost() {
 function pass(mat, target, additive) {
   POST.quad.material = mat;
   renderer.setRenderTarget(target || null);
+  /* additive upsampling must retain the sharper bloom already in the target. */
+  const autoClear = renderer.autoClear;
+  renderer.autoClear = false;
   if (!additive) renderer.clear(true, false, false);
   renderer.render(POST.qScene, POST.cam);
+  renderer.autoClear = autoClear;
 }
 function renderPost() {
   const L = POST.levels;
   POST.bright.uniforms.tS.value = POST.scene.texture;
   pass(POST.bright, L[0].a);
   for (let i = 0; i < L.length; i++) {
-    if (i > 0) { POST.up.blending = THREE.NoBlending; POST.up.uniforms.uAmt.value = 1; POST.up.uniforms.tS.value = L[i - 1].a; pass(POST.up, L[i].a); }
-    POST.blur.uniforms.tS.value = L[i].a; POST.blur.uniforms.uDir.value.set(1 / L[i].w, 0); pass(POST.blur, L[i].b);
-    POST.blur.uniforms.tS.value = L[i].b; POST.blur.uniforms.uDir.value.set(0, 1 / L[i].h); pass(POST.blur, L[i].a);
+    if (i > 0) { POST.up.blending = THREE.NoBlending; POST.up.uniforms.uAmt.value = 1; POST.up.uniforms.tS.value = L[i - 1].a.texture; pass(POST.up, L[i].a); }
+    POST.blur.uniforms.tS.value = L[i].a.texture; POST.blur.uniforms.uDir.value.set(1 / L[i].w, 0); pass(POST.blur, L[i].b);
+    POST.blur.uniforms.tS.value = L[i].b.texture; POST.blur.uniforms.uDir.value.set(0, 1 / L[i].h); pass(POST.blur, L[i].a);
   }
   POST.up.blending = THREE.AdditiveBlending; POST.up.uniforms.uAmt.value = .52;
-  for (let i = L.length - 1; i > 0; i--) { POST.up.uniforms.tS.value = L[i].a; pass(POST.up, L[i - 1].a, true); }
+  for (let i = L.length - 1; i > 0; i--) { POST.up.uniforms.tS.value = L[i].a.texture; pass(POST.up, L[i - 1].a, true); }
   POST.comp.uniforms.tS.value = POST.scene.texture;
-  POST.comp.uniforms.tB.value = L[0].a;
+  POST.comp.uniforms.tB.value = L[0].a.texture;
   pass(POST.comp, null);
 }
 
@@ -7629,6 +8401,7 @@ function frame(now) {
   tPrev = now; clock += dt;
   fadeIn = INTRO.t0 ? sat((now - INTRO.t0) / 700) : 1;
 
+  recordGardenFrame(raw);
   if (!PERF.locked && clock > 2.2) {
     PERF.acc += raw; PERF.n++;      /* … but the governor reads the truth */
     if (PERF.n >= 40 || PERF.acc > .9) {
@@ -7690,10 +8463,10 @@ const JOBS = [
      renderer setup to third, and the old index check left failed boots locked. */
   ['Pouring the ground', async () => { initGL(); WORLD.uT = { value: 0 }; buildRig(); await buildEnvironment(); buildLights(); }, true],
   ['Cutting the approach', () => buildShell()],
-  ['Raising the temple', () => buildTemple()],
+  ['Raising the temple', () => buildTempleStudy()],
   ['Setting the threshold', () => buildTorii()],
   ['Placing the stones', () => {
-    buildRocks();
+    rememberStudyRocks();
     buildLantern(7.4, -7.0, 1.15); buildLantern(-7.6, -5.2, 1.0);
     /* The pairs flanking the flight were given flat heights — 2 and PODIUM —
        and the flight does not reach either at those depths, so both pairs hung
@@ -7709,7 +8482,7 @@ const JOBS = [
       buildLantern(-cheekX(z), z, sc, cheekTop(z));
     });
   }],
-  ['Growing the redwood grove', () => buildRedwoods()],
+  ['Growing the redwood grove', () => rememberStudyGrove()],
   ['Painting the near grass', () => buildForeground()],
   ['Cutting the word', () => buildWordmark()],
   ['Raising the mist', () => { buildAtmosphere(); buildLeafFall(); buildWisps(); }],
@@ -7724,7 +8497,7 @@ const JOBS = [
     WORLD.ripples.forEach(r => r.layers.set(1));
     /* after the layer assignments above, not before — the mirror camera is
        set to layer 0 and what it excludes depends on them having run */
-    initMirror(); buildPuddles(); initTuning();
+    initMirror(); buildPuddles(); initTuning(); buildLandscapeStudy();
     layoutWord(); measure();          /* measure() places the roles */
     /* nothing that casts a shadow ever moves, so bake it once */
     if (WANT_SHADOW && WORLD.key) { WORLD.key.shadow.autoUpdate = false; WORLD.key.shadow.needsUpdate = true; }

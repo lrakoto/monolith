@@ -5,9 +5,9 @@ designer in Los Angeles — built over a live WebGL temple above a forty-step
 flight and reflective pond. Three settings surround the same timber hall:
 red maples, a redwood grove and a planted forest.
 
-Rendered live in Three.js. Temple combines a detailed Blender building and
-baked materials with a procedural garden, water and sky. Redwoods and Forest
-retain their browser-generated scenes. The studio mark lives in
+Rendered live in Three.js. Temple and Redwoods combine a detailed Blender building and
+baked materials with procedural gardens, water and sky. Forest retains its
+browser-generated scene. The studio mark lives in
 `assets/brand/`, and captures of the work in `assets/work/`.
 
 Temple is the opening scene in `index.html`, followed by Redwoods in
@@ -25,12 +25,14 @@ pond reflections and wind clock, but retain their own camera and accents.
 Redwoods refines its modeled giant trunks with darker bark, layered needle
 sprays and fern beds, with a fallen limb on the bank. Pond (formerly the Forest
 study) replaces the standing stones and tree canopy with low rounded shrubs,
-reeds rooted in the shallows and gently rocking lily pads. It retains the
+reeds rooted in the shallows and gently rocking lily pads. Taller shrubs grow
+past the basin, two green trees frame the middle terrace and four larger trees
+rise behind the temple. The near pond stays open. It retains the
 climbing stair planting and keeps the central reflection corridor open.
 `forest-study.html` redirects to Pond, preserving query flags and section links. The Temple study continues with subtle stone joints, weathering and moss
 at the approach; leaf shading and midribs now accompany the existing flutter.
 Temple's stonework and gate refinements are included in the approved live scene;
-Redwoods and Pond refinements remain in the studies.
+Redwoods refinements are also live; Pond remains a study.
 The next detail pass adds fine lacquer grain and restrained brass patina to
 Temple's torii, uneven crown sectors and damp-root variation to Redwoods, and
 three to seven muted water lilies with a pebble transition at Pond's shoreline.
@@ -56,9 +58,11 @@ python3 tools/create_temple_study.py --scene redwoods
 python3 tools/create_temple_study.py --scene pond
 ```
 
-Redwoods and Pond read `redwoods.html` and `forest.html` as their baselines.
-The `--scene forest` option remains an alias for Pond. Their
-production promotion is deliberately disabled until a version is approved.
+Redwoods reads `tools/templates/redwoods-original.html`; Pond reads
+`forest.html`. The `--scene forest` option remains an alias for Pond.
+`python3 tools/create_temple_study.py --scene redwoods --production` promotes
+Redwoods and pins its model and loader in `assets/redwoods/`. Pond promotion
+remains disabled until approved.
 
 ## Temple quality study
 
@@ -67,8 +71,8 @@ restores the approved scene, Temple shows the Blender building in the original
 garden, and Study adds the complete landscape pass. All three share the camera
 path. Wide / Pond / Close jump between viewpoints; View scene
 hides the portfolio copy. The approved full garden also runs in the live Temple
-homepage, with gusts and individual leaf flutter. Redwoods and Forest are
-unchanged. Future study edits stay isolated until explicitly promoted.
+homepage, with gusts and individual leaf flutter. Redwoods also runs its
+approved garden study; Forest is unchanged. Future study edits stay isolated until explicitly promoted.
 
 The garden adds gently sloping planted banks, curved maple branches and roots,
 fuller red canopies with individual leaf silhouettes, distant trees, sedges,

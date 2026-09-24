@@ -24,6 +24,22 @@ class TempleStudyTests(unittest.TestCase):
         result=subprocess.run(['node','--check',str(ROOT/'assets/temple-study/GLTFLoader.r149.js')],text=True,capture_output=True)
         self.assertEqual(result.returncode,0,result.stderr)
 
+    def test_live_redwoods_keeps_original_comparison_and_pinned_assets(self):
+        live=(ROOT/'redwoods.html').read_text()
+        baseline=(ROOT/'tools/templates/redwoods-original.html').read_text()
+        study=(ROOT/'redwoods-study.html').read_text()
+        self.assertNotIn('<aside class="study-controls"',live)
+        self.assertNotIn('assets/temple-study/',live)
+        self.assertNotIn('noindex,nofollow',live)
+        self.assertIn("fetch('/__tune/redwoods/save'",live)
+        self.assertIn("const GARDEN_KIND = 'redwoods'",live)
+        for asset in ('temple-quality.glb','temple-bounce.png','GLTFLoader.r149.js'):
+            self.assertIn('assets/redwoods/'+asset,live)
+            self.assertTrue((ROOT/'assets/redwoods'/asset).is_file())
+        for pattern in [r'const CAM = \[.*?\n\];',r'const TUNE = \{.*?\n\};']:
+            self.assertEqual(re.search(pattern,baseline,re.S).group(),re.search(pattern,live,re.S).group())
+            self.assertEqual(re.search(pattern,baseline,re.S).group(),re.search(pattern,study,re.S).group())
+
     def test_comparison_preserves_camera_and_window_settings(self):
         original=(ROOT/'tools/templates/temple-original.html').read_text();study=PAGE.read_text()
         for pattern in [r'const CAM = \[.*?\n\];',r'const TUNE = \{.*?\n\};',r'function buildTemple\(\) \{.*?\n\}',r'function applyCamera\(\) \{.*?\n\}']:
