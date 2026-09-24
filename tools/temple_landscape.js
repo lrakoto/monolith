@@ -149,7 +149,7 @@ function buildGardenMaple(seed,x,z,scale,background=false) {
   }
   const trunk=new THREE.Mesh(mergeGeos(parts),GARDEN.bark);trunk.castShadow=true;trunk.receiveShadow=true;
   const count=tips.length*(background?9:(LOW?16:30));
-  const leaves=new THREE.InstancedMesh(GARDEN.leafGeo,GARDEN.leafMat,count);
+  const leaves=new THREE.InstancedMesh(GARDEN.mapleGeo||GARDEN.leafGeo,GARDEN.leafMat,count);
   const color=new THREE.Color(),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();
   for(let i=0;i<count;i++){
     const tip=tips[Math.floor(i/(count/tips.length))],a=rnd()*TAU,v=rnd()*2-1,r=Math.cbrt(rnd());
@@ -313,7 +313,14 @@ function buildLandscapeStudy() {
      the far bank stays low so the water still opens toward the stairs. */
   WORLD.fg.forEach(o=>{
     const lift=o.name==='grassNear'?.40:o.name==='grassMid'?.30:0;
-    if(lift)gardenEdit(o.position,'y',o.position.y+lift);
+    if(GARDEN_STYLE==='temple' && /^grass(Far|Mid|Near)$/.test(o.name)){
+      /* redwoods opens farther back with a wider lens. move the grass away
+         by that camera offset to carry its low, broad framing into temple. */
+      gardenEdit(o.position,'z',o.position.z-3.6);
+      gardenEdit(o.position,'x',o.position.x*.943);
+      gardenEdit(o.position,'y',4.05+(o.position.y+lift-4.05)*.943-.20);
+      gardenEdit(o.scale,'x',.943);gardenEdit(o.scale,'y',.943);
+    }else if(lift)gardenEdit(o.position,'y',o.position.y+lift);
   });
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
   /* the silhouette is geometry rather than a rectangular alpha sheet. */
@@ -323,6 +330,15 @@ function buildLandscapeStudy() {
   const lp=GARDEN.leafGeo.attributes.position;
   for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
   GARDEN.leafGeo.computeVertexNormals();
+  if(GARDEN_STYLE==='forest'){
+    const maple=new THREE.Shape();
+    [[0,0],[-.20,.19],[-.50,.25],[-.30,.39],[-.43,.63],[-.18,.55],[0,1],[.18,.55],[.43,.63],[.30,.39],[.50,.25],[.20,.19]].forEach((p,i)=>i?maple.lineTo(...p):maple.moveTo(...p));maple.closePath();
+    GARDEN.mapleGeo=new THREE.ShapeGeometry(maple);
+    const p=GARDEN.mapleGeo.attributes.position;
+    for(let i=0;i<p.count;i++)p.setZ(i,Math.abs(p.getX(i))*.18+Math.sin(p.getY(i)*Math.PI)*.055);
+    GARDEN.mapleGeo.computeVertexNormals();
+  }
+
   GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
   if(GARDEN_STYLE!=='redwoods'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
   buildGardenTerrain();

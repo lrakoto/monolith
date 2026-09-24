@@ -3828,7 +3828,7 @@ function buildGardenMaple(seed,x,z,scale,background=false) {
   }
   const trunk=new THREE.Mesh(mergeGeos(parts),GARDEN.bark);trunk.castShadow=true;trunk.receiveShadow=true;
   const count=tips.length*(background?9:(LOW?16:30));
-  const leaves=new THREE.InstancedMesh(GARDEN.leafGeo,GARDEN.leafMat,count);
+  const leaves=new THREE.InstancedMesh(GARDEN.mapleGeo||GARDEN.leafGeo,GARDEN.leafMat,count);
   const color=new THREE.Color(),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();
   for(let i=0;i<count;i++){
     const tip=tips[Math.floor(i/(count/tips.length))],a=rnd()*TAU,v=rnd()*2-1,r=Math.cbrt(rnd());
@@ -3992,7 +3992,14 @@ function buildLandscapeStudy() {
      the far bank stays low so the water still opens toward the stairs. */
   WORLD.fg.forEach(o=>{
     const lift=o.name==='grassNear'?.40:o.name==='grassMid'?.30:0;
-    if(lift)gardenEdit(o.position,'y',o.position.y+lift);
+    if(GARDEN_STYLE==='temple' && /^grass(Far|Mid|Near)$/.test(o.name)){
+      /* redwoods opens farther back with a wider lens. move the grass away
+         by that camera offset to carry its low, broad framing into temple. */
+      gardenEdit(o.position,'z',o.position.z-3.6);
+      gardenEdit(o.position,'x',o.position.x*.943);
+      gardenEdit(o.position,'y',4.05+(o.position.y+lift-4.05)*.943-.20);
+      gardenEdit(o.scale,'x',.943);gardenEdit(o.scale,'y',.943);
+    }else if(lift)gardenEdit(o.position,'y',o.position.y+lift);
   });
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
   /* the silhouette is geometry rather than a rectangular alpha sheet. */
@@ -4002,8 +4009,17 @@ function buildLandscapeStudy() {
   const lp=GARDEN.leafGeo.attributes.position;
   for(let i=0;i<lp.count;i++)lp.setZ(i,Math.abs(lp.getX(i))*.18+Math.sin(lp.getY(i)*Math.PI)*.055);
   GARDEN.leafGeo.computeVertexNormals();
+  if(GARDEN_STYLE==='forest'){
+    const maple=new THREE.Shape();
+    [[0,0],[-.20,.19],[-.50,.25],[-.30,.39],[-.43,.63],[-.18,.55],[0,1],[.18,.55],[.43,.63],[.30,.39],[.50,.25],[.20,.19]].forEach((p,i)=>i?maple.lineTo(...p):maple.moveTo(...p));maple.closePath();
+    GARDEN.mapleGeo=new THREE.ShapeGeometry(maple);
+    const p=GARDEN.mapleGeo.attributes.position;
+    for(let i=0;i<p.count;i++)p.setZ(i,Math.abs(p.getX(i))*.18+Math.sin(p.getY(i)*Math.PI)*.055);
+    GARDEN.mapleGeo.computeVertexNormals();
+  }
+
   GARDEN.leafMat=gardenWind(new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,roughness:.83,envMapIntensity:.78}),.20,true);
-  if(GARDEN_STYLE==='temple'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
+  if(GARDEN_STYLE!=='redwoods'){gardenSway(GARDEN.bark,1,7,.10);gardenSway(GARDEN.leafMat,1,7,.10);}
   buildGardenTerrain();
   if(GARDEN_STYLE==='redwoods')buildGardenRedwoods();
   else if(GARDEN_STYLE==='forest')buildPondGarden();
@@ -4204,8 +4220,8 @@ function buildGardenRedwoods() {
      the static shadow map noisy, while the solid boughs carry its silhouette. */
   GARDEN.group.add(group);
 }
-/* the pond is framed from below: shrubs stay beneath the lantern sightline,
-   emergent plants grow from the basin, and pads leave the reflection open. */
+/* the near water stays open; taller bank shrubs lead to terrace trees
+   and a loose canopy behind the hall instead of enclosing the basin. */
 function gardenSway(mat, low, high, amount) {
   const compile=mat.onBeforeCompile,key=mat.customProgramCacheKey();
   mat.onBeforeCompile=sh=>{
@@ -4229,23 +4245,23 @@ function gardenSway(mat, low, high, amount) {
 }
 function buildPondGarden() {
   const rnd=mulberry32(305481),matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),color=new THREE.Color();
-  const shrubs=[[-10.2,2.6,1.3],[11.8,1.4,1.5],[-13,-8,1.7],[14,-10,1.6],[-15,-19,1.4],[17,-24,1.8],[-19,-32,1.5],[21,-37,1.7]];
+  const shrubs=[[-10.2,2.6,1.3],[11.8,1.4,1.5],[-13,-8,1.7],[14,-10,1.6],[-11,-18,2.9],[12,-21,3.2],[-15,-23,3.5],[16,-26,3.0],[-19,-30,3.3],[20,-32,2.8]];
   const twigs=[],locations=[];
   shrubs.forEach(([x,z,height])=>{
     const ground=Math.max(0,gardenGround(x,z));
     for(let branch=0;branch<7;branch++){
-      const angle=rnd()*TAU,reach=.5+rnd()*.8;
+      const angle=rnd()*TAU,reach=(.5+rnd()*.8)*Math.max(1,height*.48);
       const start=new THREE.Vector3(x,ground-.03,z),end=new THREE.Vector3(x+Math.cos(angle)*reach,ground+height*(.55+rnd()*.45),z+Math.sin(angle)*reach);
       const d=end.clone().sub(start),g=new THREE.CylinderGeometry(.012,.045,d.length(),5,1,true);
       q.setFromUnitVectors(up,d.clone().normalize());g.applyQuaternion(q).translate(...start.clone().lerp(end,.5).toArray());twigs.push(g);
       for(let j=0;j<(LOW?18:42);j++){
-        const a=rnd()*TAU,r=Math.sqrt(rnd())*.68;
-        locations.push(new THREE.Vector3(end.x+Math.cos(a)*r,end.y+(rnd()-.5)*.6,end.z+Math.sin(a)*r));
+        const a=rnd()*TAU,r=Math.sqrt(rnd())*.68*Math.max(1,height*.43);
+        locations.push(new THREE.Vector3(end.x+Math.cos(a)*r,end.y+(rnd()-.5)*Math.max(.6,height*.33),end.z+Math.sin(a)*r));
       }
     }
   });
-  const wood=new THREE.Mesh(mergeGeos(twigs),gardenSway(GARDEN.bark.clone(),.15,2.4,.10));wood.name='low pond shrub branches';wood.receiveShadow=true;GARDEN.group.add(wood);
-  const leafMat=gardenSway(gardenWind(new THREE.MeshStandardMaterial({color:0x93ac6d,side:THREE.DoubleSide,roughness:.82,envMapIntensity:.7}),.24,true),.15,2.4,.10);
+  const wood=new THREE.Mesh(mergeGeos(twigs),gardenSway(GARDEN.bark.clone(),.15,3.8,.12));wood.name='pond bank shrub branches';wood.receiveShadow=true;GARDEN.group.add(wood);
+  const leafMat=gardenSway(gardenWind(new THREE.MeshStandardMaterial({color:0x93ac6d,side:THREE.DoubleSide,roughness:.82,envMapIntensity:.7}),.24,true),.15,3.8,.12);
   const leaves=new THREE.InstancedMesh(GARDEN.leafGeo,leafMat,locations.length);
   locations.forEach((p,i)=>{
     q.setFromEuler(new THREE.Euler((rnd()-.5)*1.7,rnd()*TAU,(rnd()-.5)*2));
@@ -4253,6 +4269,13 @@ function buildPondGarden() {
     color.setHSL(.24+rnd()*.07,.34+rnd()*.16,.22+rnd()*.12);leaves.setColorAt(i,color);
   });
   leaves.name='pond shrub leaves';leaves.frustumCulled=false;leaves.receiveShadow=true;GARDEN.group.add(leaves);
+
+  /* use temple's familiar maple silhouettes, swapping left and right while
+     preserving each tree's seed, size and depth. shrubs keep their oval leaves. */
+  [[71,12.6,-13,1.05],[72,-11.8,-9.4,.95],[73,9.2,-19,.82],
+   [74,-14.5,-17.5,1],[75,16.5,-6,.88]].forEach(([seed,x,z,size])=>buildGardenMaple(seed,-x,z,size));
+  [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],
+   [814,28,-58,2.15]].forEach(([seed,x,z,size])=>buildGardenMaple(seed,-x,z,size,true));
 
   const reedParts=[];
   for(let i=0;i<7;i++){

@@ -26,8 +26,8 @@ Redwoods refines its modeled giant trunks with darker bark, layered needle
 sprays and fern beds, with a fallen limb on the bank. Pond (formerly the Forest
 study) replaces the standing stones and tree canopy with low rounded shrubs,
 reeds rooted in the shallows and gently rocking lily pads. Taller shrubs grow
-past the basin, two green trees frame the middle terrace and four larger trees
-rise behind the temple. The near pond stays open. It retains the
+past the basin; the green maple grove mirrors Temple’s tree layout from left
+to right, replacing the earlier terrace trees. It retains the
 climbing stair planting and keeps the central reflection corridor open.
 `forest-study.html` redirects to Pond, preserving query flags and section links. The Temple study continues with subtle stone joints, weathering and moss
 at the approach; leaf shading and midribs now accompany the existing flutter.
@@ -38,7 +38,8 @@ Temple's torii, uneven crown sectors and damp-root variation to Redwoods, and
 three to seven muted water lilies with a pebble transition at Pond's shoreline.
 `tools/garden_details.js` owns these reversible material and planting details.
 All three studies retain the original foreground grass layers, including their
-scroll fade and breeze. The live Temple includes this restored grass framing.
+scroll fade and breeze. Temple’s grass sits farther back to match the broader foreground framing
+of Redwoods despite its closer camera.
 
 `tools/temple_landscape.js` authors the common ground and canopy;
 `tools/woodland_studies.js` owns the woodland additions and stonework.

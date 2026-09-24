@@ -48,15 +48,12 @@ function buildPondGarden() {
   });
   leaves.name='pond shrub leaves';leaves.frustumCulled=false;leaves.receiveShadow=true;GARDEN.group.add(leaves);
 
-  /* the middle trees root on the stone terrace outside the roof footprint.
-     rear crowns rise behind the roof, leaving the central facade readable. */
-  [[921,-18,-38,1.20,7],[922,18,-36,1.12,7],
-   [923,-17,-54,2.25,7],[924,17,-55,2.40,7],
-   [925,-27,-65,2.70,0],[926,26,-68,2.85,0]].forEach(([seed,x,z,size,y],i)=>{
-    buildGardenMaple(seed,x,z,size,true);
-    const tree=GARDEN.group.children[GARDEN.group.children.length-1];
-    tree.position.y=y-.04;tree.name=i<2?'pond terrace tree':'pond backdrop tree';
-  });
+  /* use temple's familiar maple silhouettes, swapping left and right while
+     preserving each tree's seed, size and depth. shrubs keep their oval leaves. */
+  [[71,12.6,-13,1.05],[72,-11.8,-9.4,.95],[73,9.2,-19,.82],
+   [74,-14.5,-17.5,1],[75,16.5,-6,.88]].forEach(([seed,x,z,size])=>buildGardenMaple(seed,-x,z,size));
+  [[811,-22,-34,1.55],[812,23,-38,1.7],[813,-28,-52,1.95],
+   [814,28,-58,2.15]].forEach(([seed,x,z,size])=>buildGardenMaple(seed,-x,z,size,true));
 
   const reedParts=[];
   for(let i=0;i<7;i++){
