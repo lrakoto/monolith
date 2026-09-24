@@ -3999,6 +3999,7 @@ function buildLandscapeStudy() {
       gardenEdit(o.position,'x',o.position.x*.943);
       gardenEdit(o.position,'y',4.05+(o.position.y+lift-4.05)*.943-.20);
       gardenEdit(o.scale,'x',.943);gardenEdit(o.scale,'y',.943);
+      if(o.material)gardenEdit(o.material,'color',new THREE.Color(0x8eaa78));
     }else if(lift)gardenEdit(o.position,'y',o.position.y+lift);
   });
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
