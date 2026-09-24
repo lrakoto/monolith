@@ -309,6 +309,12 @@ function buildLandscapeStudy() {
   /* keep the original grass framing and its scroll fade in every mode.
      only the old rock and overhead cutouts give way to the modeled garden. */
   GARDEN.original.push(...WORLD.fg.filter(o=>!/^grass(Far|Mid|Near)$/.test(o.name)));
+  /* a small lift brings the near blades into the hero's lower edge;
+     the far bank stays low so the water still opens toward the stairs. */
+  WORLD.fg.forEach(o=>{
+    const lift=o.name==='grassNear'?.40:o.name==='grassMid'?.30:0;
+    if(lift)gardenEdit(o.position,'y',o.position.y+lift);
+  });
   GARDEN.bark=gardenSurface(new THREE.MeshStandardMaterial({color:0x292720,roughness:.94,envMapIntensity:.65}), 'bark');
   /* the silhouette is geometry rather than a rectangular alpha sheet. */
   const leaf=new THREE.Shape();
