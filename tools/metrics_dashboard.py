@@ -46,7 +46,7 @@ class ReportCache:
             budget = {'day': today, 'reserved_reads': 0}
         # reserve an upper bound before querying, including failed attempts.
         # allowlisted events and projects bound each day's aggregate rows.
-        reserve = self.days * 4 * (26 * 3 + 4)
+        reserve = self.days * 5 * (26 * 3 + 6)
         if budget['reserved_reads'] + reserve > 1_000_000:
             raise RuntimeError('Daily dashboard read budget reached; resumes tomorrow UTC.')
         budget['reserved_reads'] += reserve

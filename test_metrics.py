@@ -25,6 +25,15 @@ class MetricsTests(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             db.execute("INSERT INTO metrics_daily VALUES('2026-09-24','website','unknown','',1)")
 
+    def test_game_migration_preserves_existing_counts(self):
+        db = sqlite3.connect(':memory:')
+        db.execute("CREATE TABLE metrics_daily(day TEXT,scene TEXT,event TEXT,project TEXT,count INTEGER,PRIMARY KEY(day,scene,event,project))")
+        db.execute("INSERT INTO metrics_daily VALUES('2026-09-24','temple','live_click','pyxel',9)")
+        db.executescript((ROOT/'worker/metrics-games-migration.sql').read_text())
+        self.assertEqual(db.execute('SELECT count FROM metrics_daily').fetchone()[0],9)
+        db.execute("INSERT INTO metrics_daily VALUES('2026-09-25','games','game_launch','pyxel',1)")
+        self.assertEqual(db.execute('SELECT SUM(count) FROM metrics_daily').fetchone()[0],10)
+
     def test_dashboard_caches_and_enforces_budget(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(metrics_dashboard,'ROOT',Path(tmp)):
             def report(days,usage):

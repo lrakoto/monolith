@@ -31,3 +31,10 @@ Open the localhost URL printed by the command. Keep the command running while vi
 The primary report is now WordPress Admin → Dashboard → 305 Metrics, at `/wp-admin/index.php?page=305-metrics`. WordPress requires the `manage_options` capability and an AJAX nonce. A dedicated server-only key authenticates WordPress requests to `/api/metrics-report`. That endpoint rejects unauthenticated reads and has no CORS permission. The secret is held in Worker secrets and an ABSPATH-guarded PHP file, installed from a GitHub Actions secret. No Cloudflare account credentials are stored in WordPress or browser JavaScript.
 
 The hosted view refreshes every 60 seconds while visible and stops polling when closed. WordPress shares a 60-second cache across devices and reserves database reads before fetching, reconciling against returned row usage. A one-million-row daily allowance pauses report queries before using the full free-tier allowance. Guestbook endpoints and public-site routing stay unchanged. The local report remains optional; the laptop is no longer needed for the hosted dashboard or collection.
+
+
+### September 25 update
+
+Reporting accepts only 7, 30 or 90 days and caches each period separately. The WordPress date selector uses the same allowlist. Its daily one-million-row budget remains unchanged; each fetch now reserves 40,000 rows to cover the largest permitted date range, then reconciles actual usage. All project names are presented as readable labels.
+
+`game_launch` records a Play Beta link click for `pyxel` or `blockshooter`. It does not prove the game loaded or that someone played. Field-log visits use the `games` scene; study pages remain excluded. Previous game links remain `live_click`, because their destination cannot be inferred from the historic aggregates. Apply `metrics-games-migration.sql` once before deploying this version; it copies existing counts into the extended schema.

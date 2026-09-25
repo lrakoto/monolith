@@ -1,7 +1,7 @@
 /* aggregate in place so the database never becomes a visitor history. */
 export const PROJECTS = new Set(['studio','autodex','shop','aero','newegg','manhattan','tranomics','godayone','alliance','lewislaw','erikka','cards','moomenu','reactor','teastory','shoboomenu','ara','pilot','moolunch','starke','sean','spatel','cot','pyxel','blockshooter']);
-const EVENTS = new Set(['page_view','project_click','project_view','live_click','resume_click','contact_click','portfolio_click']);
-const SCENES = new Set(['temple','redwoods','forest','website']);
+const EVENTS = new Set(['page_view','project_click','project_view','live_click','game_launch','resume_click','contact_click','portfolio_click']);
+const SCENES = new Set(['temple','redwoods','forest','website','games']);
 const headers = {'cache-control':'no-store'};
 const reply = status => new Response(null, {status, headers});
 export async function metrics(request, env) {
@@ -25,7 +25,8 @@ export async function metrics(request, env) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return reply(400);
   const {event,scene,project = ''} = input;
   if (!EVENTS.has(event) || !SCENES.has(scene)) return reply(400);
-  const projectEvent = event === 'project_click' || event === 'project_view' || event === 'live_click';
+  const projectEvent = event === 'project_click' || event === 'project_view' || event === 'live_click' || event === 'game_launch';
+  if (event === 'game_launch' && !['pyxel','blockshooter'].includes(project)) return reply(400);
   if (projectEvent ? !PROJECTS.has(project) : project !== '') return reply(400);
   try {
     /* one rolling bucket limits spam without tracking callers; origin checks

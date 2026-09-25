@@ -41,3 +41,10 @@ body:has(.wmodal[open]){overflow:hidden}
 .game-beta:hover{background:rgba(var(--brand-rgb),.25)}
 .game-beta:focus-visible{outline:2px solid var(--bone);outline-offset:4px}
 .wmodal-side .game-beta{display:flex;width:100%}
+
+.game-premise{font-size:16px;line-height:1.6;color:var(--bone);margin:18px 0 10px;max-width:52ch}
+.game-device,.game-controls{font-size:13px;line-height:1.7;color:#b9c5bd;margin:6px 0;max-width:58ch}
+.game-device{color:var(--bone-dim)}
+body.xp-3d .xp li{background:linear-gradient(145deg,rgba(9,13,17,.96),rgba(9,13,17,.88));border-top:1px solid rgba(223,231,224,.1)}
+body.xp-3d .xp li p{color:#bcc7c0}
+.card-meta{gap:12px;line-height:1.6}.card-meta>span:first-child{max-width:70%}

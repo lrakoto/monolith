@@ -11,3 +11,11 @@ Verified against published case study: five eras, sixteen dated milestones, sour
 
 LinkedIn: https://www.linkedin.com/in/lovarakoto/
 Authenticated profile confirms current Web Developer at Logix. Project implementation detail comes from the richer first-party case studies above.
+
+## Game introductions and roles, September 25
+
+User clarified Gundry MD role as lead frontend developer and AERO involvement across all aspects. Card labels and project copy reflect that clarification.
+
+Pyxel controls: https://github.com/lrakoto/Pyxel2/blob/main/README.md and src/main.ts, checked against the public playable destination https://lrakoto.github.io/Pyxel2/. Desktop remains the primary experience; touch controls exist.
+
+Block Shooter controls: https://lrakoto.github.io/blockshooter/ and its script.js, whose current controls UI and touch handlers confirm WASD, mouse aim/fire, E wave blast, Escape pause, and touch support. The README is explicitly retrospective, so current controls take precedence.

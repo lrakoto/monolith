@@ -10,7 +10,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 LABELS = {'page_view': 'Site / scene visits', 'project_click': 'Project button clicks', 'project_view': 'Project details opened',
-          'live_click': 'Live project clicks', 'resume_click': 'Résumé clicks',
+          'game_launch': 'Game launches', 'live_click': 'Other project link clicks', 'resume_click': 'Résumé clicks',
           'contact_click': 'Email-contact clicks', 'portfolio_click': 'WordPress → portfolio clicks'}
 
 def report(days=30, output=None, usage=None):
@@ -37,7 +37,7 @@ def report(days=30, output=None, usage=None):
     stats = ''.join('<div class="stat"><strong>'+str(total[k])+'</strong><span>'+v+'</span></div>' for k,v in LABELS.items())
     body = '<h1>Portfolio &amp; website activity</h1><p>'+start+' through today · UTC · generated '+datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')+'</p><div class="stats">'+stats+'</div>'
     body += '<h2>By site and scene</h2>'+table(['Site / scene',*LABELS.values()], [[name,*[counts[k] for k in LABELS]] for name,counts in sorted(scopes.items())])
-    body += '<h2>Project interest</h2>'+table(['Project','Project buttons','Details opened','Live-site clicks'], [[name,counts['project_click'],counts['project_view'],counts['live_click']] for name,counts in sorted(projects.items(),key=lambda x:sum(x[1].values()),reverse=True)])
+    body += '<h2>Project interest</h2>'+table(['Project','Project buttons','Details opened','Game launches','Other links'], [[name,counts['project_click'],counts['project_view'],counts['game_launch'],counts['live_click']] for name,counts in sorted(projects.items(),key=lambda x:sum(x[1].values()),reverse=True)])
     body += '<h2>Daily activity</h2>'+table(['Date',*LABELS.values()], [[day,*[counts[k] for k in LABELS]] for day,counts in sorted(daily.items(),reverse=True)])
     body += '<p class="note">Counts begin at installation. Each event and project counts once per site or scene per tab session. Visits are not unique people, and a person can appear in multiple scenes. Storage-disabled browsers deduplicate only until reload. Clicks do not confirm downloads, emails sent, or leads. Privacy opt-outs, blockers and delivery failures can reduce counts; bots can inflate them. No cross-site conversion rate is inferred.</p><p class="note">Only UTC day, site/scene, event, project slug and total are stored. No cookie IDs, IP addresses, full URLs, referrers or form contents are stored by this metrics code. Reports require your Cloudflare login and are not published.</p>'
     if not rows: body += '<p>No activity has been recorded yet.</p>'

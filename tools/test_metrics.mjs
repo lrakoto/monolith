@@ -26,7 +26,7 @@ function browser(path='/portfolio/', opt={}) {
  const navigator={sendBeacon:(url,body)=>{sent.push(body);return true},...opt};
  const context={location,document,navigator,window:{},sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},Blob,URL,Set};
  vm.runInNewContext(client,context);
- return {events,sent,context,async payloads(){return Promise.all(sent.map(async b=>JSON.parse(await b.text())))},click(href){events.click({isTrusted:true,type:'click',target:{closest:()=>({href:new URL(href,location).href,dataset:{}})}})}};
+ return {events,sent,context,async payloads(){return Promise.all(sent.map(async b=>JSON.parse(await b.text())))},click(href,dataset={}){events.click({isTrusted:true,type:'click',target:{closest:()=>({href:new URL(href,location).href,dataset})}})}};
 }
 let b=browser();b.events.visibilitychange();assert.equal(b.sent.length,1);
 b.context.window.portfolioMetric('project_view','aero');b.context.window.portfolioMetric('project_view','aero');assert.equal(b.sent.length,2);
@@ -48,3 +48,19 @@ assert.equal((await report(authorized(),reportEnv)).status,200);
 assert.equal((await report(authorized(),reportEnv)).status,200);
 assert.equal(reads,1);
 assert.equal((await report(authorized(),{})).status,403);
+
+limited = false;
+assert.equal((await metrics(req({event:'game_launch',scene:'games',project:'pyxel'}),{DB})).status,204);
+assert.equal((await metrics(req({event:'game_launch',scene:'games',project:'shop'}),{DB})).status,400);
+b=browser('/portfolio/pyxel/');
+b.click('https://lrakoto.github.io/Pyxel2/',{metricProject:'pyxel',metricEvent:'game_launch'});
+assert.deepEqual((await b.payloads()).map(x=>x.event),['page_view','game_launch']);
+assert.equal((await b.payloads())[1].scene,'games');
+const rangeRequest = days => new Request('https://example.com/api/metrics-report?days='+days,{headers:{Authorization:'Bearer test-only'}});
+assert.equal((await report(rangeRequest(7),reportEnv)).status,200);
+assert.equal((await report(rangeRequest(90),reportEnv)).status,200);
+assert.equal(reads,3);
+const ninety = await (await report(rangeRequest(90),reportEnv)).json();
+assert.equal(ninety.days,90); assert.equal(reads,3);
+assert.equal((await report(rangeRequest(999),reportEnv)).status,400);
+assert.equal(reads,3);

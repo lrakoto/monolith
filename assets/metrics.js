@@ -1,7 +1,7 @@
 /* counts describe interest, not people. no identifiers leave the browser. */
 (() => {
   'use strict';
-  const scenes = {'/portfolio/':'temple','/portfolio/index.html':'temple','/portfolio/temple.html':'temple','/portfolio/redwoods.html':'redwoods','/portfolio/monolith.html':'redwoods','/portfolio/forest.html':'forest'};
+  const scenes = {'/portfolio/':'temple','/portfolio/index.html':'temple','/portfolio/temple.html':'temple','/portfolio/redwoods.html':'redwoods','/portfolio/monolith.html':'redwoods','/portfolio/forest.html':'forest','/portfolio/pyxel/':'games','/portfolio/pyxel/index.html':'games','/portfolio/blockshooter/':'games','/portfolio/blockshooter/index.html':'games'};
   const scene = scenes[location.pathname] || (!location.pathname.startsWith('/portfolio/') ? 'website' : null);
   if (location.hostname !== 'threeohfivestudios.com' || !scene || navigator.webdriver || navigator.globalPrivacyControl || navigator.doNotTrack === '1') return;
   const seen = new Set();
@@ -33,7 +33,8 @@
     if (!link) return;
     const url = new URL(link.href, location.href);
     const local = url.origin === location.origin;
-    if (url.protocol === 'mailto:' || (local && url.pathname.startsWith('/cdn-cgi/l/email-protection'))) track('contact_click');
+    if (link.dataset.metricEvent === 'game_launch' && ['pyxel','blockshooter'].includes(link.dataset.metricProject)) track('game_launch', link.dataset.metricProject);
+    else if (url.protocol === 'mailto:' || (local && url.pathname.startsWith('/cdn-cgi/l/email-protection'))) track('contact_click');
     else if (/Lova_Resume_2026\.pdf$/.test(url.pathname)) track('resume_click');
     else if (scene === 'website') {
       if (local && rootProjects[url.pathname]) track('project_click', rootProjects[url.pathname]);
