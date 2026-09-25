@@ -5969,11 +5969,8 @@ function buildGames() {
     beta.href = p.play; beta.target = '_blank'; beta.rel = 'noopener';
     beta.dataset.metricProject = p.slug; beta.setAttribute('data-cursor', '');
     beta.textContent = 'Play Beta'; beta.setAttribute('aria-label', 'Play ' + p.title + ' beta (opens in a new tab)');
-    const intro = document.createElement('p'); intro.className = 'game-premise'; intro.textContent = p.premise;
-    const devices = document.createElement('p'); devices.className = 'game-device'; devices.textContent = p.devices;
-    const controls = document.createElement('p'); controls.className = 'game-controls'; controls.textContent = p.controls;
     beta.dataset.metricEvent = 'game_launch';
-    entry.append(el, intro, devices, controls, beta); wrap.appendChild(entry);
+    entry.append(el, beta); wrap.appendChild(entry);
   });
 }
 
