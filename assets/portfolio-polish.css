@@ -1,0 +1,37 @@
+/* the process earns its space through concrete outputs, without another animation. */
+.proc{padding:clamp(20px,3vw,38px);background:rgba(6,10,12,.84);border:1px solid var(--line-soft)}
+.proc-title{font-size:clamp(25px,3vw,42px);line-height:1.15;font-weight:400;max-width:24ch;margin:0 0 16px;letter-spacing:-.025em}
+.proc-intro{font-size:16px;line-height:1.65;color:var(--bone-dim);max-width:54ch;margin:0 0 32px}
+.proc ol{align-items:stretch;gap:0;border-bottom:1px solid var(--line)}
+.proc li,.proc li:nth-child(1),.proc li:nth-child(2){padding:24px clamp(18px,2.4vw,34px) 26px;background:linear-gradient(145deg,rgba(var(--brand-rgb),.065),rgba(5,9,12,.8));display:flex;flex-direction:column}
+.proc li::after{width:100%;opacity:.55}
+.proc li::before{background:var(--line-soft)}
+.proc-n{font-size:clamp(38px,4.2vw,64px);line-height:1;font-weight:300;letter-spacing:-.045em;margin:0 0 28px;color:var(--bone-dim)}
+.proc li b{font-size:24px}
+.proc li p{font-size:15px;line-height:1.7;color:#b8c3bc;margin:12px 0 24px}
+.proc-output{display:block;font-size:12px;line-height:1.6;color:var(--bone-dim);border-top:1px solid var(--line-soft);padding-top:16px;margin-top:auto}
+.case-summary{display:grid;gap:22px;padding-bottom:20px}
+.case-summary h4{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--bone);margin:0 0 8px}
+.case-summary p{font-size:16px;line-height:1.7;color:#bac5be;margin:0;max-width:66ch}
+.case-source{display:inline-flex;align-items:center;min-height:44px;width:fit-content;text-decoration:underline;text-underline-offset:5px;font-size:14px;color:var(--bone)}
+.wmodal-head{padding-right:60px}.wmodal-tag,.wmodal-facts dt{color:#aab7ae}
+.wmodal-head p{color:#bac5be}.wmodal-cta{min-height:44px;box-sizing:border-box;letter-spacing:.1em}
+.wmodal{max-height:90dvh}.wmodal-in{max-height:90dvh}
+body:has(.wmodal[open]){overflow:hidden}
+.skip-link{position:fixed;left:16px;top:12px;z-index:10000;padding:14px 20px;background:#e5ede7;color:#101613;transform:translateY(-180%);font:16px system-ui}
+.skip-link:focus{transform:translateY(0)}
+.nav:focus-within{transform:none!important}
+@media(max-width:820px){
+ .proc ol{grid-template-columns:1fr}.proc li,.proc li:nth-child(1),.proc li:nth-child(2){padding:22px}
+ .proc-n{margin-bottom:16px}.proc{padding:clamp(20px,3vw,38px);background:rgba(6,10,12,.84);border:1px solid var(--line-soft)}
+.proc-title{max-width:100%}
+ /* one scroll container keeps long project introductions reachable in landscape. */
+ .wmodal-in{display:block;overflow-y:auto;overscroll-behavior:contain}
+ .wmodal-wrap{overflow:visible}.wmodal-head p{font-size:14px;line-height:1.6}
+ .wmodal-side{order:0}.wmodal-gal{order:1}.wmodal-facts{grid-template-columns:1fr;gap:5px}
+ .wmodal-facts dd{margin-bottom:10px}.case-summary p{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}body,body *{cursor:auto!important}
+ .cur-dot{display:none!important}*,*::before,*::after{animation:none!important;transition:none!important}
+}

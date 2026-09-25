@@ -1401,10 +1401,12 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
 }
 
 </style>
+<link rel="stylesheet" href="assets/portfolio-polish.css">
 </head>
 <body data-layout-hero="b" data-layout-story="b" data-layout-gallery="b"
       data-layout-curriculum="b" data-layout-closing="b" data-layout-footer="b">
 
+<a class="skip-link" href="#top">Skip to content</a>
 <canvas id="gl" aria-hidden="true"></canvas>
 <div id="vignette"></div>
 <div id="grain"></div>
@@ -1466,7 +1468,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
   <button class="nav-burger" aria-label="Menu" data-cursor><i></i><i></i></button>
 </header>
 
-<div class="page" id="top">
+<main class="page" id="top" tabindex="-1">
 
 <!-- ============================================================ hero -->
 <section class="hero" id="hero" data-cam="0">
@@ -1708,13 +1710,18 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
 
   <div class="proc" data-rv="up">
     <div class="proc-k"><b>Data-driven process</b><span class="rule"></span></div>
+    <h3 class="proc-title">Build with intent. Improve with evidence.</h3>
+    <p class="proc-intro">A clear question, a working experience, and a reason for the next change.</p>
     <ol>
-      <li><span class="proc-n">01</span><b>Fast prototyping</b>
-        <p>Get a working, production-ready prototype deployed, to gather real-world data to iterate on.</p></li>
-      <li><span class="proc-n">02</span><b>Data collection &amp; testing</b>
-        <p>Data-driven insight combined with informed solutions, for quick iteration and metric improvement.</p></li>
-      <li><span class="proc-n">03</span><b>Analyse &amp; redeploy</b>
-        <p>Analysis leads to improved strategy. Relaunch better informed, with results backed by data.</p></li>
+      <li><span class="proc-n" aria-hidden="true">01</span><b>Build</b>
+        <p>Define the visitor’s goal, then turn the design into a responsive experience with reusable components.</p>
+        <span class="proc-output">Deliverable: a testable experience</span></li>
+      <li><span class="proc-n" aria-hidden="true">02</span><b>Measure</b>
+        <p>Check performance and accessibility. Use meaningful actions and focused experiments to understand what helps people move forward.</p>
+        <span class="proc-output">Evidence: behavior and performance</span></li>
+      <li><span class="proc-n" aria-hidden="true">03</span><b>Improve</b>
+        <p>Prioritize the clearest friction, ship a focused change, and compare the result before deciding what comes next.</p>
+        <span class="proc-output">Next step: an informed iteration</span></li>
     </ol>
   </div>
 </section>
@@ -1814,7 +1821,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
   </div>
 </footer>
 
-</div><!-- /.page -->
+</main><!-- /.page -->
 
 <div class="scene-view-controls">
   <span class="scene-view-hint" aria-hidden="true">Scroll to explore</span>
@@ -2967,7 +2974,7 @@ const canvas = document.getElementById('gl');
 const vpW = () => document.documentElement.clientWidth  || innerWidth;
 const vpH = () => document.documentElement.clientHeight || innerHeight;
 let renderer, scene, camera, maxAniso = 1;
-const HI = qs('q', COARSE ? 'low' : 'high');
+const HI = qs('q', COARSE || navigator.connection?.saveData ? 'low' : 'high');
 const LOW = HI === 'low';
 const WANT_POST    = qs('post', '1') !== '0';
 const WANT_SHADOW  = qs('shadow', LOW ? '0' : '1') !== '0';
@@ -6263,24 +6270,26 @@ function texCardPlate(seed, gx, gy, kind) {
 const WORK_INFO = {
   autodex: {
     tag: 'Personal project', title: 'AutoDex',
-    body: 'Designed, built and deployed a web app car database with API integration and user profiles, from the data model through to the interface and the deploy.',
-    facts: { Role: 'Design and build', Stack: 'Web app, REST API', Features: 'Search, specs, user garage' },
+    body: "A public-data vehicle catalog and personal garage, rebuilt from a course project into a deployed full-stack app.",
+    story: [["The challenge", "Keep vehicle information useful and accurate across inconsistent public data sources, without maintaining the catalog by hand."], ["My contribution", "Designed and built the interface, database and API integrations. Cached source data in PostgreSQL and added vehicle search, VIN lookup, garages and community photos."], ["The result", "A live catalog covering 71 makes, with exact model-year lists that preserve production gaps and cached answers when upstream sources fail."]],
+    facts: {"Role": "Design & full-stack development", "Stack": "Node.js, Express, PostgreSQL", "Timeline": "Started 2022, rebuilt 2026"},
+    caseStudy: "https://threeohfivestudios.com/recent-work-autodex/",
     cta: 'View live site', plate: [9101, .70, .42, 'autodex']
   },
   shop: {
     tag: 'Case study: Frontend engineering', title: 'Gundry MD',
-    body: 'Lead Frontend Engineer on the complete rebuild of gundrymd.com, a high-traffic wellness storefront taken from high-fidelity Figma through to production, built in Builder.io against an Angular and Salesforce backend.',
-    facts: { Role: 'Lead Frontend Engineer', Team: 'Lead + 2 FE engineers + backend devs',
-             Timeline: '~2 month production build', Stack: 'Builder.io, Angular, Salesforce',
-             Source: 'Figma to production' },
+    body: "Led the frontend rebuild of Gundry MD, translating approved Figma designs into a reusable storefront connected to live product data.",
+    story: [["The challenge", "Deliver a consistent shopping experience while supporting quantity tiers, subscriptions and member pricing from Salesforce."], ["My contribution", "Led two supporting frontend engineers, planned the Builder.io component implementation, and coordinated the Angular data integration with backend developers."], ["The result", "Delivered the production build in approximately two months. The published case study reports a 10–20% improvement in Google PageSpeed Insights scores following performance optimization."]],
+    facts: {"Role": "Lead Frontend Engineer", "Team": "Lead + 2 FE engineers + backend developers", "Stack": "Builder.io, Angular, Salesforce"},
+    caseStudy: "https://threeohfivestudios.com/recent-work-gundry-md/",
     cta: 'View live site', plate: [9203, .32, .58, 'shop']
   },
   aero: {
     tag: 'Personal project: Interactive exhibition', title: 'AERO',
-    body: 'A century of Lockheed aviation read as one continuous record: five chapters from the 1912 origins through to the present, sixteen dated milestones that open into field notes and the sources behind them, and an ocean horizon held under the whole scroll. An independent educational project, not affiliated with Lockheed Martin.',
-    facts: { Role: 'Design and build', Stack: 'React, Framer Motion, SVG',
-             Contents: 'Five chapters, sixteen milestones',
-             Technique: 'Scroll-driven chapters, expandable field notes' },
+    body: "An independent educational exhibition that turns a century of aviation history into a continuous, interactive reading experience. Not affiliated with Lockheed Martin.",
+    story: [["The challenge", "Make a long historical record inviting to explore while keeping its references accessible and the text readable without motion."], ["My contribution", "Designed and built the chapter system, aircraft illustrations, expandable field notes and WebGL ocean. Connected each milestone to its historical source."], ["The result", "A publicly deployed exhibition with five eras and sixteen dated milestones. The complete record remains readable with motion switched off."]],
+    facts: {"Role": "Design & development", "Stack": "React, Framer Motion, WebGL2, SVG", "Scope": "5 chapters · 16 milestones"},
+    caseStudy: "https://threeohfivestudios.com/recent-work-aero/",
     cta: 'View live site', plate: [9307, .54, .30, 'aero']
   }
 };
@@ -6513,6 +6522,18 @@ function wireWorkModal() {
     body.textContent = d.body || ''; body.hidden = !d.body;
 
     gal.innerHTML = '';
+    if (d.story) {
+      const summary = document.createElement('div'); summary.className = 'case-summary';
+      d.story.forEach(([heading, text]) => {
+        const section = document.createElement('section'), h = document.createElement('h4'), p = document.createElement('p');
+        h.textContent = heading; p.textContent = text; section.append(h, p); summary.appendChild(section);
+      });
+      if (d.caseStudy) {
+        const link = document.createElement('a'); link.href = d.caseStudy;
+        link.textContent = 'Read the full case study'; link.className = 'case-source'; summary.appendChild(link);
+      }
+      gal.appendChild(summary);
+    }
     (d.media || []).forEach(m => {
       if (m.type === 'vid') {
         const w = document.createElement('div'); w.className = 'vid';
@@ -6556,6 +6577,7 @@ function wireWorkModal() {
 
     dlg.querySelector('.wmodal-wrap').scrollTop = 0;
     dlg.showModal();
+    $('#wmodal-x').focus({ preventScroll: true });
     if (d.project && window.portfolioMetric) window.portfolioMetric('project_view', d.project);
   }
 
@@ -6568,7 +6590,7 @@ function wireWorkModal() {
       if (!plates[slug]) plates[slug] = texCardPlate.apply(null, d.plate).toDataURL();
       src = plates[slug];
     }
-    show({ project: slug, tag: d.tag, title: d.title, body: d.body, facts: d.facts,
+    show({ project: slug, tag: d.tag, title: d.title, body: d.body, facts: d.facts, story: d.story, caseStudy: d.caseStudy,
            media: [{ type: 'img', src: src, alt: d.title + ' project preview' }],
            cta: { label: d.cta, href: href } });
   }
@@ -8236,6 +8258,7 @@ function wireNav() {
   $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
     const t = document.querySelector(a.getAttribute('href'));
     if (!t) return;
+    if (a.classList.contains('skip-link')) { t.focus({ preventScroll: true }); }
     e.preventDefault();
     scrollTo({ top: a.getAttribute('href') === '#top' ? 0 : t.offsetTop - 40, behavior: REDUCE ? 'auto' : 'smooth' });
   }));
@@ -8262,10 +8285,11 @@ function wireFocus() {
 
 function wireCursor() {
   const dot = $('#cursor');
-  if (COARSE) { dot.style.display = 'none'; return; }
+  if (COARSE || REDUCE) { dot.style.display = 'none'; return; }
   let x = vpW() / 2, y = vpH() / 2, tx2 = x, ty = y;
   addEventListener('pointermove', e => {
     tx2 = e.clientX; ty = e.clientY;
+    if (!cursorFrame && !document.hidden) cursorFrame = requestAnimationFrame(tick);
     RIG.tmx = (e.clientX / vpW()) * 2 - 1;
     RIG.tmy = -((e.clientY / vpH()) * 2 - 1);
     RIG.pointer = 1;
@@ -8274,11 +8298,17 @@ function wireCursor() {
     el.addEventListener('mouseenter', () => dot.classList.add('act'));
     el.addEventListener('mouseleave', () => dot.classList.remove('act'));
   });
-  (function tick() {
+  let cursorFrame = 0;
+  function tick() {
+    if (document.hidden) { cursorFrame = 0; return; }
     x = lerp(x, tx2, .18); y = lerp(y, ty, .18);
     dot.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
-    requestAnimationFrame(tick);
-  })();
+    cursorFrame = Math.abs(x - tx2) + Math.abs(y - ty) > .15 ? requestAnimationFrame(tick) : 0;
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !cursorFrame) tick();
+  });
+  tick();
 }
 
 /* The tile is only ever baked once, and only if something asks to see it —
@@ -8463,39 +8493,40 @@ function resize() {
 }
 
 function updateWorld(dt) {
-  WORLD.uT.value = clock;
-  WET_TIME.value = REDUCE ? 0 : clock;
+  const sceneTime = REDUCE ? 0 : clock;
+  WORLD.uT.value = sceneTime;
+  WET_TIME.value = REDUCE ? 0 : sceneTime;
   if (WORLD.breeze) WORLD.breeze.value = WET_TIME.value;
 
   /* the focused chapter warms the lanterns and swells the disc */
   RIG.focusAmt = damp(RIG.focusAmt, RIG.focus >= 0 ? 1 : 0, 5, dt);
-  const pulse = Math.sin(clock * 1.9) * .5 + .5;
+  const pulse = Math.sin(sceneTime * 1.9) * .5 + .5;
   const f = RIG.focusAmt;
-  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .08 + f * .025 + Math.sin(clock * .6) * .005;
-  if (WORLD.hallLight) WORLD.hallLight.intensity = 1.25 * (1 + f * .15) * (1 + Math.sin(clock * .43) * .025);
+  if (WORLD.hallHalo) WORLD.hallHalo.material.opacity = .08 + f * .025 + Math.sin(sceneTime * .6) * .005;
+  if (WORLD.hallLight) WORLD.hallLight.intensity = 1.25 * (1 + f * .15) * (1 + Math.sin(sceneTime * .43) * .025);
   /* the moon only breathes — the haze in front of it is what actually moves */
-  if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .44 + f * .10 + Math.sin(clock * .34) * .05;
+  if (WORLD.moonHalo) WORLD.moonHalo.material.opacity = .44 + f * .10 + Math.sin(sceneTime * .34) * .05;
   if (WORLD.lanternLights) WORLD.lanternLights.forEach((l, i) => {
-    l.intensity = .90 * (1 + f * .15) * (1 + .04 * Math.sin(clock * (.7 + i * .08) + i * 2.1));
+    l.intensity = .90 * (1 + f * .15) * (1 + .04 * Math.sin(sceneTime * (.7 + i * .08) + i * 2.1));
   });
 
   /* the halo faces the camera, and breathes with the lamp inside it rather
      than sitting at a fixed brightness beside a flickering light */
   if (WORLD.lanternGlows) WORLD.lanternGlows.forEach((h, i) => {
     h.quaternion.copy(camera.quaternion);
-    h.material.opacity = .085 * (1 + .035 * Math.sin(clock * (.7 + i * .08) + i * 2.1));
+    h.material.opacity = .085 * (1 + .035 * Math.sin(sceneTime * (.7 + i * .08) + i * 2.1));
   });
 
   /* haze slides across the courtyard */
   if (WORLD.haze) WORLD.haze.forEach(h => {
-    h.position.x = h.userData.x0 + Math.sin(clock * h.userData.sp + h.userData.ph) * 5.5;
+    h.position.x = h.userData.x0 + Math.sin(sceneTime * h.userData.sp + h.userData.ph) * 5.5;
     h.quaternion.copy(camera.quaternion);
   });
 
   /* ripples on the standing water */
   if (WORLD.ripples) WORLD.ripples.forEach(r => {
     const u = r.userData;
-    u.t += dt * u.sp;
+    u.t += (REDUCE ? 0 : dt) * u.sp;
     if (u.t > 4) { u.t = 0; u.x = (Math.random() - .5) * 22; u.z = -8 + Math.random() * 22; }
     const k = u.t / 4;
     const s = .3 + k * 4.2;
@@ -8522,8 +8553,8 @@ function updateWorld(dt) {
     m.material.opacity = a;
     m.visible = a > .006;
   });
-  updateLeaves(dt);
-  updateWisps(dt);
+  if (!REDUCE) updateLeaves(dt);
+  if (!REDUCE) updateWisps(dt);
   if (CARDS.length) CARDS.forEach(C => { const u = C.cam.userData; u.push = damp(u.push, u.want, 3.4, dt); });
 }
 
@@ -8545,6 +8576,10 @@ function render() {
 
 function frame(now) {
   if (!running) return;
+  /* the last rendered frame is enough behind the reading panel. */
+  if (document.getElementById('wmodal').open) {
+    tPrev = now; setTimeout(() => frame(performance.now()), 100); return;
+  }
   const raw = (now - tPrev) / 1000 || 0;
   const dt = Math.min(raw, .05);              /* animation never jumps … */
   tPrev = now; clock += dt;
