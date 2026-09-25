@@ -37,3 +37,14 @@ b=browser('/');b.click('/recent-work-autodex/');b.click('https://autodx.io/');b.
 assert.deepEqual((await b.payloads()).map(x=>x.event),['page_view','project_click','live_click','portfolio_click']);
 assert.equal((await b.payloads())[1].project,'autodex');
 console.log('Metrics client and endpoint checks passed');
+const reportSource = fs.readFileSync('worker/src/report.js','utf8');
+const {report} = await import('data:text/javascript;base64,'+Buffer.from(reportSource).toString('base64'));
+let reads = 0;
+const reportEnv = {METRICS_REPORT_KEY:'test-only',DB:{prepare(){return {bind(){return {async all(){reads++;return {results:[],meta:{rows_read:0}}}}}}}}};
+assert.equal((await report(new Request('https://example.com/api/metrics-report'),reportEnv)).status,403);
+assert.equal(reads,0);
+const authorized = () => new Request('https://example.com/api/metrics-report',{headers:{Authorization:'Bearer test-only'}});
+assert.equal((await report(authorized(),reportEnv)).status,200);
+assert.equal((await report(authorized(),reportEnv)).status,200);
+assert.equal(reads,1);
+assert.equal((await report(authorized(),{})).status,403);

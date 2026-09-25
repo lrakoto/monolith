@@ -1,3 +1,4 @@
+import { report } from './report.js';
 import { metrics } from './metrics.js';
 
 /* signals — the tally under the footer of the portfolio.
@@ -152,6 +153,8 @@ export default {
   async fetch(request, env) {
     const url  = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
+
+    if (path === '/api/metrics-report') return report(request, env);
 
     if (path === '/api/events') return metrics(request, env);
 

@@ -10,6 +10,7 @@ jobs:
         run: php -l root/mu-plugins/305-metrics.php
       - name: Install only the anonymous metrics plugin
         env:
+          METRICS_REPORT_KEY: ${{ secrets.METRICS_REPORT_KEY }}
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
@@ -30,6 +31,10 @@ jobs:
                   if not str(e).startswith('550'): raise
                   ftp.mkd('mu-plugins')
                   ftp.cwd('mu-plugins')
+              key = os.environ['METRICS_REPORT_KEY']
+              assert len(key) == 64 and all(c in '0123456789abcdef' for c in key)
+              secret_php = ("<?php if (!defined('ABSPATH')) { exit; } return '" + key + "';\n").encode()
+              ftp.storbinary('STOR 305-metrics-key.php', BytesIO(secret_php))
               name = '305-metrics.php'
               content = Path('root/mu-plugins/305-metrics.php').read_bytes()
               ftp.storbinary('STOR ' + name + '.upload', BytesIO(content))

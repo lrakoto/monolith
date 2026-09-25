@@ -25,3 +25,9 @@ python3 tools/metrics_dashboard.py
 ```
 
 Open the localhost URL printed by the command. Keep the command running while viewing it. The dashboard refreshes every 60 seconds while visible, pauses in hidden tabs, and stops requesting data when closed. Credentials stay in Wrangler, never in the HTML. Only the loopback interface is served, with a random path, host validation, and no CORS access. Multiple viewing tabs share a 60-second cache. A persisted conservative daily read reservation caps dashboard queries below one million rows per UTC day; reaching that cap pauses updates until the next day. The report remains visible after refresh failures. This uses existing free-tier allowances, adds no subscription, and never upgrades billing. Other account usage still shares Cloudflare's limits.
+
+## Hosted dashboard
+
+The primary report is now WordPress Admin → Dashboard → 305 Metrics, at `/wp-admin/index.php?page=305-metrics`. WordPress requires the `manage_options` capability and an AJAX nonce. A dedicated server-only key authenticates WordPress requests to `/api/metrics-report`. That endpoint rejects unauthenticated reads and has no CORS permission. The secret is held in Worker secrets and an ABSPATH-guarded PHP file, installed from a GitHub Actions secret. No Cloudflare account credentials are stored in WordPress or browser JavaScript.
+
+The hosted view refreshes every 60 seconds while visible and stops polling when closed. WordPress shares a 60-second cache across devices and reserves database reads before fetching, reconciling against returned row usage. A one-million-row daily allowance pauses report queries before using the full free-tier allowance. Guestbook endpoints and public-site routing stay unchanged. The local report remains optional; the laptop is no longer needed for the hosted dashboard or collection.
