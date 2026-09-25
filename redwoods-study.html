@@ -932,13 +932,13 @@ body.xp-3d .xp li p{ margin-top:4px; }
   grid-template-columns:64px minmax(0,1.05fr) minmax(0,1.25fr) 86px;
   gap:clamp(14px,2.4vw,40px);
   padding:clamp(20px,2.4vw,30px) 0; border-bottom:1px solid var(--line-soft);
-  cursor:pointer; transition:padding .5s var(--ease-out);
+  cursor:auto;
 }
-.les::before{ content:''; position:absolute; left:calc(var(--gut) * -1); right:0; top:0; bottom:0;
-  background:linear-gradient(90deg, rgba(var(--brand-rgb),.11), transparent 46%);
+.les::before{ content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse 320px 230px at var(--hover-x,50%) var(--hover-y,50%), rgba(var(--brand-rgb),.13), transparent 100%);
   opacity:0; transition:opacity .55s var(--ease); pointer-events:none; }
 .les:hover::before{ opacity:1; }
-.les:hover{ padding-left:clamp(8px,1.2vw,18px); }
+
 .les .k{ font-size:11px; letter-spacing:.16em; color:var(--muted); font-variant-numeric:tabular-nums; transition:color .4s; }
 .les:hover .k{ color:var(--brand); }
 .les h3{ font-size:clamp(16px,1.5vw,23px); font-weight:400; letter-spacing:-.005em; }
@@ -954,7 +954,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
 .les .t{ text-align:right; font-size:11px; letter-spacing:.14em; color:#8b958f; font-variant-numeric:tabular-nums; text-shadow:0 1px 16px rgba(3,6,8,.92); }
 .les .bar{ position:absolute; left:0; bottom:-1px; height:1px; width:100%; background:var(--brand);
   transform:scaleX(0); transform-origin:left; transition:transform .7s var(--ease-out); }
-.les:hover .bar{ transform:scaleX(1); }
+
 
 /* the first screen offers a direct next step without hiding the landscape. */
 .hero-actions{ display:flex; align-items:center; flex-wrap:wrap; gap:14px 24px; margin-top:24px; }
@@ -1191,8 +1191,8 @@ body[data-layout-curriculum="b"] .les{
    which left a third of the row empty and read as a fifth discipline that had
    gone missing rather than as a deliberate margin. */
 body[data-layout-curriculum="b"] .les{ grid-column:span 3; }
-body[data-layout-curriculum="b"] .les::before{ left:0; background:linear-gradient(145deg,rgba(var(--brand-rgb),.15),transparent 58%); }
-body[data-layout-curriculum="b"] .les:hover{ padding-left:32px; }
+
+
 body[data-layout-curriculum="b"] .les h3{ font-size:clamp(20px,2vw,30px); }
 body[data-layout-curriculum="b"] .les p{ display:block; max-width:34ch; }
 body[data-layout-curriculum="b"] .les .t{ text-align:left; margin-top:auto; }
@@ -1284,7 +1284,7 @@ body[data-layout-footer="b"] .foot-base span:last-child{ text-align:right; }
 
   body[data-layout-curriculum="b"] .cur{ grid-template-columns:1fr; }
   body[data-layout-curriculum="b"] .les:nth-child(n){ grid-column:auto; min-height:0; padding:20px; }
-  body[data-layout-curriculum="b"] .les:hover{ padding-left:20px; }
+
 
   body[data-layout-closing="b"] .fin{ display:flex; align-items:center; text-align:center; gap:0; }
   body[data-layout-closing="b"] .fin .eyebrow{ margin:0 0 26px; }
@@ -1684,28 +1684,28 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
       launch, and staying with them long enough to see what the numbers say.</p>
   </div>
   <div class="cur" id="cur">
-    <div class="les" data-les="0" data-cursor>
+    <div class="les" data-les="0">
       <span class="k">01</span>
       <h3>Web Design and Development</h3>
       <p>End-to-end web experiences that combine strong visual design with clean, scalable development.</p>
       <ul class="les-pts"><li>Responsive implementation</li><li>Figma to production</li><li>HTML, CSS, JavaScript, React</li><li>CMS adaptation (WordPress, Builder.io)</li></ul>
       <span class="t">Build</span><i class="bar"></i>
     </div>
-    <div class="les" data-les="1" data-cursor>
+    <div class="les" data-les="1">
       <span class="k">02</span>
       <h3>Visual Design &amp; UI/UX</h3>
       <p>Intuitive, visually compelling interfaces that balance aesthetics, usability and performance.</p>
       <ul class="les-pts"><li>Figma design systems and mockups</li><li>Visual design systems</li><li>UX audits and usability improvements</li><li>Conversion-focused design (CRO)</li></ul>
       <span class="t">Design</span><i class="bar"></i>
     </div>
-    <div class="les" data-les="2" data-cursor>
+    <div class="les" data-les="2">
       <span class="k">03</span>
       <h3>A/B Testing and Performance</h3>
       <p>Websites as growth tools, using data and experimentation to continuously improve the experience.</p>
       <ul class="les-pts"><li>Experiment implementation</li><li>Analytics integration</li><li>Performance tracking</li><li>Iteration based on user behaviour</li></ul>
       <span class="t">Growth</span><i class="bar"></i>
     </div>
-    <div class="les" data-les="3" data-cursor>
+    <div class="les" data-les="3">
       <span class="k">04</span>
       <h3>Collaboration &amp; Strategy</h3>
       <p>Cross-functional alignment of design, technical execution and business goals.</p>
@@ -8255,6 +8255,13 @@ function wireFocus() {
   $$('[data-les]').forEach(el => {
     el.addEventListener('mouseenter', () => set(+el.dataset.les % 4));
     el.addEventListener('mouseleave', () => set(-1));
+    /* this is reading light, not a button state; keep the copy still. */
+    el.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      const bounds = el.getBoundingClientRect();
+      el.style.setProperty('--hover-x', (e.clientX - bounds.left) + 'px');
+      el.style.setProperty('--hover-y', (e.clientY - bounds.top) + 'px');
+    }, { passive: true });
   });
 }
 
