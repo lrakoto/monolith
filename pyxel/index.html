@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sector 7 Field Log — EVERYBODY / NOBODY</title>
+<title>Sector 7 Field Log: EVERYBODY / NOBODY</title>
 <meta name="description" content="A hundred days of building a cyberpunk noir detective game, in eighteen milestones. Every clip is the real build from that date, rebuilt from source and recorded.">
 <link rel="canonical" href="https://threeohfivestudios.com/portfolio/pyxel/">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Sector 7 Field Log — EVERYBODY / NOBODY">
+<meta property="og:title" content="Sector 7 Field Log: EVERYBODY / NOBODY">
 <meta property="og:description" content="A hundred days of building a cyberpunk noir detective game, in eighteen milestones. Every clip is the real build from that date.">
 <meta property="og:url" content="https://threeohfivestudios.com/portfolio/pyxel/">
 <meta property="og:image" content="https://threeohfivestudios.com/portfolio/pyxel/media/m18.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sector 7 Field Log — EVERYBODY / NOBODY">
+<meta name="twitter:title" content="Sector 7 Field Log: EVERYBODY / NOBODY">
 <meta name="twitter:description" content="A hundred days of building a cyberpunk noir detective game, in eighteen milestones.">
 <meta name="twitter:image" content="https://threeohfivestudios.com/portfolio/pyxel/media/m18.jpg">
 <link rel="icon" href="../assets/brand/icon-32.webp" sizes="32x32">
@@ -202,7 +202,7 @@
     <h1>A hundred days, <i>rebuilt from source</i></h1>
     <p class="standfirst">
       EVERYBODY / NOBODY is a cyberpunk noir detective game that runs in a browser.
-      This is how it was built &mdash; eighteen milestones from the first wet street to
+      This is how it was built: eighteen milestones from the first wet street to
       the detective who ended up solving the case. Every clip below is the real build
       from that date: checked out of git, compiled, run and recorded. Nothing here is
       a reconstruction.
@@ -227,7 +227,7 @@
   <p>
     The game began in June 2026 as a three.js scene: pixel sprites lit by real 3D lights,
     run through a post-processing stack. In September it was rebuilt from nothing as a
-    <b>2D canvas renderer with no runtime dependencies at all</b> &mdash; every light,
+    <b>2D canvas renderer with no runtime dependencies at all</b>: every light,
     reflection, bloom and lens flare hand-written. The rebuild looks better than the
     engine did, which was not the expected result.
   </p>
@@ -257,54 +257,54 @@
    title:"Proof of scene",
    hook:"Day one of my cyberpunk detective game.",
    caption:"Started this on a Friday. A wet street, some neon signs, and a guy in a coat. Everything you see is drawn in code except the skyline, which is a painted plate run through a pixelation pass.",
-   changed:"The whole pipeline landed in one commit — pixel sprites inside a real 3D-lit scene at 960×540 internal resolution, upscaled crisp. HDR bloom, film grain, chromatic aberration and vignette. The player sprite has a wet rim glow that reacts to whichever neon is nearest."},
+   changed:"The whole pipeline landed in one commit: pixel sprites inside a real 3D-lit scene at 960×540 internal resolution, upscaled crisp. HDR bloom, film grain, chromatic aberration and vignette. The player sprite has a wet rim glow that reacts to whichever neon is nearest."},
 
   {id:"m02",n:"02",act:1,date:"12 Jun 2026",commit:"ee0f40c",repo:"Pyxel",
    title:"The street goes procedural",
    hook:"I deleted the AI-generated buildings and wrote them in code instead.",
-   caption:"Generated a row of storefronts, looked at them, and threw them out. Wrote the facades procedurally instead — storefronts, lit windows with interior detail, AC units, pipes, canopies. Better, and now I can change any of it.",
+   caption:"Generated a row of storefronts, looked at them, and threw them out. Wrote the facades procedurally instead: storefronts, lit windows with interior detail, AC units, pipes, canopies. Better, and now I can change any of it.",
    changed:"This set the art-direction rule the project still follows: everything in the play space is procedural or hand-pixeled, and generated art is only allowed in distant painted layers."},
 
   {id:"m03",n:"03",act:1,date:"12 Jun 2026",commit:"fd83df7",repo:"Pyxel",pick:true,
    title:"Mirror puddles",
    hook:"The puddles are a second camera, mirrored through the floor.",
    caption:"Real reflections. There's a whole second render of the scene from a camera flipped underneath the ground plane, and the puddles sample it projectively with a ripple on top.",
-   changed:"The sparkles got rewritten too, and this is the detail I like most — each fleck is a physical micro-facet that reflects the scene's actual point lights, and only lights up when its bounce happens to aim at the camera. No random twinkle. The colour comes from whichever light it caught."},
+   changed:"The sparkles got rewritten too, and this is the detail I like most: each fleck is a physical micro-facet that reflects the scene's actual point lights, and only lights up when its bounce happens to aim at the camera. No random twinkle. The colour comes from whichever light it caught."},
 
   {id:"m04",n:"04",act:1,date:"16 Jun 2026",commit:"52c2f85",repo:"Pyxel",
    title:"The scarf becomes cloth",
    hook:"Rewrote the scarf as actual cloth simulation.",
-   caption:"It was a single spring. Now it's a verlet chain — gravity, air drag, wind off his walk speed, gusts, distance constraints. It lags when he starts, flutters when he moves, and settles when he stops.",
-   changed:"This is the one capture where the dev tuning panel is left visible on purpose — eighteen sliders, live, with a SAVE TO CODE button that writes the values back into the source. Tuning happens in the browser, not the editor."},
+   caption:"It was a single spring. Now it's a verlet chain with gravity, air drag, wind off his walk speed, gusts, distance constraints. It lags when he starts, flutters when he moves, and settles when he stops.",
+   changed:"This is the one capture where the dev tuning panel is left visible on purpose: eighteen sliders, live, with a SAVE TO CODE button that writes the values back into the source. Tuning happens in the browser, not the editor."},
 
   {id:"m05",n:"05",act:1,date:"17 Jun 2026",commit:"c80772f",repo:"Pyxel",
    title:"Sunglasses that catch the neon",
    hook:"Every neon sign gets its own reflection in his sunglasses.",
-   caption:"Not one generic shine — each sign reflects separately, tinted its own colour, positioned by the direction that light is actually coming from. When he stops walking the reflections freeze in place mid-sweep instead of snapping back.",
+   caption:"There is no generic shine. Each sign reflects separately, tinted its own colour, positioned by the direction that light is actually coming from. When he stops walking the reflections freeze in place mid-sweep instead of snapping back.",
    changed:"Rebuilding this commit reproduced a bug I'd forgotten: the console throws “[Cole idle] row 2 is 13 wide, expected 14”. His fedora crown was one pixel narrow and stayed that way for five days. The sprite validator caught it at the time and I shipped past it anyway."},
 
   {id:"m06",n:"06",act:2,date:"17 Jun 2026",commit:"7911184",repo:"Pyxel",
    title:"Turn-based battle",
    hook:"I built a full Final Fantasy-style turn queue.",
-   caption:"Conditional turn-based combat — turn meters that fill at each fighter's speed, a projected next-six queue you can read ahead on, attack/skill/defend with damage variance and guard. Portraits, HP bars, hit flashes, damage popups.",
+   caption:"Conditional turn-based combat with turn meters that fill at each fighter's speed, a projected next-six queue you can read ahead on, attack/skill/defend with damage variance and guard. Portraits, HP bars, hit flashes, damage popups.",
    changed:"Deliberately built presentation-agnostic: the engine knows nothing about how it's drawn. That decision is the only reason the next beat didn't hurt more."},
 
   {id:"m07",n:"07",act:2,date:"25 Jun 2026",commit:"90e8c7e",repo:"Pyxel",pick:true,
    title:"I scrapped it for a shooter",
    hook:"Eight days later I deleted the whole combat system.",
-   caption:"Turn-based was the wrong genre for this. Ripped it out and replaced it with a side-scrolling twin-stick shooter — walk on the keyboard, aim with the mouse, machine pistol, ground enforcers and aerial drones.",
-   changed:"My favourite trick here: “accurate up close, inaccurate at range” needed no special-casing at all. Give every shot a small random angular jitter and the error scales with distance for free — a tiny miss point-blank, a wide one across the street."},
+   caption:"Turn-based was the wrong genre for this. Ripped it out and replaced it with a side-scrolling twin-stick shooter: walk on the keyboard, aim with the mouse, machine pistol, ground enforcers and aerial drones.",
+   changed:"My favourite trick here: “accurate up close, inaccurate at range” needed no special-casing at all. Give every shot a small random angular jitter and the error scales with distance for free: a tiny miss point-blank, a wide one across the street."},
 
   {id:"m08",n:"08",act:3,date:"25 Jul 2026",commit:"966328f",repo:"Pyxel",
    title:"A second room",
    hook:"The street finally leads somewhere.",
-   caption:"Added an area system and the first interior — Marlon Graves' studio, which is the crime scene the whole case hangs off. Fifty fragmented faces in the painting on the wall, each with its own eyes and mouth.",
+   caption:"Added an area system and the first interior: Marlon Graves' studio, which is the crime scene the whole case hangs off. Fifty fragmented faces in the painting on the wall, each with its own eyes and mouth.",
    changed:"Doors, transitions and per-area worlds. The studio got exposed brick, branching wall cracks, aged tile, paint splatter, a hanging bulb whose colour tracks its own flicker, and a chalk body outline with iridescent residue."},
 
   {id:"m09",n:"09",act:3,date:"27 Jul 2026",commit:"89db394",repo:"Pyxel",
    title:"Title card",
    hook:"The moment it started looking like a real game.",
-   caption:"Glitch title with cyan/magenta chromatic split, drifting scanlines, and a slash that cycles colour. Retuned the whole post stack around it — tighter bloom, deeper vignette, lower exposure so the neon reads hotter.",
+   caption:"Glitch title with cyan/magenta chromatic split, drifting scanlines, and a slash that cycles colour. Retuned the whole post stack around it: tighter bloom, deeper vignette, lower exposure so the neon reads hotter.",
    changed:"Pure presentation, no new systems. Worth its own post because it's the single biggest perceived-quality jump in the project for the least code."},
 
   {id:"m10",n:"10",act:3,date:"1 Aug 2026",commit:"7792356",repo:"Pyxel",
@@ -316,37 +316,37 @@
   {id:"m11",n:"11",act:3,date:"13 Aug 2026",commit:"888ea62",repo:"Pyxel",
    title:"Cole, redrawn",
    hook:"Redesigned my detective from scratch.",
-   caption:"New sprite, rebuilt motion. Also the last thing I'd build in this codebase — though I didn't know that yet.",
+   caption:"New sprite, rebuilt motion. Also the last thing I'd build in this codebase, though I didn't know that yet.",
    changed:""},
 
   {id:"m12",n:"12",act:4,date:"4 Sep 2026",commit:"358f90e",repo:"Pyxel2",pick:true,
    title:"I rebuilt the entire game with zero dependencies",
    hook:"I rebuilt my 3D game in 2D. It looks better.",
-   caption:"Fragments is the whole thing rewritten from scratch. The original ran on three.js and WebGL — real 3D lights, a post-processing stack, planar reflection cameras. The rebuild has no runtime dependencies at all. Every light, reflection, bloom and flare is hand-written 2D canvas code.",
+   caption:"Fragments is the whole thing rewritten from scratch. The original ran on three.js and WebGL with real 3D lights, a post-processing stack, planar reflection cameras. The rebuild has no runtime dependencies at all. Every light, reflection, bloom and flare is hand-written 2D canvas code.",
    changed:"The most counterintuitive result in the project: dropping the 3D engine made it look more cinematic, because every effect is now authored for exactly the shot it appears in rather than emerging from a general lighting model."},
 
   {id:"m13",n:"13",act:4,date:"8 Sep 2026",commit:"c2fe9ec",repo:"Pyxel2",
    title:"The city gets a crowd",
    hook:"Porting a 3D lighting shader to 2D taught me something about tone mapping.",
-   caption:"Brought the wet rim light and the verlet scarf over from the old prototype. The rim had to be capped well below the original's strength — three.js was tone-mapping the result and canvas isn't, so the same numbers blew the entire silhouette out to white.",
+   caption:"Brought the wet rim light and the verlet scarf over from the old prototype. The rim had to be capped well below the original's strength because three.js was tone-mapping the result and canvas isn't, so the same numbers blew the entire silhouette out to white.",
    changed:"Pedestrians with contact shadows and depth lanes, foreground traffic whose headlights do the night-time work, an elevated train, window bloom and fog in the middle distance. Plus a fix for a bug I'd shipped twice: pedestrians and midground were composited at reduced alpha, so the skyline read straight through people."},
 
   {id:"m14",n:"14",act:4,date:"8 Sep 2026",commit:"0adb4ab",repo:"Pyxel2",
    title:"Rain gets indoors",
    hook:"My ceiling leaks were falling slower than a walking pace.",
-   caption:"Interior weather — rain seen through the doorway, droplets clinging to glass, ceiling leaks that ring when they land, puddles smearing whatever light is above them. Then I did the maths: a drop was crossing the room in 2.5 seconds, averaging well under walking speed. No amount of easing fixes “too slow”. Now it lands in about a second.",
-   changed:"The puddles were invisible at first for a good reason — they sampled the strip directly above them, which indoors is just more dark floor. A reflection of a dark room adds nothing to a dark floor. They now squash a tall slice of the wall into a shallow band and composite it additively, so only genuinely bright things come through."},
+   caption:"Interior weather: rain seen through the doorway, droplets clinging to glass, ceiling leaks that ring when they land, puddles smearing whatever light is above them. Then I did the maths: a drop was crossing the room in 2.5 seconds, averaging well under walking speed. No amount of easing fixes “too slow”. Now it lands in about a second.",
+   changed:"The puddles were invisible at first for a good reason: they sampled the strip directly above them, which indoors is just more dark floor. A reflection of a dark room adds nothing to a dark floor. They now squash a tall slice of the wall into a shallow band and composite it additively, so only genuinely bright things come through."},
 
   {id:"m15",n:"15",act:4,date:"9 Sep 2026",commit:"c286543",repo:"Pyxel2",
    title:"A wrong guess should teach you something",
    hook:"My deduction game punished thinking. So I fixed it.",
    caption:"The case board rejected all 36 wrong pairings with the same single sentence. In a game about deduction that leaves brute force as the only viable strategy, because nothing you learn from a miss narrows the next guess.",
-   changed:"Misses are graded now. Pair two records of the same kind and it refuses on kind. Get one half right and it names only that half — never the partner — so a half-formed idea is rewarded without handing over the answer. Only a genuinely cold pair gets the flat no."},
+   changed:"Misses are graded now. Pair two records of the same kind and it refuses on kind. Get one half right and it names only that half, never the partner, so a half-formed idea is rewarded without handing over the answer. Only a genuinely cold pair gets the flat no."},
 
   {id:"m16",n:"16",act:5,date:"19 Sep 2026",commit:"f5b6fb1",repo:"Pyxel2",
    title:"The case file becomes a thing you hold",
    hook:"I turned my menu into a physical object.",
-   caption:"The investigation UI isn't a HUD any more — it's a field notebook. Tactile paper, handwriting, margin notes that evolve as the case develops, and an olive cloth case jacket with worn brass that wraps the whole page.",
+   caption:"The investigation UI isn't a HUD any more. It's a field notebook. Tactile paper, handwriting, margin notes that evolve as the case develops, and an olive cloth case jacket with worn brass that wraps the whole page.",
    changed:""},
 
   {id:"m17",n:"17",act:5,date:"20 Sep 2026",commit:"807911d",repo:"Pyxel2",
@@ -358,7 +358,7 @@
   {id:"m18",n:"18",act:5,date:"20 Sep 2026",commit:"b4c820e",repo:"Pyxel2",
    title:"Detective Gravity",
    hook:"My detective isn't who he used to be.",
-   caption:"Cole is gone. Detective Gravity takes the case — blonde, black outfit, authored pixel animation rather than a procedural placeholder. She kept his red scarf, now hanging near her ankles.",
+   caption:"Cole is gone. Detective Gravity takes the case: blonde, black outfit, authored pixel animation rather than a procedural placeholder. She kept his red scarf, now hanging near her ankles.",
    changed:"The most honest beat in the log: black boots, then back to white, stockings added and removed, a fuller silhouette committed and reverted within nine minutes. Four commits in forty minutes to settle one character."}
   ];
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -374,7 +374,7 @@
       '<div class="plate">' +
         '<span class="num">'+b.n+'</span>' +
         '<video src="media/'+b.id+'.mp4" poster="media/'+b.id+'.jpg" muted loop playsinline preload="none" ' +
-          'aria-label="'+esc(b.title)+' \u2014 gameplay clip"></video>' +
+          'aria-label="'+esc(b.title)+': gameplay clip"></video>' +
         (reduced ? '<button class="playpip" type="button" data-play>Play</button>' : '') +
       '</div>' +
       '<div class="dossier">' +
