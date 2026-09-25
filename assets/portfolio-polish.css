@@ -35,3 +35,9 @@ body:has(.wmodal[open]){overflow:hidden}
  html{scroll-behavior:auto}body,body *{cursor:auto!important}
  .cur-dot{display:none!important}*,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+.game-entry{min-width:0}
+.game-beta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;margin-top:16px;box-sizing:border-box;border:1px solid var(--brand);background:rgba(var(--brand-rgb),.14);color:var(--bone);font-size:13px;letter-spacing:.07em;text-decoration:none}
+.game-beta:hover{background:rgba(var(--brand-rgb),.25)}
+.game-beta:focus-visible{outline:2px solid var(--bone);outline-offset:4px}
+.wmodal-side .game-beta{display:flex;width:100%}

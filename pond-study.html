@@ -7215,6 +7215,14 @@ function wireWorkModal() {
       cta.onclick = external ? null : () => dlg.close();
     }
 
+    dlg.querySelector('[data-game-beta]')?.remove();
+    if (d.play) {
+      const beta = document.createElement('a');
+      beta.className = 'game-beta'; beta.dataset.gameBeta = ''; beta.dataset.metricProject = d.project;
+      beta.href = d.play; beta.target = '_blank'; beta.rel = 'noopener';
+      beta.textContent = 'Play Beta'; beta.setAttribute('aria-label', 'Play ' + d.title + ' beta (opens in a new tab)');
+      cta.before(beta);
+    }
     dlg.querySelector('.wmodal-wrap').scrollTop = 0;
     dlg.showModal();
     $('#wmodal-x').focus({ preventScroll: true });
@@ -7239,7 +7247,7 @@ function wireWorkModal() {
     const d = GAMES_WORK.filter(x => x.slug === slug)[0]; if (!d) return;
     show({ project: slug, tag: d.tag, title: d.title, body: d.body, facts: d.facts,
            media: [{ type: 'img', src: GAMES_DIR + d.thumb, alt: d.title + ' project preview' }],
-           cta: { label: d.cta, href: d.href } });
+           play: d.play, cta: { label: d.cta, href: d.href } });
   }
 
   function openDesign(slug) {
@@ -7440,14 +7448,14 @@ const GAMES_WORK = [
     facts: { Role: 'Design and build', Stack: 'TypeScript, canvas 2D, no dependencies',
              Contents: 'Eighteen milestones, June to September',
              Technique: 'Every milestone rebuilt from its commit and recorded' },
-    cta: 'Read the field log', href: 'https://threeohfivestudios.com/portfolio/pyxel/' },
+    cta: 'Read the field log', href: 'https://threeohfivestudios.com/portfolio/pyxel/', play: 'https://lrakoto.github.io/Pyxel2/' },
   { slug: "blockshooter", title: "Block Shooter", thumb: "blockshooter.jpg",
     tag: 'Personal project: Game development',
     body: 'A two-week bootcamp project from 2022 that sat untouched for 1,333 days, then became something else entirely: synthesized audio, a kinetic arsenal, a scrolling camera, enemies that shoot back, touch controls, a narrative, and a boss fight. Seventy-eight commits across four years, with a field log of all of it.',
     facts: { Role: 'Design and build', Stack: 'HTML, CSS, JavaScript, no dependencies',
              Contents: 'Seventeen milestones, 2022 to 2026',
              Technique: 'Every milestone rebuilt from its commit and recorded' },
-    cta: 'Read the field log', href: 'https://threeohfivestudios.com/portfolio/blockshooter/' }
+    cta: 'Read the field log', href: 'https://threeohfivestudios.com/portfolio/blockshooter/', play: 'https://lrakoto.github.io/blockshooter/' }
 ];
 
 function buildGames() {
@@ -7464,7 +7472,12 @@ function buildGames() {
         GAMES_DIR + p.thumb + '"></span>' +
       '<span class="acard-meta"><span>' + p.title + '</span><span>' +
         ('0' + (i + 4 + DESIGN_WORK.length)).slice(-2) + '</span></span>';
-    wrap.appendChild(el);
+    const entry = document.createElement('div'); entry.className = 'game-entry';
+    const beta = document.createElement('a'); beta.className = 'game-beta';
+    beta.href = p.play; beta.target = '_blank'; beta.rel = 'noopener';
+    beta.dataset.metricProject = p.slug; beta.setAttribute('data-cursor', '');
+    beta.textContent = 'Play Beta'; beta.setAttribute('aria-label', 'Play ' + p.title + ' beta (opens in a new tab)');
+    entry.append(el, beta); wrap.appendChild(entry);
   });
 }
 
