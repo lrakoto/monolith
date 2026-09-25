@@ -603,7 +603,7 @@ body.xp-3d .xp-label b{ color:var(--brand); font-weight:500; }
 body.xp-3d .xp{ position:fixed; inset:0; z-index:3; margin:0; pointer-events:none; }
 body.xp-3d .xp-k{ display:none; }
 body.xp-3d .xp ol{ border:0; }
-body.xp-3d .xp{ --xp-w:min(340px,32vw); }
+body.xp-3d .xp{ --xp-w:min(380px,36vw); }
 body.xp-3d .xp li{
   position:absolute; top:0; left:0; width:var(--xp-w);
   margin:0; padding:11px 14px 12px; border:0;
@@ -620,9 +620,13 @@ body.xp-3d .xp li.xp-l{ margin-left:calc(var(--xp-w) * -1); transform-origin:100
 body.xp-3d .xp li.xp-l{ border-left:0; border-right:1px solid var(--brand); text-align:right; }
 body.xp-3d .xp li.xp-l p{ margin-left:auto; }
 body.xp-3d .xp li::before{ display:none; }
+/* full width dates keep ranges readable without squeezing the role title. */
+body.xp-3d .xp li{ display:block; }
+body.xp-3d .xp li .xp-y{ display:block; margin-bottom:7px; }
+body.xp-3d .xp li b{ display:block; }
 body.xp-3d .xp li p{ margin-top:4px; }
 .xp ol{ list-style:none; margin:0; padding:0; border-top:1px solid rgba(0,0,0,.55); }
-.xp li{ position:relative; display:grid; grid-template-columns:78px minmax(0,1fr);
+.xp li{ position:relative; display:grid; grid-template-columns:112px minmax(0,1fr);
   gap:clamp(12px,2vw,30px); align-items:baseline;
   padding:16px 0 15px; border-top:1px solid rgba(0,0,0,.5);
   background:linear-gradient(180deg, rgba(223,231,224,.030), rgba(223,231,224,0) 58%); }
@@ -656,7 +660,7 @@ body.xp-3d .xp li p{ margin-top:4px; }
   .proc ol{ grid-template-columns:1fr; }
   .proc li:nth-child(1), .proc li:nth-child(2){ padding-bottom:0; }
   .proc li::before{ display:none; }
-  .xp li{ grid-template-columns:58px minmax(0,1fr); }
+  .xp li{ grid-template-columns:112px minmax(0,1fr); }
   /* the going collapses on a narrow frame, or the last role starts
      halfway across the screen with nowhere left to set its title */
   .xp li{ --going:clamp(4px,1vw,10px); }
@@ -1220,7 +1224,7 @@ body[data-layout-footer="b"] .foot-brand{
      to nothing while the tally is hidden and the statement keeps the whole row,
      which is how the footer looked before any of this existed. */
   grid-template-columns:70px minmax(0,1fr) auto; align-items:center;
-  padding-bottom:34px; margin-bottom:8px; border-bottom:1px solid var(--line-soft);
+  padding-bottom:40px; margin-bottom:28px; border-bottom:1px solid var(--line-soft);
 }
 body[data-layout-footer="b"] .foot-brand .foot-signals:not([hidden]){
   padding-left:clamp(18px,2.2vw,34px); border-left:1px solid var(--line-soft);
@@ -1656,13 +1660,13 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
 
       <h4>Experience</h4>
       <ul>
-        <li>Now: Logix, Web Developer</li>
-        <li>2026: Golden Hippo, Design Engineer</li>
-        <li>2023: Starke Marketing, Web Developer and Design Lead</li>
+        <li>2026–present: Logix Federal Credit Union, Marketing Web Developer</li>
+        <li>2023–2026: Golden Hippo, Design Engineer</li>
+        <li>2019–2023: Starke Marketing, Web Developer and Design Lead</li>
         <li>2022: General Assembly, Software Engineering Certificate</li>
-        <li>2019: Murphy Research, Graphic Designer</li>
-        <li>2018: Agency 2.0, Graphic Designer</li>
-        <li>2016: Newegg, Email Marketing Designer</li>
+        <li>2018–2019: Murphy Research, Graphic Designer</li>
+        <li>Feb–Jul 2018: Agency 2.0, Graphic Designer</li>
+        <li>2016–2018: Newegg, Email Marketing Designer</li>
       </ul>
 
       <h4>Contact</h4>
@@ -1739,19 +1743,20 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
   <div class="xp" data-rv="up">
     <div class="xp-k"><b>Experience</b><span class="rule"></span></div>
     <ol>
-      <li><span class="xp-y">2016</span><b>Newegg: Email Marketing Designer</b>
+      <li><span class="xp-y">2016–2018</span><b>Newegg: Email Marketing Designer</b>
         <p>Designed and managed email marketing campaigns.</p></li>
-      <li><span class="xp-y">2018</span><b>Agency 2.0: Graphic Designer</b>
+      <li><span class="xp-y">Feb–Jul 2018</span><b>Agency 2.0: Graphic Designer</b>
         <p>Created visual design solutions across client campaigns.</p></li>
-      <li><span class="xp-y">2019</span><b>Murphy Research: Graphic Designer</b>
+      <li><span class="xp-y">2018–2019</span><b>Murphy Research: Graphic Designer</b>
         <p>Designed research-driven visual assets and brand materials.</p></li>
       <li><span class="xp-y">2022</span><b>General Assembly: Software Engineering Certificate</b>
         <p>Immersive programme in full-stack software engineering.</p></li>
-      <li><span class="xp-y">2023</span><b>Starke Marketing: Web Developer / Design Lead</b>
+      <li><span class="xp-y">2019–2023</span><b>Starke Marketing: Web Developer / Design Lead</b>
         <p>Led web design and development, owning projects from concept to deployment.</p></li>
-      <li><span class="xp-y">2026</span><b>Golden Hippo: Design Engineer</b>
-        <p>Building and optimising digital experiences at scale.</p></li>
-      <li><span class="xp-y">Now</span><b>Logix: Web Developer</b></li>
+      <li><span class="xp-y">2023–2026</span><b>Golden Hippo: Design Engineer</b>
+        <p>Built and optimised digital experiences at scale.</p></li>
+      <li><span class="xp-y">2026–present</span><b>Logix Federal Credit Union: Marketing Web Developer</b>
+        <p>Developing marketing web experiences with WordPress and Sitecore.</p></li>
     </ol>
   </div>
 </section>
@@ -1788,7 +1793,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
         <rect x="13" y="5" width="18" height="34" stroke="#dfe7e0" stroke-width="1.4"/>
         <rect x="13" y="20" width="18" height="3.6" fill="var(--brand)"/>
       </svg>
-      <p>Thanks for stopping by! I'm a web developer and designer in Los Angeles. This Temple study combines a detailed Blender model with a live browser landscape.</p>
+      <p>Thanks for stopping by!</p>
       <div class="foot-signals" id="foot-signals" hidden>
         <span class="foot-signals-k">Signals received</span>
         <ul id="foot-signals-list"></ul>

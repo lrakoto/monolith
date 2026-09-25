@@ -124,7 +124,6 @@ replacements={
      offscreen depth is 16 bit; packed depth/stencil gives the view 24 bit. */
   POST.scene = new THREE.WebGLRenderTarget(w, h, Object.assign({}, O, { depthBuffer: true, stencilBuffer: true, samples: LOW ? 0 : 2 }));""",
 'every\n        surface below is generated in the browser at load, with no model files and no images behind\n        the scene.':'this Temple study combines a detailed Blender model and baked lighting with a landscape generated in the browser.',
-'Every surface in the\n        scene backdrop on this page is generated in browser at load.':'This Temple study combines a detailed Blender model with a live browser landscape.',
 '<title>Lova Rakoto: Web developer and designer in Los Angeles</title>':'<title>Temple garden study: ThreeOhFive Studios</title>\n<meta name="robots" content="noindex,nofollow">',
 '</style>':css+'\n</style>',
 '<script src="assets/three.min.js"></script>':html+'\n<script src="assets/three.min.js"></script>\n<script src="assets/temple-study/GLTFLoader.r149.js"></script>',
