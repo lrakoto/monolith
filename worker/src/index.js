@@ -1,3 +1,5 @@
+import { metrics } from './metrics.js';
+
 /* signals — the tally under the footer of the portfolio.
 
    The page is one static file on shared hosting, so there is nowhere on the
@@ -150,6 +152,8 @@ export default {
   async fetch(request, env) {
     const url  = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
+
+    if (path === '/api/events') return metrics(request, env);
 
     if (request.method === 'OPTIONS') {
       return new Response(null, {

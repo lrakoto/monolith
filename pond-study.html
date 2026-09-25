@@ -1873,6 +1873,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
   <span class="study-status" id="study-status" role="status">Loading detailed model…</span>
 </aside>
 
+<script src="assets/metrics.js" defer></script>
 <script src="assets/three.min.js"></script>
 <script src="assets/temple-study/GLTFLoader.r149.js"></script>
 <script>
@@ -7183,6 +7184,8 @@ function wireWorkModal() {
     cta.removeAttribute('target');
     cta.removeAttribute('rel');
     cta.onclick = null;
+    delete cta.dataset.metricProject;
+    if (d.project) cta.dataset.metricProject = d.project;
     if (!cta.hidden) {
       ctatx.textContent = d.cta.label || 'View live site';
       cta.setAttribute('href', href);
@@ -7193,6 +7196,7 @@ function wireWorkModal() {
 
     dlg.querySelector('.wmodal-wrap').scrollTop = 0;
     dlg.showModal();
+    if (d.project && window.portfolioMetric) window.portfolioMetric('project_view', d.project);
   }
 
   function openFeatured(slug, href) {
@@ -7204,14 +7208,14 @@ function wireWorkModal() {
       if (!plates[slug]) plates[slug] = texCardPlate.apply(null, d.plate).toDataURL();
       src = plates[slug];
     }
-    show({ tag: d.tag, title: d.title, body: d.body, facts: d.facts,
+    show({ project: slug, tag: d.tag, title: d.title, body: d.body, facts: d.facts,
            media: [{ type: 'img', src: src, alt: d.title + ' project preview' }],
            cta: { label: d.cta, href: href } });
   }
 
   function openGame(slug) {
     const d = GAMES_WORK.filter(x => x.slug === slug)[0]; if (!d) return;
-    show({ tag: d.tag, title: d.title, body: d.body, facts: d.facts,
+    show({ project: slug, tag: d.tag, title: d.title, body: d.body, facts: d.facts,
            media: [{ type: 'img', src: GAMES_DIR + d.thumb, alt: d.title + ' project preview' }],
            cta: { label: d.cta, href: d.href } });
   }
@@ -7224,7 +7228,7 @@ function wireWorkModal() {
        design site, which is a worse copy of what they are already looking at —
        the images here are the same ones, larger, and the panel carries the
        facts the old page put in a caption. */
-    show({ tag: d.meta.Client ? 'Client: ' + d.meta.Client : 'Design', title: d.title,
+    show({ project: slug, tag: d.meta.Client ? 'Client: ' + d.meta.Client : 'Design', title: d.title,
            body: '', facts: d.meta, media: media });
   }
 

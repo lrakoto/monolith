@@ -1,0 +1,41 @@
+name: metrics-wordpress
+on:
+  workflow_dispatch:
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check plugin syntax
+        run: php -l root/mu-plugins/305-metrics.php
+      - name: Install only the anonymous metrics plugin
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          from ftplib import FTP_TLS, error_perm
+          from io import BytesIO
+          import os, ssl
+          from pathlib import Path
+          with FTP_TLS(context=ssl.create_default_context()) as ftp:
+              ftp.connect(os.environ['FTP_SERVER'])
+              ftp.login(os.environ['FTP_USERNAME'], os.environ['FTP_PASSWORD'])
+              ftp.prot_p()
+              ftp.cwd('threeohfivestudios.com/wp-content')
+              try:
+                  ftp.cwd('mu-plugins')
+              except error_perm as e:
+                  if not str(e).startswith('550'): raise
+                  ftp.mkd('mu-plugins')
+                  ftp.cwd('mu-plugins')
+              name = '305-metrics.php'
+              content = Path('root/mu-plugins/305-metrics.php').read_bytes()
+              ftp.storbinary('STOR ' + name + '.upload', BytesIO(content))
+              copied = BytesIO()
+              ftp.retrbinary('RETR ' + name + '.upload', copied.write)
+              assert copied.getvalue() == content
+              ftp.rename(name + '.upload', name)
+          print('Metrics plugin installed; no other WordPress files changed.')
+          PY
