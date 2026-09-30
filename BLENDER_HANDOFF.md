@@ -2,6 +2,18 @@
 
 Updated 2026-09-29. Read this before continuing the cinematic forest work. This is a local, editable Blender study for Lova's portfolio, not yet a website asset or deployment.
 
+## Pond depth mapping diagnostic — 2026-09-29
+
+The September29 heartbeat cadence is now every10 minutes until8p.m. America/Los_Angeles; this supersedes the30-minute scheduling text below. Hitch_07 is mounted at the recorded path. No heavy local render was running; Blender only prepared and packed this scene with two threads. One coherent cloud comparison completed this run, with no overlapping job or website changes.
+
+`tools/prepare_cathedral_water_broken_depth.py` loads the broken shoreline crowns scene and copies the pond and submerged shelf materials. It changes their world-space noise mappings from(.018,.011,1) to(.045,.0038,1), and(.012,.008,1) to(.040,.0035,1), respectively, then adds six feathered irregular dark submerged meshes. Existing objects other than the two material assignments, camera/lens and lights pass isolation assertions; all dependencies are packed. Output is `renders/cathedral-water-broken-depth-cloud-v1.blend`. RenderStreet job2861120 completed at1200px/64samples: elapsed3m47s, billed3m16s, price$0.24. Download and SHA256 manifest are in `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861120/`; PNG is `cathedralwaterbrokendepthcloudv1_00001.png`. Settled balance is$18.66, above the$5 pause point. No cloud render remains active.
+
+**Rejected visual diagnostic, not the working candidate.** Full-frame comparison shows conspicuous bright green rays converging toward the stair foot. The longer world-y texture footprints reinforced the perspective streaking rather than breaking it up, and the new dark meshes are insufficiently legible. Keep job2861106 and `renders/cathedral-shore-grove-broken-cloud-v1.blend` as the working baseline. Its PNG remains `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861106/cathedralshoregrovebrokencloudv1_00001.png`.
+
+Reference and baseline pond crops confirm the broad value split is already close: far-water mean RGB(47.2,67.4,50.9) versus reference(52.9,73.2,56.6), near-water(37.5,50.6,42.9) versus(35.5,47.6,38.5). Near-water green standard deviation is4.1 versus17.8. These are composition diagnostics, not physical-water validation. The next bounded pass should start from the retained baseline, reduce the luminous shelf's directional contrast, and test more legible organic dark shapes in the foreground. Do not repeat this global anisotropic mapping adjustment or brighten all the water. Preserve the open center, far-shallow/near-dark split, camera, monument and forest composition.
+
+The required24-test suite passes with one skip, the new builder parses, and diff checks pass. Commit only this diagnostic source and notes; packed scenes, render PNGs and download manifests stay outside Git on Hitch_07. Mirror this entry to the main checkout only after verifying its prior handoff matches the study's committed version.
+
 ## Broken shoreline crowns — 2026-09-29
 
 `tools/prepare_cathedral_shore_grove_broken.py` loads the placed grove, hides its five large crowns and adds seven smaller copies at varied heights, orientations and leaf values. Existing stems,12 underplantings, camera, monument, stairs, main forest, pond materials and lights are preserved. Builder isolation checks passed for all existing object descriptors, camera/lens and lights; only the five crowns' render visibility changes. Packed scene saved as `renders/cathedral-shore-grove-broken-cloud-v1.blend`. Projected combined crown bounds are x(.679,1.053), bottom-up y(.141,.356); the small rightmost crop is intentional.
