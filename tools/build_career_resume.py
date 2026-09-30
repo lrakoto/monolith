@@ -55,8 +55,7 @@ ROLES=[
 'Developed responsive HTML email templates with cross-client compatibility.',
 'Created professional visual and motion assets using Adobe Creative Cloud, including After Effects.'])]
 SKILLS=[('Frontend','HTML, CSS, JavaScript, Git; React fundamentals; Angular compatibility and support'),('CMS','WordPress, custom themes, Sitecore, Builder.io, Elementor, Webflow, Shopify'),('Design','Figma; 10+ years professional Photoshop, Illustrator, InDesign and After Effects; Adobe Creative Cloud since release'),('Delivery','Responsive interfaces, reusable components, cross-browser QA, accessibility, performance optimization, A/B test implementation')]
-# the graduation year is omitted while Lova resolves the conflicting source dates.
-EDU=[('General Assembly','Software Engineering Immersive Certificate, 2022'),('Cal Poly Pomona','BFA, Graphic Design')]
+EDU=[('General Assembly','Software Engineering Immersive Certificate, 2022'),('Cal Poly Pomona','BFA, Graphic Design, 2015')]
 LINKS=[('Email','lova@threeohfivestudios.com','mailto:lova@threeohfivestudios.com'),('Portfolio','threeohfivestudios.com/portfolio/','https://threeohfivestudios.com/portfolio/'),('WordPress site','threeohfivestudios.com','https://threeohfivestudios.com/'),('LinkedIn','linkedin.com/in/lovarakoto/','https://www.linkedin.com/in/lovarakoto/')]
 
 def para(c,text,x,top,w,size=10,leading=14,color='#14262a',bold=False):
