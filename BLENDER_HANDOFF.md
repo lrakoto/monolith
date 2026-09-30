@@ -2,6 +2,18 @@
 
 Updated 2026-09-29. Read this before continuing the cinematic forest work. This is a local, editable Blender study for Lova's portfolio, not yet a website asset or deployment.
 
+## Higher-quality cloud comparison in flight — 2026-09-29
+
+**Resume job2861174 before starting any new pass.** RenderStreet `https://my.render.st/job/2861174` was launched around7:11p.m. America/Los_Angeles on September29, and remains queued/Launched at this checkpoint. Packed input is `renders/cathedral-fine-mineral-quality-cloud-v1.blend`. This is a sampling/resolution comparison, not a new approved visual candidate. Retained scene remains `renders/cathedral-stone-fine-breakup-cloud-v1.blend`, job2861168, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861168/cathedralstonefinebreakupcloudv1_00001.png`. No overlapping job or local still rendered. The heartbeat ends today at8p.m.; do not start new work at or after that cutoff.
+
+`tools/prepare_cathedral_cloud_quality_comparison.py` loads that exact retained scene, asserts1200px/64samples/adaptive.01 and no camera depth of field, then changes only resolution to2400px, samples to128 and adaptive threshold to.005. Denoising stays enabled. All object descriptors, camera lens/shifts, light energy/color and AgX/None/exposure.1 pass equality assertions; materials and composition are not edited. Dependencies are packed and two-thread local Blender preparation exits normally. A process check found no heavy local Blender render; the other project remains free to use local resources.
+
+RenderStreet analysis visibly confirmed2400x2400px,100% scale,128samples,.005 adaptive, Blender5.2/Cycles/PNG/OnDemand and still frame1 before launch. Last settled credit is$17.61, comfortably above the$5 pause point. Download the completed still through `python3 tools/download_renderstreet.py --job 2861174`; expected external output folder is `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861174/` and normalized PNG stem `cathedralfinemineralqualitycloudv1_00001.png`. Keep packed blend, PNG and SHA256 manifest out of Git.
+
+Next heartbeat should check this job's status first, retrieve it only when complete, and compare full-frame/downsampled1200px views plus matching native-resolution monument/foliage/pond crops against job2861168 and `reference/midjourney-index2.png`. Evaluate whether higher sampling preserves fine texture or merely resolves existing coarse geometry and smooth material patterns. Do not claim added realism from pixel count alone. Record elapsed/billed time, final charge and settled credit, then choose whether to retain this as the quality baseline while preserving the1200px study for faster subsequent design comparisons. If still pending, remain quiet and launch nothing else.
+
+Required tests pass24 with one skip, the new builder parses, isolation/packing and diff checks pass, and the new packed blend is ignored. This checkpoint contains only the verified builder and pending-job notes, safely mirrored to main after checking prior handoff equality. No website edit or deployment. The previous section's proposed higher-quality pass is now in flight; do not duplicate it.
+
 ## Finer mineral breakup — 2026-09-29
 
 Current retained candidate is `renders/cathedral-stone-fine-breakup-cloud-v1.blend`, RenderStreet job2861168, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861168/cathedralstonefinebreakupcloudv1_00001.png`. It supersedes job2861160 for continued work while keeping that comparison intact. Hitch_07 is mounted. One bounded material pass completed, with no overlapping cloud job, local still rendering or website deployment. The heartbeat still ends at8p.m. America/Los_Angeles today.
