@@ -2,6 +2,20 @@
 
 Updated 2026-09-29. Read this before continuing the cinematic forest work. This is a local, editable Blender study for Lova's portfolio, not yet a website asset or deployment.
 
+## Broken foreground growth and fine pond tufts — 2026-09-29
+
+Current retained candidate is `renders/cathedral-pond-growth-fragments-cloud-v1.blend`, RenderStreet job2861130, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861130/cathedralpondgrowthfragmentscloudv1_00001.png`. Preserve the calmer-water job2861122 as its comparison baseline. The 10-minute cadence continues until8p.m. America/Los_Angeles today; this run completed one coherent cloud pass, with no overlapping still or local rendering. Hitch_07 is mounted and no heavy local Blender process was active.
+
+`tools/prepare_cathedral_pond_growth_fragments.py` loads the calmer-water scene, hides only floating growth00/02/03, and adds16 smaller irregular fragments gathered unevenly near the bottom left and right edges. Two earlier mats remain. Three low tufts add84 curled dark leaves, one420-face mesh, around normalized bottom-up centers(.423,.022),(.752,.009),(.865,.025). Camera-plane projection assertions keep their bases and fragment bounds deliberate; target leaf heights are .014/.012/.010 of frame height before individual variation. The builder checks all prior descriptors, allowing only those three visibility changes, and verifies camera/lens, lights, fragment count and leaf face count. Water shaders, main forest, shoreline grove, monument and stairs remain unchanged. All dependencies are packed; Blender preparation used two threads and exited normally.
+
+RenderStreet used1200px/64samples, Blender5.2/Cycles/PNG/OnDemand. Job2861130 completed in1m58s, billed1m26s, price$0.11. Official FTPS retrieval saved the PNG and SHA256 manifest on Hitch_07. Settled balance is$18.31, above the$5 pause point. No cloud job remains active.
+
+Full-frame and matching pond crop comparison to the calmer version and reference shows less isolated flat growth and a small foreground vegetation depth cue while preserving the open middle. Retain this as a modest geometry improvement; the reference still has much stronger natural foreground variation and finer shoreline growth. Mat placement and low tufts are art directed, not validated physical algae. Equal near-water crop RGB stays essentially unchanged, moving(36.7,49.0,41.9) to(36.6,49.1,41.9); green standard deviation rises only4.4 to4.9, versus reference17.8. Avoid overclaiming the amount of change.
+
+The next useful visible target is the pond's remaining soft, painted surface: inspect its current roughness, bump and reflection graph, then test a more legible water reflection/ripple response while preserving the broad value split. Do not add another regular row of foreground tufts or return to anisotropic global texture mapping. After water reads naturally at full frame, return to overall foliage/stone cohesion rather than indefinite small foreground additions.
+
+Required tests pass24 with one skip, the builder parses and diff checks pass. Checkpoint only the builder and notes; packed blends, images and manifests remain outside Git on Hitch_07. Main handoff is mirrored only after verifying equality with the study's committed prior version. No website edit or deployment.
+
 ## Calmer pond and sparse foreground growth — 2026-09-29
 
 Retain this as the current working candidate: `renders/cathedral-water-calm-foreground-cloud-v1.blend`, RenderStreet job2861122, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861122/cathedralwatercalmforegroundcloudv1_00001.png`. It supersedes job2861106 for continued work, while preserving that baseline and the rejected ray-like job2861120 as separate comparisons. The 10-minute heartbeat continues until8p.m. America/Los_Angeles today. No local still rendered, no overlapping cloud job, and no website edit or deployment.
