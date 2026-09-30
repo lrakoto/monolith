@@ -2,6 +2,20 @@
 
 Updated 2026-09-29. Read this before continuing the cinematic forest work. This is a local, editable Blender study for Lova's portfolio, not yet a website asset or deployment.
 
+## Irregular monument weathering — 2026-09-29
+
+Current retained candidate is `renders/cathedral-stone-irregular-weathering-cloud-v1.blend`, RenderStreet job2861160, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861160/cathedralstoneirregularweatheringcloudv1_00001.png`. It preserves the balanced pond from job2861144 and supersedes that scene for continued work. The 10-minute heartbeat continues until8p.m. America/Los_Angeles today. Hitch_07 is mounted; a Chrome renderer was busy, so local Blender did only brief two-thread preparation and graph inspection, with no local still rendering.
+
+Material inspection identified the vertical weathering layer in `weathered monumental limestone`: world scale(.14,.04,.005) with multiplier .82/1.18. The later grain layer uses(.028,.028,.018), .72/1.15. `tools/prepare_cathedral_stone_irregular_weathering.py` copies that material and changes the first layer to(.065,.065,.040), .94/1.06; the later grain layer becomes(.035,.035,.035), .76/1.11. Mean multiplier stays the same for each layer. Only `limestone monument` slot0 and `305` slot0 receive the new material; source mesh, all transforms, visibility, other material slots, camera/lens, lights, water and vegetation are checked unchanged. Dependencies are packed and preparation exits normally.
+
+RenderStreet job2861160 ran1200px/64samples, Blender5.2/Cycles/PNG/OnDemand. Finished in1m39s, billed1m26s, listed price$0.11. Official FTPS retrieval saved the PNG and SHA256 manifest in the external job folder. Observed settled balance is$17.86, above the$5 pause point. No cloud job remains active. One bounded material pass completed this run; no website edit or deployment.
+
+Full-frame and matching central monument crops against the baseline and reference show the long woodlike grain replaced by irregular mineral mottling. Retain this direction. The figure, silhouette, numeral readability, lighting and cinematic scale hold; the surface remains softer and rounder than the reference's finer chipped variation. This is a visual improvement, not a claim of a faithful final concrete shader.
+
+Next bounded pass should refine the same mineral layer's finer breakup and edge definition, inspecting its noise/detail and range nodes before editing. Avoid restoring long vertical bands or changing monument geometry and camera to compensate for material softness. After that, a higher-resolution cloud quality comparison can reveal whether fine material detail survives denoising; keep its cost bounded and never start it over an active job. Keep balanced water, shoreline grove and open irregular foliage intact while assessing the whole frame.
+
+Required tests pass24 with one skip, builder parses and diff checks pass. Checkpoint only the weathering builder and notes. All packed blends, renders and manifests remain outside Git on Hitch_07. Main handoff is mirrored after verifying its prior contents equal the study's committed note.
+
 ## Balanced pond response — 2026-09-29
 
 Current retained candidate: `renders/cathedral-water-balanced-response-cloud-v1.blend`, RenderStreet job2861144, image `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861144/cathedralwaterbalancedresponsecloudv1_00001.png`. It supersedes the constant-low-roughness job2861138 for continued work. Preserve all comparison scenes. The 10-minute heartbeat continues until8p.m. America/Los_Angeles today; one bounded cloud comparison completed this run. Hitch_07 is mounted, with no heavy local Blender work and no overlapping cloud job.
