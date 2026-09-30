@@ -2,6 +2,20 @@
 
 Updated 2026-09-29. Read this before continuing the cinematic forest work. This is a local, editable Blender study for Lova's portfolio, not yet a website asset or deployment.
 
+## Balanced pond response — 2026-09-29
+
+Current retained candidate: `renders/cathedral-water-balanced-response-cloud-v1.blend`, RenderStreet job2861144, image `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861144/cathedralwaterbalancedresponsecloudv1_00001.png`. It supersedes the constant-low-roughness job2861138 for continued work. Preserve all comparison scenes. The 10-minute heartbeat continues until8p.m. America/Los_Angeles today; one bounded cloud comparison completed this run. Hitch_07 is mounted, with no heavy local Blender work and no overlapping cloud job.
+
+`tools/prepare_cathedral_water_balanced_response.py` loads the fine-reflection scene and copies only pond and submerged shelf materials. Pond roughness becomes a smooth world-y gradient from .26 at y=-620 to .17 at y=-160. Shelf emission becomes1.2 through y=-430, rising smoothly to1.5 at y=-180. The near bed's strength remains unchanged; the small lift is confined shoreward. Current bump, clarity mappings, near dark mix, floating fragments, tufts, architecture, forest, camera and lights remain intact. All prior descriptors excluding the two material assignments, camera/lens and light checks pass. Dependencies are packed, and two-thread Blender preparation exits normally without rendering a local still.
+
+RenderStreet job2861144 used1200px/64samples, Blender5.2/Cycles/PNG/OnDemand. Finished in1m47s, billed1m30s, listed price$0.11. The official FTPS helper retrieved the PNG and SHA256 manifest to the external job directory. Observed settled balance is$17.96, above the$5 pause point. No cloud job remains active. No website edit or deployment.
+
+Full-frame and matching pond crop review against job2861138 and the reference retains this pass: reflected lamps fade more gently toward the camera, and the closest water regains a little light without washing out the dark foreground. The warm columns remain more conspicuous than the reference and the broad green pattern still looks somewhat soft and painted; this is not a completed physical-water material. Equal far-water RGB moves(44.1,62.9,45.9) to(46.3,66.2,48.1), green standard deviation9.6 to10.3. Near-water moves(31.5,44.3,36.9) to(34.7,47.3,40.0), green variation4.0 to4.2. Reference near-water is about(35.4,47.6,38.5), variation17.8. These comparisons diagnose broad value balance only and do not establish naturalism.
+
+The next pass should return to the whole scene: inspect the monument's current surface graph and test less directional concrete weathering, preserving its proportions, numeral, lighting and camera. The reference concrete has irregular variation, while this monument still has visible vertical streaking. Do not spend the remainder of this session on indefinite small pond parameter changes. Keep this balanced water while assessing stone/foliage cohesion at full frame. The remaining pond softness will eventually need a more structural material/bed treatment rather than another global noise remap or indiscriminate brightness increase.
+
+Required tests pass24 with one skip, the new builder parses and diff checks pass. Checkpoint only the builder and handoff notes; packed scenes, PNGs and manifests stay outside Git on Hitch_07. Main handoff was mirrored after checking equality with the study's committed prior version.
+
 ## Pond reflection and ripple response — 2026-09-29
 
 Retain `renders/cathedral-water-fine-reflection-cloud-v1.blend` as the current working response candidate, RenderStreet job2861138, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861138/cathedralwaterfinereflectioncloudv1_00001.png`. Preserve job2861130 as its exact geometry/value comparison baseline. This remains an incremental water study; the warm reflections are now somewhat too pronounced and near water darker than the reference. The 10-minute heartbeat continues until8p.m. America/Los_Angeles today.
