@@ -2,6 +2,20 @@
 
 Updated 2026-09-29. Read this before continuing the cinematic forest work. This is a local, editable Blender study for Lova's portfolio, not yet a website asset or deployment.
 
+## Finer mineral breakup — 2026-09-29
+
+Current retained candidate is `renders/cathedral-stone-fine-breakup-cloud-v1.blend`, RenderStreet job2861168, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861168/cathedralstonefinebreakupcloudv1_00001.png`. It supersedes job2861160 for continued work while keeping that comparison intact. Hitch_07 is mounted. One bounded material pass completed, with no overlapping cloud job, local still rendering or website deployment. The heartbeat still ends at8p.m. America/Los_Angeles today.
+
+`tools/prepare_cathedral_stone_fine_breakup.py` copies the retained monument material and follows its unique(.035,.035,.035) mapping to the noise/range nodes. It asserts the original scale1/detail3/roughness.5 and range(.25,.75) ->(.76,1.11), then changes detail to5, roughness to.72 and the input range to(.35,.65). Mapping and output range stay unchanged. Only monument and305 material slots change; all previous object descriptors, camera/lens and lights pass isolation checks. Dependencies are packed. Two-thread local Blender preparation exits normally.
+
+Job2861168 completed1200px/64samples, Blender5.2/Cycles/PNG/OnDemand, elapsed3m49s, billed3m19s, price$0.25. The official FTPS helper retrieved the PNG and SHA256 manifest onto Hitch_07. No cloud job remains active. Reloading the completed job confirmed the settled balance is$17.61, above the$5 pause point.
+
+Full-frame and matching monument crop review against job2861160 and the reference retain this modest refinement: smaller irregular variations break up the rounded cloudy patches, without restoring the former woodlike stripes. Scale, camera, silhouette,305 readability and the balanced pond/forest composition hold. The reference still has more delicate scraped mineral detail, so this is not a finished faithful stone shader.
+
+Read-only inspection confirms camera depth of field is disabled,1200px/64samples, adaptive sampling enabled at.01, denoising enabled, no render border, AgX/None/exposure.1. The next bounded pass should test this exact candidate at higher cloud quality, for example2400px/128samples with a lower adaptive threshold, while preserving all visual scene settings. That will distinguish texture detail lost to sampling/denoising from remaining material and foliage limitations. Do not start over an active job, change geometry/camera to mask softness, or spend indefinitely on tiny pond tweaks. Continue comparing the whole frame to the reference.
+
+Required tests pass24 with one skip; builder parses, isolation/packing and diff checks pass. Checkpoint only the builder and notes, mirrored to main after verifying the prior handoff copies match. Packed blends, PNGs and manifests remain ignored on Hitch_07.
+
 ## Irregular monument weathering — 2026-09-29
 
 Current retained candidate is `renders/cathedral-stone-irregular-weathering-cloud-v1.blend`, RenderStreet job2861160, PNG `/Volumes/Hitch_07/Blender/Data/cloud-renders/renderstreet/2861160/cathedralstoneirregularweatheringcloudv1_00001.png`. It preserves the balanced pond from job2861144 and supersedes that scene for continued work. The 10-minute heartbeat continues until8p.m. America/Los_Angeles today. Hitch_07 is mounted; a Chrome renderer was busy, so local Blender did only brief two-thread preparation and graph inspection, with no local still rendering.
