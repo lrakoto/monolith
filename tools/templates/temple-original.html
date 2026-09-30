@@ -1690,7 +1690,7 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
       <span class="k">02</span>
       <h3>Visual Design &amp; UI/UX</h3>
       <p>Intuitive, visually compelling interfaces that balance aesthetics, usability and performance.</p>
-      <ul class="les-pts"><li>Figma design systems and mockups</li><li>Visual design systems</li><li>UX audits and usability improvements</li><li>Conversion-focused design (CRO)</li></ul>
+      <ul class="les-pts"><li>Figma design systems and mockups</li><li>Visual design systems</li><li>10+ years Photoshop, Illustrator, InDesign &amp; After Effects</li><li>UX audits and usability improvements</li><li>Conversion-focused design (CRO)</li></ul>
       <span class="t">Design</span><i class="bar"></i>
     </div>
     <div class="les" data-les="2">
@@ -1775,6 +1775,12 @@ body.scene-only,body.scene-only *{ cursor:auto !important; }
       </svg>
     </a>
   </div>
+  <details class="resume-formats" data-rv="fade">
+    <summary>Application résumé formats</summary>
+    <p>One-page versions tailored to different roles.</p>
+    <a href="assets/resume/Lova_Resume_2026_Web_Development.pdf" download>Web development &amp; CMS</a>
+    <a href="assets/resume/Lova_Resume_2026_Visual_Design.pdf" download>Web, visual design &amp; motion</a>
+  </details>
 </section>
 
 <!-- ============================================================ footer -->
@@ -5398,6 +5404,8 @@ const WORK_INFO = {
     story: [["The challenge", "Keep vehicle information useful and accurate across inconsistent public data sources, without maintaining the catalog by hand."], ["My contribution", "Designed and built the interface, database and API integrations. Cached source data in PostgreSQL and added vehicle search, VIN lookup, garages and community photos."], ["The result", "A live catalog covering 71 makes, with exact model-year lists that preserve production gaps and cached answers when upstream sources fail."]],
     facts: {"Role": "Design & full-stack development", "Stack": "Node.js, Express, PostgreSQL", "Timeline": "Started 2022, rebuilt 2026"},
     caseStudy: "https://threeohfivestudios.com/recent-work-autodex/",
+    caption: "AutoDex: the deployed vehicle explorer.",
+    notes: [["Search first", "Make or model search is the primary action, with manufacturer browsing available in the header."], ["From interface to data", "I designed and built the interface, database and API integration. PostgreSQL caches upstream data while preserving production-year gaps."]],
     cta: 'View live site', plate: [9101, .70, .42, 'autodex']
   },
   shop: {
@@ -5406,6 +5414,8 @@ const WORK_INFO = {
     story: [["The challenge", "Deliver a consistent shopping experience while supporting quantity tiers, subscriptions and member pricing from Salesforce."], ["My contribution", "Led two supporting frontend engineers, planned the Builder.io component implementation, and coordinated the Angular data integration with backend developers."], ["The result", "Delivered the production build in approximately two months. The published case study reports a 10–20% improvement in Google PageSpeed Insights scores following performance optimization."]],
     facts: {"Role": "Lead Frontend Developer", "Team": "Lead + 2 FE engineers + backend developers", "Stack": "Builder.io, Angular, Salesforce"},
     caseStudy: "https://threeohfivestudios.com/recent-work-gundry-md/",
+    caption: "Gundry MD: storefront preview from the project archive. Visual designs were supplied by the design team.",
+    notes: [["Design handoff", "The design team supplied approved Figma layouts. My role was lead frontend developer, planning reusable Builder.io components and carrying the design into production."], ["Connected storefront", "The build supported product quantity tiers, subscriptions and member pricing through the Angular and Salesforce integration, coordinated with backend developers."]],
     cta: 'View live site', plate: [9203, .32, .58, 'shop']
   },
   aero: {
@@ -5414,6 +5424,8 @@ const WORK_INFO = {
     story: [["The challenge", "Make a long historical record inviting to explore while keeping its references accessible and the text readable without motion."], ["My contribution", "Worked across the full experience: concept, visual design, research, interaction design and development. Built the chapter system, aircraft illustrations, field notes and WebGL ocean."], ["The result", "A publicly deployed exhibition with five eras and sixteen dated milestones. The complete record remains readable with motion switched off."]],
     facts: {"Role": "Design & development", "Stack": "React, Framer Motion, WebGL2, SVG", "Scope": "5 chapters · 16 milestones"},
     caseStudy: "https://threeohfivestudios.com/recent-work-aero/",
+    caption: "AERO: opening chapter of the interactive exhibition.",
+    notes: [["Reading and exploration", "The primary action begins the historical record, with a direct path to the Blackbird and sources available in the navigation."], ["Across the experience", "My involvement spanned concept, visual design, research, interactions and development, with AI assistance. Chapter navigation, field notes and a readable reduced-motion mode keep the record accessible."]],
     cta: 'View live site', plate: [9307, .54, .30, 'aero']
   }
 };
@@ -5674,7 +5686,17 @@ function wireWorkModal() {
       } else {
         const im = document.createElement('img');
         im.src = m.src; im.alt = m.alt || ''; im.loading = 'lazy'; im.decoding = 'async';
-        gal.appendChild(im);
+        if (m.caption) {
+          const figure = document.createElement('figure'); figure.className = 'case-evidence';
+          const caption = document.createElement('figcaption');
+          const label = document.createElement('p'); label.textContent = m.caption; caption.appendChild(label);
+          const notes = document.createElement('ol');
+          (m.notes || []).forEach(([heading, text]) => {
+            const item = document.createElement('li'), h = document.createElement('h4'), p = document.createElement('p');
+            h.textContent = heading; p.textContent = text; item.append(h, p); notes.appendChild(item);
+          });
+          caption.appendChild(notes); figure.append(im, caption); gal.appendChild(figure);
+        } else gal.appendChild(im);
       }
     });
 
@@ -5721,13 +5743,13 @@ function wireWorkModal() {
     const d = WORK_INFO[slug]; if (!d) return;
     /* the card's concrete border and grain belong to the scene. In the
        detail view the screenshot gets the whole frame, at its own resolution. */
-    let src = WORK_SHOTS[slug] && WORK_SHOTS[slug].src;
+    let src = WORK_SRC[slug] || (WORK_SHOTS[slug] && WORK_SHOTS[slug].src);
     if (!src) {
       if (!plates[slug]) plates[slug] = texCardPlate.apply(null, d.plate).toDataURL();
       src = plates[slug];
     }
     show({ project: slug, tag: d.tag, title: d.title, body: d.body, facts: d.facts, story: d.story, caseStudy: d.caseStudy,
-           media: [{ type: 'img', src: src, alt: d.title + ' project preview' }],
+           media: [{ type: 'img', src: src, alt: d.title + ' project preview', caption: d.caption, notes: d.notes }],
            cta: { label: d.cta, href: href } });
   }
 
@@ -5763,6 +5785,14 @@ function wireWorkModal() {
     card.addEventListener('click', () => openGame(card.dataset.game)));
   $$('.acard[data-design]').forEach(card =>
     card.addEventListener('click', () => openDesign(card.dataset.design)));
+
+  /* a recruiter can share one project without making the next reader hunt for its card. */
+  const requested = Q.get('project');
+  if (requested && Object.prototype.hasOwnProperty.call(WORK_INFO, requested)) {
+    const card = document.querySelector('.card[data-work="' + requested + '"]');
+    if (card) openFeatured(requested, card.getAttribute('href'));
+  } else if (DESIGN_WORK.some(d => d.slug === requested)) openDesign(requested);
+  else if (GAMES_WORK.some(d => d.slug === requested)) openGame(requested);
 
   $('#wmodal-x').addEventListener('click', () => dlg.close());
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });

@@ -54,8 +54,9 @@ ROLES=[
 'Built responsive websites and custom WordPress themes using HTML, CSS, JavaScript and CMS platforms including WordPress, Elementor, Webflow and Shopify.',
 'Developed responsive HTML email templates with cross-client compatibility.',
 'Created professional visual and motion assets using Adobe Creative Cloud, including After Effects.'])]
-SKILLS=[('Frontend','HTML, CSS, JavaScript, Git; React fundamentals; Angular compatibility and support'),('CMS','WordPress, custom themes, Sitecore, Builder.io, Elementor, Webflow, Shopify'),('Design','Figma, Adobe Creative Cloud, Photoshop, Illustrator, InDesign, After Effects'),('Delivery','Responsive interfaces, reusable components, cross-browser QA, accessibility, performance optimization, A/B test implementation')]
-EDU=[('General Assembly','Software Engineering Immersive Certificate, 2022'),('Cal Poly Pomona','BFA, Graphic Design, 2016')]
+SKILLS=[('Frontend','HTML, CSS, JavaScript, Git; React fundamentals; Angular compatibility and support'),('CMS','WordPress, custom themes, Sitecore, Builder.io, Elementor, Webflow, Shopify'),('Design','Figma; 10+ years professional Photoshop, Illustrator, InDesign and After Effects; Adobe Creative Cloud since release'),('Delivery','Responsive interfaces, reusable components, cross-browser QA, accessibility, performance optimization, A/B test implementation')]
+# the graduation year is omitted while Lova resolves the conflicting source dates.
+EDU=[('General Assembly','Software Engineering Immersive Certificate, 2022'),('Cal Poly Pomona','BFA, Graphic Design')]
 LINKS=[('Email','lova@threeohfivestudios.com','mailto:lova@threeohfivestudios.com'),('Portfolio','threeohfivestudios.com/portfolio/','https://threeohfivestudios.com/portfolio/'),('WordPress site','threeohfivestudios.com','https://threeohfivestudios.com/'),('LinkedIn','linkedin.com/in/lovarakoto/','https://www.linkedin.com/in/lovarakoto/')]
 
 def para(c,text,x,top,w,size=10,leading=14,color='#14262a',bold=False):
@@ -91,7 +92,7 @@ def brand():
   sy=para(c,school,side,sy,sw,10.5,14,white,True)-5
   sy=para(c,degree,side,sy,sw,9.5,13,white)-20
  sy-=7;sy=para(c,'Skills',side,sy,sw,14,19,white,True)-16
- for label,text in [('Frontend','HTML, CSS, JavaScript, Git; React fundamentals; Angular support'),('CMS','WordPress, custom themes, Sitecore, Builder.io, Elementor, Webflow, Shopify'),('Design','Figma, Adobe Creative Cloud, After Effects'),('Delivery','Responsive design, cross-browser QA, accessibility, performance, A/B testing')]:
+ for label,text in [('Frontend','HTML, CSS, JavaScript, Git; React fundamentals; Angular support'),('CMS','WordPress, custom themes, Sitecore, Builder.io, Elementor, Webflow, Shopify'),('Design','Figma; 10+ years Photoshop, Illustrator, InDesign, After Effects'),('Delivery','Responsive design, cross-browser QA, accessibility, performance, A/B testing')]:
   sy=para(c,label,side,sy,sw,9,12,muted,True)-3
   sy=para(c,escape(text),side,sy,sw,9,12,white)-10
  sy-=4;sy=para(c,'Contact',side,sy,sw,14,19,white,True)-10
@@ -102,8 +103,8 @@ def brand():
  c.showPage();c.save()
 
 
-def ats():
- c=canvas.Canvas(str(OUT/'Lova_Resume_2026_ATS.pdf'),pagesize=(612,792));metadata(c)
+def ats(filename='Lova_Resume_2026_ATS.pdf'):
+ c=canvas.Canvas(str(OUT/filename),pagesize=(612,792));metadata(c)
  x=40;w=532;y=751
  y=para(c,'Lova Rakotomavonandrianina',x,y,w,21,26,'#12262b',True)-3
  y=para(c,escape(TITLE),x,y,w,12,16,'#12262b',True)-8
@@ -124,7 +125,26 @@ def ats():
  for school,degree in EDU:y=para(c,'<b>'+school+':</b> '+degree,x,y,w,9.5,12.5)-4
  assert y>30,('ATS overflow',y)
  c.showPage();c.save()
-brand();ats()
+if __name__ == '__main__':
+ brand();ats()
+ # emphasis changes between applications; titles and employment dates do not.
+ TITLE='Frontend Web Developer | WordPress, Sitecore & Ecommerce'
+ SUMMARY='Frontend web developer with 7+ years building responsive marketing and ecommerce experiences. Production work spans WordPress, custom themes, Sitecore and Builder.io, with HTML, CSS, JavaScript, reusable components and cross-browser QA. Led the Gundry MD frontend rebuild from approved Figma designs into production.'
+ ats('Lova_Resume_2026_Web_Development.pdf')
+ TITLE='Web & Visual Designer | Frontend Implementation & Motion'
+ SUMMARY='Web and visual designer with 7+ years leading website work from concept through launch, plus 10+ years of professional Photoshop, Illustrator, InDesign and After Effects experience. Combines Figma, visual design and motion assets with responsive frontend and CMS implementation for marketing and ecommerce.'
+ ROLES[1][3][:]=[
+ 'Translated approved Figma designs into reusable Builder.io components as lead frontend developer for the Gundry MD rebuild, coordinating two supporting frontend developers with backend partners.',
+ 'Built responsive marketing and ecommerce experiences using HTML, CSS, JavaScript, WordPress and Elementor.',
+ 'Performed cross-browser, device and accessibility QA, supported Angular integrations, and submitted frontend changes through Git code review.',
+ 'Improved interfaces using user feedback, performance data and A/B testing insights.']
+ ROLES[2][3][:]=[
+ 'Led agency website projects from concept and visual design through development, launch and iteration for clients including B2B and SaaS businesses.',
+ 'Created professional visual and motion assets using Adobe Creative Cloud, including After Effects.',
+ 'Built responsive websites and custom WordPress themes using HTML, CSS, JavaScript and CMS platforms including WordPress, Elementor, Webflow and Shopify.',
+ 'Developed responsive HTML email templates with cross-client compatibility.']
+ SKILLS[:]=[SKILLS[2],SKILLS[0],SKILLS[1],SKILLS[3]]
+ ats('Lova_Resume_2026_Visual_Design.pdf')
 for path in OUT.glob('Lova_Resume_2026*.pdf'):
  r=PdfReader(path); assert len(r.pages)==1
  text=' '.join(r.pages[0].extract_text().lower().split());assert all(k.lower() in text for k in ['Sitecore','Builder.io','Gundry MD','React fundamentals','May 2026 - Present'])

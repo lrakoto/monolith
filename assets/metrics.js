@@ -35,7 +35,7 @@
     const local = url.origin === location.origin;
     if (link.dataset.metricEvent === 'game_launch' && ['pyxel','blockshooter'].includes(link.dataset.metricProject)) track('game_launch', link.dataset.metricProject);
     else if (url.protocol === 'mailto:' || (local && url.pathname.startsWith('/cdn-cgi/l/email-protection'))) track('contact_click');
-    else if (/Lova_Resume_2026\.pdf$/.test(url.pathname)) track('resume_click');
+    else if (/Lova_Resume_2026(?:_ATS|_Web_Development|_Visual_Design)?\.pdf$/.test(url.pathname)) track('resume_click');
     else if (scene === 'website') {
       if (local && rootProjects[url.pathname]) track('project_click', rootProjects[url.pathname]);
       else if (local && url.pathname.startsWith('/portfolio/')) track('portfolio_click');
