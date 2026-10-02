@@ -56,9 +56,4 @@ body.xp-3d .xp li p{color:#bcc7c0}
 .case-evidence h4{font-size:13px;line-height:1.5;color:var(--bone);margin:0 0 8px}
 .case-evidence h4::before{content:'0' counter(evidence) ' / ';color:var(--brand)}
 .case-evidence li p{font-size:14px;line-height:1.7;color:#bac5be;margin:0}
-.resume-formats{max-width:520px;margin-top:28px;text-align:left;font-size:14px;line-height:1.7;color:var(--bone-dim)}
-.resume-formats summary{cursor:pointer;width:fit-content;padding:10px 0;color:var(--bone)}
-.resume-formats p{margin:10px 0}
-.resume-formats a{display:block;width:fit-content;min-height:44px;box-sizing:border-box;padding:10px 0;color:var(--bone);text-decoration:underline;text-underline-offset:5px}
-.resume-formats a:focus-visible,.resume-formats summary:focus-visible{outline:2px solid var(--bone);outline-offset:4px}
 @media(max-width:820px){.case-evidence ol{grid-template-columns:1fr}}
