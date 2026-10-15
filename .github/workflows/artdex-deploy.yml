@@ -28,7 +28,7 @@ jobs:
           python3 - <<'PY'
           import base64, hashlib, io, os, pathlib, tarfile
           data = base64.b64decode(''.join(os.environ[f'ARTDEX_RELEASE_{i:02}'] for i in range(1, 4 + 1)), validate=True)
-          if hashlib.sha256(data).hexdigest() != '454641623cff86bfdc761d6b3a72dc7d6f15df088f49b067e9a24f3a9ab14ab2':
+          if hashlib.sha256(data).hexdigest() != '48ad88c72ea3d32c5f5be41b8aba2816aa79d65e89a5018404e5ccb8c6b57ddf':
               raise SystemExit('The release checksum does not match.')
           target = pathlib.Path('release')
           target.mkdir()
@@ -43,7 +43,7 @@ jobs:
               archive.extractall(target, filter='data')
           if not (target / 'index.html').is_file() or not (target / 'api/index.php').is_file():
               raise SystemExit('The release is incomplete.')
-          print('Verified private Artdex build for eb6c6b2d1ab048f7c6da50d0bef5ab3886c6f136.')
+          print('Verified private Artdex build for 0a5f04d11a36669aaf20b8a08168468aaff8e4e8.')
           PY
       - uses: shivammathur/setup-php@v2
         with:
@@ -72,11 +72,11 @@ jobs:
           def fetch(path):
               request = urllib.request.Request(origin + path, headers={'User-Agent': 'check-live/1.0', 'Cache-Control': 'no-cache'})
               return urllib.request.urlopen(request, timeout=30)
-          html = fetch('?deploy=eb6c6b2d1ab048f7c6da50d0bef5ab3886c6f136').read().decode()
+          html = fetch('?deploy=0a5f04d11a36669aaf20b8a08168468aaff8e4e8').read().decode()
           if '/artdex/assets/' not in html or 'Artdex' not in html:
               raise SystemExit('The live frontend did not match the Artdex release.')
-          assets = json.load(fetch('api/index.php?route=assets&deploy=eb6c6b2d1ab048f7c6da50d0bef5ab3886c6f136'))
-          session = json.load(fetch('api/index.php?route=session&deploy=eb6c6b2d1ab048f7c6da50d0bef5ab3886c6f136'))
+          assets = json.load(fetch('api/index.php?route=assets&deploy=0a5f04d11a36669aaf20b8a08168468aaff8e4e8'))
+          session = json.load(fetch('api/index.php?route=session&deploy=0a5f04d11a36669aaf20b8a08168468aaff8e4e8'))
           if not isinstance(assets.get('assets'), list) or session.get('authProvider') != 'Artdex' or session.get('isAdmin') is not False:
               raise SystemExit('The live API did not pass its public access check.')
           print('Verified https://threeohfivestudios.com/artdex/ and its standalone API.')
