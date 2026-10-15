@@ -1,0 +1,80 @@
+# This workflow is installed on deploy/artdex in lrakoto/monolith so it can use
+# that repository's existing FTPS credentials. The source and build stay private.
+name: Deploy Artdex
+
+on:
+  push:
+    branches: [deploy/artdex]
+    paths: [.github/workflows/artdex-deploy.yml]
+
+permissions: {}
+
+concurrency:
+  group: deploy-artdex
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verify and unpack private release
+        env:
+          ARTDEX_RELEASE_01: ${{ secrets.ARTDEX_RELEASE_01 }}
+          ARTDEX_RELEASE_02: ${{ secrets.ARTDEX_RELEASE_02 }}
+          ARTDEX_RELEASE_03: ${{ secrets.ARTDEX_RELEASE_03 }}
+          ARTDEX_RELEASE_04: ${{ secrets.ARTDEX_RELEASE_04 }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, io, os, pathlib, tarfile
+          data = base64.b64decode(''.join(os.environ[f'ARTDEX_RELEASE_{i:02}'] for i in range(1, 4 + 1)), validate=True)
+          if hashlib.sha256(data).hexdigest() != '763a37bff6df0f259352b6cba123856712c1de368e79849783de01d0c476857d':
+              raise SystemExit('The release checksum does not match.')
+          target = pathlib.Path('release')
+          target.mkdir()
+          with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
+              for member in archive.getmembers():
+                  path = pathlib.PurePosixPath(member.name)
+                  if path.is_absolute() or '..' in path.parts or not (member.isfile() or member.isdir()):
+                      raise SystemExit('The release contains an unsafe archive entry.')
+                  clean = member.name.removeprefix('./')
+                  if member.isfile() and not (clean in ('index.html', '.htaccess', '.nojekyll') or (len(path.parts) == 1 and path.suffix in ('.svg', '.png', '.jpg', '.webp', '.ico')) or path.parts[0] in ('assets', 'artworks', 'api')):
+                      raise SystemExit('The release contains an unexpected file.')
+              archive.extractall(target, filter='data')
+          if not (target / 'index.html').is_file() or not (target / 'api/index.php').is_file():
+              raise SystemExit('The release is incomplete.')
+          print('Verified private Artdex build for cd62df26e3ae69d060e6e0278b9a0f9fcb4decb3.')
+          PY
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, fileinfo, zip
+          coverage: none
+      - name: Check deployable PHP
+        run: |
+          set -e
+          for file in release/api/*.php; do php -l "$file"; done
+      - name: Upload only the Artdex directory
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./release/
+          server-dir: /threeohfivestudios.com/artdex/
+          dangerous-clean-slate: false
+      - name: Verify live frontend and API
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request
+          origin = 'https://threeohfivestudios.com/artdex/'
+          html = urllib.request.urlopen(origin + '?deploy=cd62df26e3ae69d060e6e0278b9a0f9fcb4decb3', timeout=30).read().decode()
+          if '/artdex/assets/' not in html or 'Artdex' not in html:
+              raise SystemExit('The live frontend did not match the Artdex release.')
+          assets = json.load(urllib.request.urlopen(origin + 'api/index.php?route=assets&deploy=cd62df26e3ae69d060e6e0278b9a0f9fcb4decb3', timeout=30))
+          session = json.load(urllib.request.urlopen(origin + 'api/index.php?route=session&deploy=cd62df26e3ae69d060e6e0278b9a0f9fcb4decb3', timeout=30))
+          if not isinstance(assets.get('assets'), list) or session.get('authProvider') != 'Artdex' or session.get('isAdmin') is not False:
+              raise SystemExit('The live API did not pass its public access check.')
+          print('Verified https://threeohfivestudios.com/artdex/ and its standalone API.')
+          PY
