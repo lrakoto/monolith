@@ -1,7 +1,8 @@
 /* aggregate in place so the database never becomes a visitor history. */
 export const PROJECTS = new Set(['studio','autodex','shop','aero','newegg','manhattan','tranomics','godayone','alliance','lewislaw','erikka','cards','moomenu','reactor','teastory','shoboomenu','ara','pilot','moolunch','starke','sean','spatel','cot','pyxel','blockshooter']);
 const EVENTS = new Set(['page_view','project_click','project_view','live_click','game_launch','resume_click','contact_click','portfolio_click']);
-const SCENES = new Set(['temple','redwoods','forest','website','games']);
+const ARTDEX_EVENTS = new Set(['asset_view','asset_download','filter_use','asset_save']);
+const SCENES = new Set(['temple','redwoods','forest','website','games','artdex']);
 const headers = {'cache-control':'no-store'};
 const reply = status => new Response(null, {status, headers});
 export async function metrics(request, env) {
@@ -24,7 +25,11 @@ export async function metrics(request, env) {
   } catch (_) { return reply(400); }
   if (!input || typeof input !== 'object' || Array.isArray(input)) return reply(400);
   const {event,scene,project = ''} = input;
-  if (!EVENTS.has(event) || !SCENES.has(scene)) return reply(400);
+  if ((!EVENTS.has(event) && !ARTDEX_EVENTS.has(event)) || !SCENES.has(scene)) return reply(400);
+  if (scene === 'artdex' && Object.keys(input).some(key => !['event','scene','project'].includes(key))) return reply(400);
+  // keep asset activity separate without accepting catalog names or search text.
+  if (ARTDEX_EVENTS.has(event) && scene !== 'artdex') return reply(400);
+  if (scene === 'artdex' && (project !== '' || (event !== 'page_view' && !ARTDEX_EVENTS.has(event)))) return reply(400);
   const projectEvent = event === 'project_click' || event === 'project_view' || event === 'live_click' || event === 'game_launch';
   if (event === 'game_launch' && !['pyxel','blockshooter'].includes(project)) return reply(400);
   if (projectEvent ? !PROJECTS.has(project) : project !== '') return reply(400);

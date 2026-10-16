@@ -64,3 +64,53 @@ const ninety = await (await report(rangeRequest(90),reportEnv)).json();
 assert.equal(ninety.days,90); assert.equal(reads,3);
 assert.equal((await report(rangeRequest(999),reportEnv)).status,400);
 assert.equal(reads,3);
+
+// asset activity never carries a catalog item, project, or search value.
+const artdexEvents = ['page_view','asset_view','asset_download','filter_use','asset_save'];
+for (const event of artdexEvents) {
+  const before = writes.length;
+  assert.equal((await metrics(req({event,scene:'artdex',project:''}),{DB})).status,204);
+  assert.deepEqual(writes[before].slice(1),['artdex',event,'']);
+}
+for (const input of [
+  ...artdexEvents.map(event=>({event,scene:'artdex',project:'aero'})),
+  ...artdexEvents.slice(1).flatMap(event=>['website','temple','redwoods','forest','games'].map(scene=>({event,scene}))),
+  {event:'project_view',scene:'artdex',project:'aero'},
+  {event:'resume_click',scene:'artdex'},
+  {event:'asset_view',scene:'artdex',email:'private@example.test'},
+  {event:'filter_use',scene:'artdex',query:'private search'},
+]) {
+  const before=writes.length;
+  assert.equal((await metrics(req(input),{DB})).status,400);
+  assert.equal(writes.length,before);
+}
+const beforeOptOut=writes.length;
+assert.equal((await metrics(req({event:'asset_view',scene:'artdex'},{'Sec-GPC':'1'}),{DB})).status,204);
+assert.equal(writes.length,beforeOptOut);
+
+// exercise the hosted dashboard script with both scenes so visits stay separate.
+const plugin = fs.readFileSync('root/mu-plugins/305-metrics.php','utf8');
+const dashboardScript = plugin.match(/<script>\s*([\s\S]*?)\s*<\/script>/)[1]
+  .replace(/<\?php echo wp_json_encode\(wp_create_nonce\('studios_metrics_report'\)\); \?>/, '"test-nonce"');
+function node(tag,text='') {return {tag,textContent:text,children:[],append(...children){this.children.push(...children)},replaceChildren(){this.children=[]},addEventListener(){}};}
+const content=node('div'), status=node('p'), range=node('select');range.value='30';
+const fixtureRows = [
+  {day:'2026-10-15',scene:'website',event:'page_view',project:'',count:3},
+  {day:'2026-10-15',scene:'artdex',event:'page_view',project:'',count:11},
+  {day:'2026-10-15',scene:'artdex',event:'asset_download',project:'',count:7}
+];
+vm.runInNewContext(dashboardScript,{
+  document:{hidden:false,createElement:tag=>node(tag),getElementById:id=>({'metrics-content':content,'metrics-status':status,'metrics-range':range})[id],addEventListener(){}},
+  fetch:async()=>({ok:true,status:200,json:async()=>({success:true,data:{rows:fixtureRows,days:30,updated:'2026-10-15T00:00:00Z'}})}),
+  ajaxurl:'/wp-admin/admin-ajax.php',URLSearchParams,Date,setInterval(){}
+});
+await new Promise(resolve=>setImmediate(resolve));
+const sections=content.children;
+assert.equal(sections[0].textContent,'Artdex');
+assert.equal(sections[1].children[0].children[0].textContent,11);
+assert.equal(sections[1].children[2].children[0].textContent,7);
+const portfolioHeading=sections.findIndex(el=>el.textContent==='Portfolio & website');
+assert.ok(portfolioHeading>1);
+assert.equal(sections[portfolioHeading+1].children[0].children[0].textContent,3);
+assert.ok(status.textContent.startsWith('Last 30 days'));
+console.log('Artdex collector and hosted dashboard checks passed');

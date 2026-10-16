@@ -38,3 +38,28 @@ The hosted view refreshes every 60 seconds while visible and stops polling when 
 Reporting accepts only 7, 30 or 90 days and caches each period separately. The WordPress date selector uses the same allowlist. Its daily one-million-row budget remains unchanged; each fetch now reserves 40,000 rows to cover the largest permitted date range, then reconciles actual usage. All project names are presented as readable labels.
 
 `game_launch` records a Play Beta link click for `pyxel` or `blockshooter`. It does not prove the game loaded or that someone played. Field-log visits use the `games` scene; study pages remain excluded. Previous game links remain `live_click`, because their destination cannot be inferred from the historic aggregates. Apply `metrics-games-migration.sql` once before deploying this version; it copies existing counts into the extended schema.
+
+### Artdex
+
+Artdex uses the same collector and private WordPress dashboard, with its own `artdex` scene. Both the hosted and local reports show a dedicated Artdex section; Artdex visits do not increase the portfolio or WordPress totals.
+
+The accepted Artdex events are `page_view`, `asset_view` (Asset previews), `asset_download` (Download clicks), `filter_use` (Filter uses), and `asset_save` (Asset saves). Each has an empty `project` value. New asset events are rejected for every other scene, and portfolio events other than `page_view` are rejected for Artdex. Existing portfolio and game event rules stay the same.
+
+Artdex counts an activity type once per tab session across the whole catalog, rather than per asset or search. Only the UTC day, fixed scene and event, empty project and aggregate count are stored. Asset IDs or names, tags, search terms, URLs, admin identities, email addresses and form content are not included. The standalone Artdex client excludes its signed-in admin and initial account setup, honors DNT/GPC, and skips local previews and browser automation. A download click measures intent, not a completed transfer or a sale. Collection begins when the integration is installed; no earlier visits are reconstructed.
+
+For an existing database, export a private backup, then apply `metrics-artdex-migration.sql` once **before** publishing the worker. It copies every existing aggregate, retains the previous table as `metrics_daily_pre_artdex`, and keeps `metrics_limit` intact. Run the SQL file as one remote import, not as separate commands; Cloudflare's import operation is atomic ([D1 import behavior](https://blog.cloudflare.com/building-d1-a-global-database/)). The fresh-install `metrics-schema.sql` already includes Artdex and should not be used to migrate an existing table. From `worker/`, using the existing authenticated Cloudflare login:
+
+```sh
+wrangler whoami
+wrangler d1 info signals
+wrangler d1 export signals --remote --output /private/tmp/signals-before-artdex.sql
+wrangler d1 execute signals --remote --file metrics-artdex-migration.sql
+wrangler d1 execute signals --remote --command "SELECT COUNT(*) AS missing_or_reduced FROM metrics_daily_pre_artdex b LEFT JOIN metrics_daily a ON a.day=b.day AND a.scene=b.scene AND a.event=b.event AND a.project=b.project WHERE a.count IS NULL OR a.count < b.count;"
+wrangler deploy
+```
+
+Keep the backup private and out of Git. Verify the database account and worker name against `wrangler.toml` first; stop if either migration table already exists, rather than rerunning or deleting it. The verification query must return zero before deploying. New traffic may increase counts, so comparing exact totals after migration is not sufficient. The route remains only `threeohfivestudios.com/api/*`; Artdex's own `/artdex/api/` remains independent. Confirm an opted-out Artdex request returns 204 without creating a count, a malformed request returns 400, and the report still rejects unauthenticated access.
+
+For an application rollback, publish the previous worker and Artdex client versions while retaining the expanded database table. The previous worker remains compatible with it and all newly collected counts survive. Keep `metrics_daily_pre_artdex` and the export until the update is verified. Do not swap the old snapshot over the active table: that would discard activity collected since migration. Any database recovery should preserve the current table first and merge aggregates, using the private export only when necessary.
+
+Publish the dashboard through the existing manual `metrics-wordpress` GitHub Actions workflow from the reviewed commit. It reuses the existing FTP and `METRICS_REPORT_KEY` secrets; no credentials belong in the Artdex client. The report's 7/30/90-day ranges, 60-second cache, visibility-based refresh and daily read budget are unchanged. The local dashboard's conservative reservation now includes the five possible Artdex rows per day.

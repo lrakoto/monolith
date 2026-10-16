@@ -12,6 +12,18 @@ ROOT = Path(__file__).resolve().parents[1]
 LABELS = {'page_view': 'Site / scene visits', 'project_click': 'Project button clicks', 'project_view': 'Project details opened',
           'game_launch': 'Game launches', 'live_click': 'Other project link clicks', 'resume_click': 'Résumé clicks',
           'contact_click': 'Email-contact clicks', 'portfolio_click': 'WordPress → portfolio clicks'}
+ARTDEX_LABELS = {'page_view': 'Artdex visits', 'asset_view': 'Asset previews', 'asset_download': 'Download clicks',
+                 'filter_use': 'Filter uses', 'asset_save': 'Asset saves'}
+
+def summarize(rows):
+    total = Counter(); scopes = {}; projects = {}; daily = {}
+    for row in rows:
+        total[row['event']] += row['count']
+        scopes.setdefault(row['scene'], Counter())[row['event']] += row['count']
+        daily.setdefault(row['day'], Counter())[row['event']] += row['count']
+        if row['project']:
+            projects.setdefault(row['project'], Counter())[row['event']] += row['count']
+    return total, scopes, projects, daily
 
 def report(days=30, output=None, usage=None):
     start = (datetime.now(timezone.utc).date() - timedelta(days=days - 1)).isoformat()
@@ -23,19 +35,22 @@ def report(days=30, output=None, usage=None):
     rows = result['results']
     if usage is not None:
         usage['rows_read'] = result.get('meta', {}).get('rows_read')
-    total = Counter(); scopes = {}; projects = {}; daily = {}
-    for row in rows:
-        total[row['event']] += row['count']
-        scopes.setdefault(row['scene'], Counter())[row['event']] += row['count']
-        daily.setdefault(row['day'], Counter())[row['event']] += row['count']
-        if row['project']:
-            projects.setdefault(row['project'], Counter())[row['event']] += row['count']
+    total, scopes, projects, daily = summarize(row for row in rows if row['scene'] != 'artdex')
+    artdex_total, _, _, artdex_daily = summarize(row for row in rows if row['scene'] == 'artdex')
     print('Anonymous activity, ' + start + ' through today (UTC)')
+    print('Artdex')
+    for key,label in ARTDEX_LABELS.items(): print(f'{label}: {artdex_total[key]}')
+    print('Portfolio & website')
     for key,label in LABELS.items(): print(f'{label}: {total[key]}')
     def table(headers, records):
         return '<table><thead><tr>'+''.join('<th>'+html.escape(str(x))+'</th>' for x in headers)+'</tr></thead><tbody>'+''.join('<tr>'+''.join('<td>'+html.escape(str(x))+'</td>' for x in record)+'</tr>' for record in records)+'</tbody></table>'
-    stats = ''.join('<div class="stat"><strong>'+str(total[k])+'</strong><span>'+v+'</span></div>' for k,v in LABELS.items())
-    body = '<h1>Portfolio &amp; website activity</h1><p>'+start+' through today · UTC · generated '+datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')+'</p><div class="stats">'+stats+'</div>'
+    def stats(totals, labels):
+        return '<div class="stats">'+''.join('<div class="stat"><strong>'+str(totals[k])+'</strong><span>'+v+'</span></div>' for k,v in labels.items())+'</div>'
+    body = '<h1>305 website activity</h1><p>'+start+' through today · UTC · generated '+datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')+'</p>'
+    body += '<h2>Artdex</h2>'+stats(artdex_total, ARTDEX_LABELS)
+    body += '<h2>Artdex daily activity (UTC)</h2>'+table(['Date',*ARTDEX_LABELS.values()], [[day,*[counts[k] for k in ARTDEX_LABELS]] for day,counts in sorted(artdex_daily.items(),reverse=True)])
+    body += '<p class="note">Artdex counts each activity type once per tab session across the catalog. Download clicks do not confirm a completed download. Asset names, search terms and account information are not collected. Signed-in Artdex admin activity is excluded.</p>'
+    body += '<h2>Portfolio &amp; website</h2>'+stats(total, LABELS)
     body += '<h2>By site and scene</h2>'+table(['Site / scene',*LABELS.values()], [[name,*[counts[k] for k in LABELS]] for name,counts in sorted(scopes.items())])
     body += '<h2>Project interest</h2>'+table(['Project','Project buttons','Details opened','Game launches','Other links'], [[name,counts['project_click'],counts['project_view'],counts['game_launch'],counts['live_click']] for name,counts in sorted(projects.items(),key=lambda x:sum(x[1].values()),reverse=True)])
     body += '<h2>Daily activity</h2>'+table(['Date',*LABELS.values()], [[day,*[counts[k] for k in LABELS]] for day,counts in sorted(daily.items(),reverse=True)])

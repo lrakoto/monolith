@@ -44,23 +44,29 @@ add_action('wp_ajax_studios_metrics_report', function () {
 function studios_metrics_page() {
     if (!current_user_can('manage_options')) { return; }
     ?>
-    <div class="wrap" id="studios-metrics"><h1>Portfolio &amp; website activity</h1>
+    <div class="wrap" id="studios-metrics"><h1>305 website activity</h1>
     <p><label for="metrics-range">Date range </label><select id="metrics-range"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></p>
     <p id="metrics-status" role="status">Loading activity…</p>
     <div id="metrics-content"></div>
+    <p>Artdex counts each activity type once per tab session across the catalog. Download clicks do not confirm a completed download. Asset names, search terms and account information are not collected. Signed-in Artdex admin activity is excluded.</p>
     <p>Anonymous activity, not unique people. Each action counts once per site or scene, project and tab session. Clicks do not confirm inquiries or downloads. Counts began when tracking was installed. Game launches count Play Beta link clicks, not completed plays. Separate launch tracking began September 25, 2026; older clicks remain under other project links.</p>
     <p>Refreshes every 60 seconds while visible. Pauses when hidden. Reports share a cache across devices and a daily database read limit.</p></div>
     <style>#studios-metrics{max-width:1400px}#studios-metrics .stats{display:flex;gap:12px;flex-wrap:wrap}#studios-metrics .stat{background:#fff;padding:18px;flex:1;min-width:140px}#studios-metrics strong{display:block;font-size:28px}#studios-metrics .table-wrap{overflow:auto}#studios-metrics table{border-collapse:collapse;width:100%;background:white}#studios-metrics th,#studios-metrics td{padding:12px;text-align:left;border-bottom:1px solid #ddd;white-space:nowrap}</style>
     <script>
     (() => {
       const labels = {page_view:'Site / scene visits',project_click:'Project buttons',project_view:'Details opened',live_click:'Other project link clicks',game_launch:'Game launches',resume_click:'Résumé clicks',contact_click:'Contact clicks',portfolio_click:'Website to portfolio'};
+      const artdexLabels = {page_view:'Artdex visits',asset_view:'Asset previews',asset_download:'Download clicks',filter_use:'Filter uses',asset_save:'Asset saves'};
       const names = {website:'Website',temple:'Temple',redwoods:'Redwoods',forest:'Forest',shop:'Gundry MD',autodex:'AutoDex',aero:'AERO',studio:'305 Studios',games:'Game field logs',pyxel:'Pyxel Game',blockshooter:'Block Shooter',newegg:'Newegg Email Campaigns',manhattan:'Manhattan Funding',tranomics:'Tranomics',godayone:'Go Day One',alliance:'Alliance Française',lewislaw:'Lewis Law',erikka:'Erikka Dawn',cards:'Flavor Cards',moomenu:'Moodaepo Menu',reactor:'Reactor Branding',teastory:'Teastory Packaging',shoboomenu:'Shoboo Menu',ara:'ARA Campaign',pilot:'Light Pulse Campaign',moolunch:'Email Campaigns',starke:'Starke Branding',sean:'Sean Website',spatel:'Spatel Website',cot:'COT Website'};
       const container = document.getElementById('metrics-content'), status = document.getElementById('metrics-status');
       function element(tag,text) {const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;}
-      function table(title,heading,groups,keys) {
+      function table(title,heading,groups,keys,labelMap=labels) {
         container.append(element('h2',title));const wrap=element('div');wrap.className='table-wrap';const t=element('table'),head=element('tr');
-        [heading,...keys.map(k=>labels[k])].forEach(x=>head.append(element('th',x)));t.append(head);
+        [heading,...keys.map(k=>labelMap[k])].forEach(x=>head.append(element('th',x)));t.append(head);
         Object.entries(groups).forEach(([name,counts])=>{const row=element('tr');[names[name]||name,...keys.map(k=>counts[k]||0)].forEach(x=>row.append(element('td',x)));t.append(row)});wrap.append(t);container.append(wrap);
+      }
+      function stats(totals,labelMap) {
+        const cards=element('div');cards.className='stats';
+        for(const [key,label] of Object.entries(labelMap)){const card=element('div');card.className='stat';card.append(element('strong',totals[key]||0),element('span',label));cards.append(card);}container.append(cards);
       }
       const range = document.getElementById('metrics-range');
       let busy=false,last=0,stopped=false;
@@ -73,10 +79,14 @@ function studios_metrics_page() {
           if(response.status===403){stopped=true;throw new Error('Session expired. Reload and sign in again.');}
           if(!response.ok)throw new Error('Could not refresh. Retrying in 60 seconds.');
           const result=await response.json();if(!result.success)throw new Error('Report unavailable.');
-          const totals={},scenes={},projects={},days={};
-          for(const row of result.data.rows){totals[row.event]=(totals[row.event]||0)+row.count;for(const [group,key] of [[scenes,row.scene],[days,row.day],[projects,row.project]]){if(!key)continue;group[key]||={};group[key][row.event]=(group[key][row.event]||0)+row.count;}}
-          container.replaceChildren();const stats=element('div');stats.className='stats';
-          for(const [key,label] of Object.entries(labels)){const card=element('div');card.className='stat';card.append(element('strong',totals[key]||0),element('span',label));stats.append(card);}container.append(stats);
+          const totals={},scenes={},projects={},days={},artdexTotals={},artdexDays={};
+          for(const row of result.data.rows){
+            if(row.scene==='artdex'){artdexTotals[row.event]=(artdexTotals[row.event]||0)+row.count;artdexDays[row.day]||={};artdexDays[row.day][row.event]=(artdexDays[row.day][row.event]||0)+row.count;continue;}
+            totals[row.event]=(totals[row.event]||0)+row.count;for(const [group,key] of [[scenes,row.scene],[days,row.day],[projects,row.project]]){if(!key)continue;group[key]||={};group[key][row.event]=(group[key][row.event]||0)+row.count;}
+          }
+          container.replaceChildren();container.append(element('h2','Artdex'));stats(artdexTotals,artdexLabels);
+          table('Artdex daily activity (UTC)','Date',Object.fromEntries(Object.entries(artdexDays).reverse()),Object.keys(artdexLabels),artdexLabels);
+          container.append(element('h2','Portfolio & website'));stats(totals,labels);
           table('By site and scene','Site / scene',scenes,Object.keys(labels));table('Project interest','Project',projects,['project_click','project_view','game_launch','live_click']);table('Daily activity (UTC)','Date',Object.fromEntries(Object.entries(days).reverse()),Object.keys(labels));
           status.textContent='Last '+result.data.days+' days · Updated '+new Date(result.data.updated).toLocaleString();
         }catch(error){status.textContent=error.message;}finally{busy=false;range.disabled=false;}
