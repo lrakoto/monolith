@@ -1,6 +1,5 @@
 import { report } from './report.js';
 import { metrics } from './metrics.js';
-import { tipReport } from './tips.js';
 
 /* signals — the tally under the footer of the portfolio.
 
@@ -65,7 +64,7 @@ export default {
     const url  = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
 
-    if (path === '/api/metrics-report') return report(request, env, tipReport);
+    if (path === '/api/metrics-report') return report(request, env);
 
     if (path === '/api/events') return metrics(request, env);
 
