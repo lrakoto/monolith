@@ -28,7 +28,7 @@ jobs:
           python3 - <<'PY'
           import base64, hashlib, io, os, pathlib, tarfile
           data = base64.b64decode(''.join(os.environ[f'ARTDEX_RELEASE_{i:02}'] for i in range(1, 4 + 1)), validate=True)
-          if hashlib.sha256(data).hexdigest() != '407e0817c6269b196caea238bc4eca68cbd86b876fb7f05355a22a79b7df01bd':
+          if hashlib.sha256(data).hexdigest() != '0b6f1e261de384cb605a07da3e181e79b76c631e8b49da64fbcf91b831945b6f':
               raise SystemExit('The release checksum does not match.')
           target = pathlib.Path('release')
           target.mkdir()
@@ -43,9 +43,9 @@ jobs:
               archive.extractall(target, filter='data')
           if not (target / 'index.html').is_file() or not (target / 'api/index.php').is_file():
               raise SystemExit('The release is incomplete.')
-          print('Verified private Artdex build for c24daf14653abe20e88db5ff5ecdec5b7d51034e.')
+          print('Verified private Artdex build for f318abdbac212ec430d28626880e8eaeac9337a8.')
           PY
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.3'
           extensions: dom, fileinfo, zip
@@ -55,12 +55,13 @@ jobs:
           set -e
           for file in release/api/*.php; do php -l "$file"; done
       - name: Upload only the Artdex directory
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
+          security: strict
           local-dir: ./release/
           server-dir: /threeohfivestudios.com/artdex/
           dangerous-clean-slate: false
@@ -72,11 +73,11 @@ jobs:
           def fetch(path):
               request = urllib.request.Request(origin + path, headers={'User-Agent': 'check-live/1.0', 'Cache-Control': 'no-cache'})
               return urllib.request.urlopen(request, timeout=30)
-          html = fetch('?deploy=c24daf14653abe20e88db5ff5ecdec5b7d51034e').read().decode()
+          html = fetch('?deploy=f318abdbac212ec430d28626880e8eaeac9337a8').read().decode()
           if '/artdex/assets/' not in html or 'Artdex' not in html:
               raise SystemExit('The live frontend did not match the Artdex release.')
-          assets = json.load(fetch('api/index.php?route=assets&deploy=c24daf14653abe20e88db5ff5ecdec5b7d51034e'))
-          session = json.load(fetch('api/index.php?route=session&deploy=c24daf14653abe20e88db5ff5ecdec5b7d51034e'))
+          assets = json.load(fetch('api/index.php?route=assets&deploy=f318abdbac212ec430d28626880e8eaeac9337a8'))
+          session = json.load(fetch('api/index.php?route=session&deploy=f318abdbac212ec430d28626880e8eaeac9337a8'))
           if not isinstance(assets.get('assets'), list) or session.get('authProvider') != 'Artdex' or session.get('isAdmin') is not False:
               raise SystemExit('The live API did not pass its public access check.')
           print('Verified https://threeohfivestudios.com/artdex/ and its standalone API.')
