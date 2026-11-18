@@ -1,11 +1,17 @@
 name: metrics-wordpress
 on:
   workflow_dispatch:
+permissions:
+  contents: read
+
 jobs:
   install:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Check plugin syntax
         run: php -l root/mu-plugins/305-metrics.php
       - name: Install only the anonymous metrics plugin

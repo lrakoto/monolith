@@ -62,8 +62,17 @@ and a check that goes red for reasons outside the code gets ignored.
 ## Automatic deploy
 
 `.github/workflows/deploy.yml` publishes on every push to `main`: it runs the
-test suite first, then FTPs the site into
-`/public_html/threeohfivestudios.com/portfolio/`.
+test suite, validates the tracked static release, and uploads it over verified
+FTPS into `/public_html/threeohfivestudios.com/portfolio/`. Manual runs default
+to inventory validation; enable the `publish` input to upload.
+
+`python3 -B tools/publish_portfolio.py` validates the same paths without any
+network access. The uploader requires a valid certificate for the configured
+hosting hostname and an existing portfolio directory. It replaces each file
+after the upload finishes, assets first and the main page last. It does not
+delete existing files; retire old public material separately after checking
+which URLs are still in use. Back up the deployed directory and verify the
+first rollout can replace existing files on this host before relying on it.
 
 It needs four repository secrets — **Settings → Secrets and variables →
 Actions → New repository secret**. Nobody but you should add these; they are
@@ -109,8 +118,9 @@ One level too high in the other direction would sync the repo over the
 WordPress root. The first deploy is worth watching in the Actions tab rather
 than assuming.
 
-The workflow excludes `*.py`, `*.md`, `.github/` and `.git*` — `serve.py` most
-of all, which has an endpoint that writes to `index.html`.
+The publisher builds from an explicit allowlist of tracked pages and static
+assets. Development tools, private docs, WordPress files, and Worker source
+stay out of the release. Add public assets to the allowlist intentionally.
 
 Note what this changes about access: anyone who can push to `main` can now
 reach the host. That is the trade a push-to-deploy makes.
