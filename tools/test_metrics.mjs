@@ -64,6 +64,34 @@ const ninety = await (await report(rangeRequest(90),reportEnv)).json();
 assert.equal(ninety.days,90); assert.equal(reads,3);
 assert.equal((await report(rangeRequest(999),reportEnv)).status,400);
 assert.equal(reads,3);
+let privateReads = 0;
+const loadTips = async () => {privateReads++;return {balance:'1.000001',transfers:[]};};
+assert.equal((await report(new Request('https://example.com/api/metrics-report'),reportEnv,loadTips)).status,403);
+assert.equal(privateReads,0);
+assert.equal((await (await report(authorized(),reportEnv,loadTips)).json()).tipWallet.balance,'1.000001');
+assert.equal(privateReads,1);
+
+const {parseTransfer} = await import('../worker/src/tips.js');
+const walletTopic = '0x00000000000000000000000023178a649a868ff0b8280125982a0fb9e9016164';
+const fromTopic = '0x' + '0'.repeat(24) + '1'.repeat(40);
+const hash = '0x' + 'a'.repeat(64);
+const sampleLog = {
+  address:'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  topics:['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',fromTopic,walletTopic],
+  transactionHash:hash,logIndex:'0x2',blockNumber:'0x309de91',data:'0xf4241'
+};
+assert.deepEqual(parseTransfer(sampleLog,'0x68ce0000'),{
+  hash,index:2,block:50978449,timestamp:1758330880,direction:'in',amount:'1.000001'
+});
+assert.equal(parseTransfer({...sampleLog,topics:[sampleLog.topics[0],walletTopic,fromTopic]},'0x1').direction,'out');
+assert.throws(()=>parseTransfer({...sampleLog,removed:true},'0x1'));
+
+const {default: worker} = await import('../worker/src/index.js');
+const publicTally = await worker.fetch(new Request('https://example.com/api/tally'),{DB:{prepare(){
+  return {all:async()=>({results:[]}),first:async()=>({t:null})};
+}}});
+assert.equal(publicTally.status,200);
+assert.equal('tips' in await publicTally.json(),false);
 
 // asset activity never carries a catalog item, project, or search value.
 const artdexEvents = ['page_view','asset_view','asset_download','filter_use','asset_save'];
@@ -101,7 +129,7 @@ const fixtureRows = [
 ];
 vm.runInNewContext(dashboardScript,{
   document:{hidden:false,createElement:tag=>node(tag),getElementById:id=>({'metrics-content':content,'metrics-status':status,'metrics-range':range})[id],addEventListener(){}},
-  fetch:async()=>({ok:true,status:200,json:async()=>({success:true,data:{rows:fixtureRows,days:30,updated:'2026-10-15T00:00:00Z'}})}),
+  fetch:async()=>({ok:true,status:200,json:async()=>({success:true,data:{rows:fixtureRows,days:30,updated:'2026-10-15T00:00:00Z',tipWallet:{balance:'1.100001',received:'1',syncedThrough:1758330880,transfers:[{timestamp:1758330880,amount:'1.000001',direction:'in',hash}]}}})}),
   ajaxurl:'/wp-admin/admin-ajax.php',URLSearchParams,Date,setInterval(){}
 });
 await new Promise(resolve=>setImmediate(resolve));
@@ -114,3 +142,10 @@ assert.ok(portfolioHeading>1);
 assert.equal(sections[portfolioHeading+1].children[0].children[0].textContent,3);
 assert.ok(status.textContent.startsWith('Last 30 days'));
 console.log('Artdex collector and hosted dashboard checks passed');
+
+const tipHeading = sections.findIndex(el=>el.textContent==='Tip wallet · Native USDC on Base');
+assert.ok(tipHeading>portfolioHeading);
+const transferRow = sections[tipHeading+3].children[0].children[1];
+assert.equal(transferRow.children[1].textContent,'Incoming');
+assert.equal(transferRow.children[2].textContent,'1.000001');
+assert.equal(transferRow.children[3].children[0].href,'https://basescan.org/tx/'+hash);
