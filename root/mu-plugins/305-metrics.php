@@ -18,7 +18,7 @@ add_action('wp_ajax_studios_metrics_report', function () {
     check_ajax_referer('studios_metrics_report');
     $days = isset($_POST['days']) && is_scalar($_POST['days']) ? absint($_POST['days']) : 30;
     if (!in_array($days, array(7, 30, 90), true)) { wp_send_json_error(null, 400); }
-    $cache_key = 'studios_metrics_report_v3_' . $days;
+    $cache_key = 'studios_metrics_report_v4_' . $days;
     $data = get_transient($cache_key);
     if ($data === false) {
         $key_file = __DIR__ . '/305-metrics-key.php';
@@ -39,8 +39,113 @@ add_action('wp_ajax_studios_metrics_report', function () {
         update_option('studios_metrics_read_budget', $budget, false);
         set_transient($cache_key, $data, 60);
     }
+    $data['tipWallet'] = studios_tip_wallet($data['tipBaseline'] ?? null);
+    unset($data['tipBaseline']);
     wp_send_json_success($data);
 });
+function studios_tip_rpc($method, $params) {
+    $response = wp_remote_post('https://base-rpc.publicnode.com', array(
+        'timeout' => 2.5,
+        'redirection' => 0,
+        'headers' => array('Content-Type' => 'application/json'),
+        'body' => wp_json_encode(array('jsonrpc'=>'2.0','id'=>1,'method'=>$method,'params'=>$params)),
+    ));
+    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) { return null; }
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    return $body['result'] ?? null;
+}
+function studios_tip_integer($hex) {
+    if (!is_string($hex) || !preg_match('/^0x[0-9a-f]+$/iD', $hex)) { return null; }
+    $value = hexdec(substr($hex, 2));
+    return is_int($value) ? $value : null;
+}
+function studios_tip_amount($raw) {
+    $fraction = rtrim(str_pad((string)($raw % 1000000), 6, '0', STR_PAD_LEFT), '0');
+    return intdiv($raw, 1000000) . ($fraction !== '' ? '.' . $fraction : '');
+}
+function studios_tip_sync($state, $contract, $wallet) {
+    $finalized = studios_tip_rpc('eth_getBlockByNumber', array('finalized', false));
+    $last = studios_tip_integer($finalized['number'] ?? null);
+    $from = $state['next'] ?? 51018127; // before the tip jar went live in September 2026.
+    if ($last === null) { return null; }
+    if ($last < $from) { return $state; }
+    $to = min($last, $from + 49999);
+    $transfer_topic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+    $filter = array('address'=>$contract,'fromBlock'=>'0x'.dechex($from),'toBlock'=>'0x'.dechex($to));
+    $in = studios_tip_rpc('eth_getLogs', array($filter + array('topics'=>array($transfer_topic, null, $wallet))));
+    $out = studios_tip_rpc('eth_getLogs', array($filter + array('topics'=>array($transfer_topic, $wallet))));
+    if (!is_array($in) || !is_array($out)) { return null; }
+
+    $rows = $state['transfers'] ?? array();
+    $timestamps = array($last => studios_tip_integer($finalized['timestamp'] ?? null));
+    foreach (array_merge($in, $out) as $log) {
+        $block = studios_tip_integer($log['blockNumber'] ?? null);
+        $index = studios_tip_integer($log['logIndex'] ?? null);
+        $amount = studios_tip_integer($log['data'] ?? null);
+        $hash = strtolower($log['transactionHash'] ?? '');
+        $topics = $log['topics'] ?? array();
+        $sender = strtolower($topics[1] ?? '');
+        $recipient = strtolower($topics[2] ?? '');
+        if (strtolower($log['address'] ?? '') !== $contract || ($topics[0] ?? '') !== $transfer_topic
+            || !empty($log['removed']) || ($sender !== $wallet && $recipient !== $wallet)
+            || !preg_match('/^0x[0-9a-f]{64}$/D', $hash) || $block === null || $block < $from || $block > $to
+            || $index === null || $amount === null) { return null; }
+        $time = studios_tip_integer($log['blockTimestamp'] ?? null);
+        if ($time === null) {
+            if (!isset($timestamps[$block])) {
+                $header = studios_tip_rpc('eth_getBlockByNumber', array($log['blockNumber'], false));
+                $timestamps[$block] = studios_tip_integer($header['timestamp'] ?? null);
+            }
+            $time = $timestamps[$block];
+        }
+        if ($time === null) { return null; }
+        $direction = $sender === $wallet ? ($recipient === $wallet ? 'self' : 'out') : 'in';
+        $rows[$hash . ':' . $index] = array('hash'=>$hash,'timestamp'=>$time,'direction'=>$direction,
+            'amount'=>studios_tip_amount($amount),'block'=>$block,'index'=>$index);
+    }
+    if (!isset($timestamps[$to])) {
+        $header = studios_tip_rpc('eth_getBlockByNumber', array('0x'.dechex($to), false));
+        $timestamps[$to] = studios_tip_integer($header['timestamp'] ?? null);
+    }
+    if ($timestamps[$to] === null) { return null; }
+    uasort($rows, function ($a, $b) {
+        return ($b['block'] <=> $a['block']) ?: ($b['index'] <=> $a['index']);
+    });
+    return array('next'=>$to + 1, 'timestamp'=>$timestamps[$to], 'transfers'=>array_slice($rows, 0, 100, true));
+}
+function studios_tip_wallet($baseline) {
+    $cached = get_transient('studios_tip_wallet_v1');
+    if (is_array($cached)) { return $cached; }
+
+    $contract = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913';
+    $wallet = '0x00000000000000000000000023178a649a868ff0b8280125982a0fb9e9016164';
+    $raw = studios_tip_integer(studios_tip_rpc('eth_call',
+        array(array('to'=>$contract,'data'=>'0x70a08231'.substr($wallet, 2)), 'latest')));
+    $state = get_option('studios_tip_transfers_v1', array());
+    $updated = studios_tip_sync($state, $contract, $wallet);
+    if ($updated && $updated !== $state) {
+        // Two admins may poll together. Only advance the checkpoint we read.
+        if (!$state) { add_option('studios_tip_transfers_v1', $updated, '', false); }
+        else {
+            global $wpdb;
+            $wpdb->update($wpdb->options, array('option_value'=>maybe_serialize($updated)), array(
+                'option_name'=>'studios_tip_transfers_v1','option_value'=>maybe_serialize($state),
+            ));
+            wp_cache_delete('studios_tip_transfers_v1', 'options');
+        }
+        $state = get_option('studios_tip_transfers_v1', array());
+    }
+    $initial = is_string($baseline) && ctype_digit($baseline) ? (int)$baseline : null;
+    $value = array(
+        'balance'=>$raw !== null ? studios_tip_amount($raw) : null,
+        'received'=>$raw !== null && $initial !== null ? studios_tip_amount(max(0, $raw - $initial)) : null,
+        'transfers'=>array_values($state['transfers'] ?? array()),
+        'syncedThrough'=>$state['timestamp'] ?? null,
+        'refreshFailed'=>$updated === null,
+    );
+    set_transient('studios_tip_wallet_v1', $value, 60);
+    return $value;
+}
 function studios_metrics_page() {
     if (!current_user_can('manage_options')) { return; }
     ?>
