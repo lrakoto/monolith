@@ -1,5 +1,5 @@
 const cache = new Map();
-export async function report(request, env) {
+export async function report(request, env, loadTips) {
   const headers = {'Content-Type':'application/json', 'Cache-Control':'no-store'};
   if (request.method !== 'GET') return new Response(null, {status:405, headers});
   if (!env.METRICS_REPORT_KEY || request.headers.get('Authorization') !== 'Bearer ' + env.METRICS_REPORT_KEY) return new Response(null, {status:403, headers});
@@ -11,9 +11,10 @@ export async function report(request, env) {
     if (!cached || Date.now() - cached.at >= 60000) {
       const start = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0,10);
       const {results, meta} = await env.DB.prepare('SELECT day,scene,event,project,count FROM metrics_daily WHERE day >= ? ORDER BY day,scene,event,project LIMIT 40000').bind(start).all();
-      cached = {body:JSON.stringify({start, days, updated:new Date().toISOString(), rows:results, reads:meta?.rows_read ?? 40000}),at:Date.now()};
+      cached = {body:{start, days, updated:new Date().toISOString(), rows:results, reads:meta?.rows_read ?? 40000},at:Date.now()};
       cache.set(days,cached);
     }
-    return new Response(cached.body, {headers});
+    const tipWallet = loadTips ? await loadTips(env).catch(() => null) : null;
+    return new Response(JSON.stringify({...cached.body, tipWallet}), {headers});
   } catch (_) { return new Response(null, {status:503, headers}); }
 }

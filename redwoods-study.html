@@ -1037,7 +1037,6 @@ body.xp-3d .xp li p{ margin-top:4px; }
   font-variant-numeric:tabular-nums; letter-spacing:.01em; }
 .foot-signals li span{ font-size:10px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--muted); }
-.foot-signals li.is-tip b{ color:#e4606c; }
 .foot-signals-note{ margin:12px 0 0; max-width:30ch; font-size:11px;
   line-height:1.5; color:#79847e; }
 
@@ -8827,7 +8826,7 @@ function start() {
 }
 
 /* The footer tally. Same origin, so no key and no third party; the worker on
-   /api/* holds the counts and reads the tip balance off Base itself.
+   /api/* holds the guestbook counts.
 
    Every failure path here is the same one: leave the row hidden. A footer
    ornament has no business reporting its own outage, and the page has to be
@@ -8841,21 +8840,16 @@ function loadSignals() {
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if (!d || !d.signals) return;
-      /* received, not the wallet balance: the difference is dust that was
-         already there, and calling that a tip would be a small lie */
-      const tip = d.tips && d.tips.received ? parseFloat(d.tips.received) : 0;
       const rows = [];
-      if (d.signals.hello)     rows.push(['said hello',  d.signals.hello, false]);
-      if (d.signals.helpful)   rows.push(['found it useful', d.signals.helpful, false]);
-      if (d.signals.unhelpful) rows.push(['found it not',    d.signals.unhelpful, false]);
-      if (tip > 0)             rows.push(['USDC tipped', d.tips.received, true]);
+      if (d.signals.hello)     rows.push(['said hello',  d.signals.hello]);
+      if (d.signals.helpful)   rows.push(['found it useful', d.signals.helpful]);
+      if (d.signals.unhelpful) rows.push(['found it not',    d.signals.unhelpful]);
       /* nothing has happened yet, so there is nothing to say */
       if (!rows.length) return;
 
       list.replaceChildren();
-      rows.forEach(([label, value, isTip]) => {
+      rows.forEach(([label, value]) => {
         const li = document.createElement('li');
-        if (isTip) li.className = 'is-tip';
         const b = document.createElement('b'); b.textContent = String(value);
         const s = document.createElement('span'); s.textContent = label;
         li.append(b, s); list.appendChild(li);

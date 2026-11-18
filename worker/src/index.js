@@ -1,5 +1,6 @@
 import { report } from './report.js';
 import { metrics } from './metrics.js';
+import { tipReport } from './tips.js';
 
 /* signals — the tally under the footer of the portfolio.
 
@@ -13,28 +14,7 @@ import { metrics } from './metrics.js';
    Nothing here identifies anyone. A signal is a kind, an optional name the
    caller chose for itself, and a timestamp — no address, no headers, no
    fingerprint. The point is a guestbook, and a guestbook that recorded its
-   visitors would be a different and worse thing.
-
-   The tip figure is read from Base on demand rather than kept, so it cannot
-   drift from the truth, and anyone who doubts it can ask the chain the same
-   question this does. The one number stored is the balance the wallet already
-   held before any of this went up, so the footer can show what arrived since
-   instead of counting dust as a tip. */
-
-const WALLET   = '0x23178a649a868ff0b8280125982a0fb9e9016164';
-const USDC     = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; /* native USDC on Base, per Circle */
-/* More than one, and tried in order, because a worker's outbound requests leave
-   from shared cloudflare addresses and the public endpoints rate-limit those
-   hard. mainnet.base.org answers a laptop instantly and returns 429 "over rate
-   limit" to this, every time — which is what the first deploy did, silently.
-   Any one of these answering is enough. */
-const RPCS = [
-  'https://base-rpc.publicnode.com',
-  'https://base.llamarpc.com',
-  'https://1rpc.io/base',
-  'https://mainnet.base.org'
-];
-const DECIMALS = 6n;   /* confirmed by calling decimals() rather than assumed */
+   visitors would be a different and worse thing. */
 
 /* a flood cap rather than a per-caller rate limit. per-caller means keeping
    something about the caller, and that is the one thing this will not do. */
@@ -48,75 +28,6 @@ const HEADERS = {
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body, null, 2) + '\n', { status, headers: HEADERS });
-
-/* the isolate outlives a request, so a minute of memory here spares the public
-   rpc a call per visitor and costs no storage */
-let tipCache = { at: 0, value: null };
-
-/* raw units to a decimal string, without going through a float */
-function fmt(raw) {
-  const unit = 10n ** DECIMALS;
-  const frac = (raw % unit).toString().padStart(Number(DECIMALS), '0').replace(/0+$/, '');
-  return frac ? (raw / unit) + '.' + frac : String(raw / unit);
-}
-
-async function tips(env) {
-  if (tipCache.value && Date.now() - tipCache.at < 60000) return tipCache.value;
-
-  const body = JSON.stringify({
-    jsonrpc: '2.0', id: 1, method: 'eth_call',
-    params: [{ to: USDC, data: '0x70a08231' + '0'.repeat(24) + WALLET.slice(2) }, 'latest']
-  });
-
-  let usdc = null;
-  for (const rpc of RPCS) {
-    try {
-      const res = await fetch(rpc, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: body
-      });
-      const j = res.ok ? await res.json() : null;
-      if (!j || j.error || !j.result) {
-        /* an empty catch here cost an afternoon: the balance simply read null
-           and nothing anywhere said why. observability is on, so say it. */
-        console.log('tip read: ' + rpc + ' -> ' + res.status
-                    + (j && j.error ? ' ' + JSON.stringify(j.error) : ''));
-        continue;
-      }
-      usdc = BigInt(j.result);
-      break;
-    } catch (e) {
-      console.log('tip read: ' + rpc + ' threw ' + (e && e.message ? e.message : String(e)));
-    }
-  }
-
-  /* What the footer shows is what arrived after this went up, not what the
-     wallet happens to hold. There was dust in it beforehand, and a row reading
-     "0.000658 USDC TIPPED" would be announcing a tip nobody sent. The balance
-     stays in the response so the claim can still be checked against the chain.
-
-     Clamped at zero: withdrawing puts the balance under the baseline, and a
-     negative tip total is not a thing anyone should have to read. */
-  let received = null, balance = null;
-  if (usdc !== null) {
-    balance = fmt(usdc);
-    let base = 0n;
-    try {
-      const row = await env.DB
-        .prepare("SELECT value FROM meta WHERE key = 'tip_baseline_raw'").first();
-      if (row && row.value) base = BigInt(row.value);
-    } catch (e) {
-      console.log('tip baseline read failed: ' + (e && e.message ? e.message : String(e)));
-    }
-    received = fmt(usdc > base ? usdc - base : 0n);
-  }
-
-  const value = { received, balance, wallet: WALLET,
-                  asset: 'native USDC', network: 'Base', chainId: 8453 };
-  if (usdc !== null) tipCache = { at: Date.now(), value };
-  return value;
-}
 
 async function tally(env) {
   const { results } = await env.DB
@@ -154,7 +65,7 @@ export default {
     const url  = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
 
-    if (path === '/api/metrics-report') return report(request, env);
+    if (path === '/api/metrics-report') return report(request, env, tipReport);
 
     if (path === '/api/events') return metrics(request, env);
 
@@ -182,21 +93,19 @@ export default {
         return json({
           error: 'not found',
           endpoints: {
-            'GET /api/tally': 'the counts, and the tip wallet balance',
+            'GET /api/tally': 'the guestbook counts',
             'GET /api/hello?agent=': 'say you came by',
             'GET /api/signal?helpful=yes|no&agent=': 'say whether it was any use'
           }
         }, 404);
       }
 
-      const [counts, tip] = await Promise.all([tally(env), tips(env)]);
-      const body = { ...counts, tips: tip };
+      const body = await tally(env);
       if (recorded !== undefined) {
         body.recorded = recorded;
         if (!recorded) body.note = 'not recorded: more than a minute’s worth of signals arrived at once';
       }
-      body.about = 'Signals are self-reported and unverified — anyone can call these endpoints. '
-                 + 'The tip figure is the live USDC balance of the wallet on Base, which anyone can check against the chain.';
+      body.about = 'Signals are self-reported and unverified — anyone can call these endpoints.';
       return json(body);
     } catch (e) {
       return json({ error: 'the tally is unavailable' }, 500);

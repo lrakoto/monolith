@@ -18,7 +18,7 @@ add_action('wp_ajax_studios_metrics_report', function () {
     check_ajax_referer('studios_metrics_report');
     $days = isset($_POST['days']) && is_scalar($_POST['days']) ? absint($_POST['days']) : 30;
     if (!in_array($days, array(7, 30, 90), true)) { wp_send_json_error(null, 400); }
-    $cache_key = 'studios_metrics_report_v2_' . $days;
+    $cache_key = 'studios_metrics_report_v3_' . $days;
     $data = get_transient($cache_key);
     if ($data === false) {
         $key_file = __DIR__ . '/305-metrics-key.php';
@@ -68,6 +68,43 @@ function studios_metrics_page() {
         const cards=element('div');cards.className='stats';
         for(const [key,label] of Object.entries(labelMap)){const card=element('div');card.className='stat';card.append(element('strong',totals[key]||0),element('span',label));cards.append(card);}container.append(cards);
       }
+      function showTips(wallet) {
+        container.append(element('h2','Tip wallet · Native USDC on Base'));
+        if (!wallet) {
+          container.append(element('p','Tip wallet data is temporarily unavailable.'));
+          return;
+        }
+        stats({
+          balance:wallet.balance ?? 'Unavailable',
+          received:wallet.received ?? 'Unavailable'
+        }, {balance:'Current wallet balance',received:'Balance above launch baseline'});
+        const through = wallet.syncedThrough ? new Date(wallet.syncedThrough * 1000).toISOString().slice(0,19).replace('T',' ') + ' UTC' : '';
+        container.append(element('p',through
+          ? 'Finalized history checked through ' + through + (wallet.refreshFailed ? '. The latest refresh failed.' : '.')
+          : 'Finalized transfer history is awaiting its first sync.'));
+        if (!wallet.transfers.length) {
+          if (through) container.append(element('p','No transfers recorded since September 8, 2026.'));
+          return;
+        }
+        const wrap=element('div');wrap.className='table-wrap';
+        const table=element('table'), head=element('tr');
+        ['Date (UTC)','Direction','USDC','Transaction'].forEach(label=>head.append(element('th',label)));
+        table.append(head);
+        for (const transfer of wallet.transfers) {
+          const row=element('tr'), linkCell=element('td');
+          const date=new Date(transfer.timestamp * 1000).toISOString().slice(0,19).replace('T',' ');
+          const direction={in:'Incoming',out:'Outgoing',self:'Self-transfer'}[transfer.direction];
+          if (/^0x[0-9a-f]{64}$/.test(transfer.hash)) {
+            const link=element('a',transfer.hash.slice(0,10)+'…'+transfer.hash.slice(-6));
+            link.href='https://basescan.org/tx/'+transfer.hash;
+            linkCell.append(link);
+          }
+          row.append(element('td',date),element('td',direction),element('td',transfer.amount),linkCell);
+          table.append(row);
+        }
+        wrap.append(table);container.append(wrap);
+        container.append(element('p','Up to 100 recent finalized transfers, independent of the activity date selector.'));
+      }
       const range = document.getElementById('metrics-range');
       let busy=false,last=0,stopped=false;
       async function refresh() {
@@ -88,6 +125,7 @@ function studios_metrics_page() {
           table('Artdex daily activity (UTC)','Date',Object.fromEntries(Object.entries(artdexDays).reverse()),Object.keys(artdexLabels),artdexLabels);
           container.append(element('h2','Portfolio & website'));stats(totals,labels);
           table('By site and scene','Site / scene',scenes,Object.keys(labels));table('Project interest','Project',projects,['project_click','project_view','game_launch','live_click']);table('Daily activity (UTC)','Date',Object.fromEntries(Object.entries(days).reverse()),Object.keys(labels));
+          showTips(result.data.tipWallet);
           status.textContent='Last '+result.data.days+' days · Updated '+new Date(result.data.updated).toLocaleString();
         }catch(error){status.textContent=error.message;}finally{busy=false;range.disabled=false;}
       }
